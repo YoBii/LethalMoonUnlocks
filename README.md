@@ -8,6 +8,8 @@ Unfortunately Permanent Moons is not maintained anymore and has some issues wher
 
 That is why I decided to make this mod. You can seamlessly transition your savefiles to LethalMoonUnlocks. Read more below.
 
+All clients need to have this mod installed!
+
 Report issues on GitHub: [**LethalMoonUnlocks**](https://github.com/YoBii/LethalMoonUnlocks)
 
 ---
