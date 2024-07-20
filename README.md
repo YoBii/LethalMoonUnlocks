@@ -8,6 +8,8 @@ Unfortunately Permanent Moons is not maintained anymore and has some issues wher
 
 That is why I decided to make this mod. You can seamlessly transition your savefiles to LethalMoonUnlocks. Read more below.
 
+Report issues on GitHub: [**LethalMoonUnlocks**](https://github.com/YoBii/LethalMoonUnlocks)
+
 ---
 This mod requires:
 - LethalNetwork API - Used for networking the necessary data between host and clients.
@@ -54,7 +56,7 @@ Disabled by default (Config value: False)
 Set your preferred discount rates. Values are given as % off of the original price and seperated by comma.
 Only affects prices when discount mode is enabled.
 
-## Thanks
+## Special Thanks
 
 * [Permanent Moons](https://thunderstore.io/c/lethal-company/p/BULLETBOT/Permanent_Moons/)
 * [LethalLevelLoader](https://thunderstore.io/c/lethal-company/p/IAmBatby/LethalLevelLoader/)
