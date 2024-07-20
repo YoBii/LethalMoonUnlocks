@@ -41,7 +41,7 @@ Disabled by default (Config value: False)
 #### Max unlock price
 This will limit the random unlock to moons below this price. Of course free moons are always excluded.
 
-Disabled by default (Config value: 0).
+Disabled by default (Config value: 0)
 
 #### Limit number of unlocks
 Simply limit how often this unlock can occur in a single run.
