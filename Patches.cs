@@ -1,8 +1,6 @@
 ﻿using HarmonyLib;
 using LethalLevelLoader;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LethalMoonUnlocks {
     internal class Patches {
@@ -15,8 +13,10 @@ namespace LethalMoonUnlocks {
             Plugin.Instance.Mls.LogInfo($"Terminal is booting up!");
             Plugin.Instance.terminal = __instance;
             if (Plugin.Instance.IsServer()) {
+                UnlockManager.Instance.BackupOriginalPrices();
                 UnlockManager.Instance.ApplyDataFromSavefile();
-                UnlockManager.Instance.ServerSyncData();
+                UnlockManager.Instance.ServerSyncOriginalPrices();
+                UnlockManager.Instance.ServerSyncUnlockedMoons();
             } else {
                 UnlockManager.Instance.ClientRequestSync();
             }
@@ -43,9 +43,9 @@ namespace LethalMoonUnlocks {
                 int cost = buyCredits - Plugin.Instance.terminal.groupCredits;
                 Plugin.Instance.Mls.LogInfo($"Successfully bought moon {buyMoon} for {cost} credits!");
                 if (Plugin.Instance.IsServer()) {
-                    UnlockManager.Instance.ServerUnlockMoon(buyMoon, cost);
+                    UnlockManager.Instance.ServerUnlockMoon(buyMoon);
                 } else {
-                    UnlockManager.Instance.ClientUnlockMoon(buyMoon, cost);
+                    UnlockManager.Instance.ClientUnlockMoon(buyMoon);
                 }
                 buyMoon = null;
                 buyCredits = 0;
@@ -75,10 +75,9 @@ namespace LethalMoonUnlocks {
         [HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.Disconnect))]
         [HarmonyPostfix]
         private static void DisconnectPatch() {
-            Plugin.Instance.Mls.LogInfo($"Disconnecting from lobby. Clearing variables..");
-            UnlockManager.Instance.UnlockedMoons.Clear();
-            UnlockManager.Instance.OriginalPrices.Clear();
-            UnlockManager.Instance.QuotaCount = 0;
+            Plugin.Instance.Mls.LogInfo($"Disconnecting from lobby. Restoring original prices and clearing variables..");
+            UnlockManager.Instance.RestorePrices();
+            UnlockManager.Instance.Reset();
         }
 
         [HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.SaveGame))]
@@ -100,8 +99,12 @@ namespace LethalMoonUnlocks {
         private static void ResetSavedGameValuesPatch() {
             Plugin.Instance.Mls.LogInfo($"You are fired!");
             if (Plugin.Instance.IsServer() && Plugin.ResetWhenFired) {
-                Plugin.Instance.Mls.LogInfo($"Resetting..");
+                UnlockManager.Instance.ServerSyncOriginalPrices();
                 UnlockManager.Instance.ServerSendResetMoonsEvent();
+
+                UnlockManager.Instance.BackupOriginalPrices();
+                UnlockManager.Instance.ServerSyncOriginalPrices();
+                UnlockManager.Instance.ServerSyncUnlockedMoons();
             }
         }
     }

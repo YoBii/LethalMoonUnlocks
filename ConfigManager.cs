@@ -8,6 +8,7 @@ namespace LethalMoonUnlocks
     {
         private static string _configPath = Path.Combine(Paths.ConfigPath, "LethalMoonUnlocks.cfg");
         private static ConfigFile _configFile;
+
         private static T GetConfigValue<T>(string section, string key, T defaultValue, string description = null) {
             return _configFile.Bind(section, key, defaultValue, description).Value;
         }

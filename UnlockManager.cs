@@ -14,8 +14,10 @@ namespace LethalMoonUnlocks {
         private static LNetworkMessage<Dictionary<string, int>> UnlockedMoonsMessage;
         private static LNetworkMessage<Dictionary<string, int>> OriginalPricesMessage;
         private static LNetworkMessage<KeyValuePair<string, int>> BuyMoonMessage;
+        //private static LNetworkMessage<string> BuyMoonMessage;
         private static LNetworkEvent RequestSyncEvent;
         private static LNetworkEvent ResetMoonsEvent;
+
         public UnlockManager() {
             if (Instance == null) {
                 Instance = this;
@@ -24,10 +26,37 @@ namespace LethalMoonUnlocks {
             UnlockedMoonsMessage = LNetworkMessage<Dictionary<string, int>>.Create("LMU_UnlockedMoonsMessage", onClientReceived: ClientReceiveUnlockedMoonsMessage);
             OriginalPricesMessage = LNetworkMessage<Dictionary<string, int>>.Create("LMU_OriginalPricesMessage", onClientReceived: ClientReceiveOriginalPricesMessage);
             BuyMoonMessage = LNetworkMessage<KeyValuePair<string, int>>.Create("LMU_BuyMoonMessage", onServerReceived: ServerReceiveBuyMoonMessage);
+            //BuyMoonMessage = LNetworkMessage<string>.Create("LMU_BuyMoonMessage", onServerReceived: ServerReceiveBuyMoonMessage);
             ResetMoonsEvent = LNetworkEvent.Create("LMU_ResetMoonsEvent", onClientReceived: ClientReceiveResetMoonsEvent);
             RequestSyncEvent = LNetworkEvent.Create("LMU_RequestSyncEvent", onServerReceived: ServerReceiveRequestSyncEvent);
 
             Plugin.Instance.Mls.LogInfo($"UnlockManager created.");
+        }
+
+        public void Reset() {
+            if (Instance == null) {
+                return;
+            }
+            Plugin.Instance.Mls.LogInfo($"Resetting..");
+            UnlockedMoons.Clear();
+            OriginalPrices.Clear();
+            QuotaCount = 0;
+        }
+
+        public List<ExtendedLevel> GetLevels() {
+            if (AllExtendedLevels == null || AllExtendedLevels.Count == 0) {
+                AllExtendedLevels = PatchedContent.ExtendedLevels;
+                Plugin.Instance.Mls.LogInfo($"Found LLL levels: {string.Join(", ", AllExtendedLevels.Select(level => level.NumberlessPlanetName))}");
+            }
+            return AllExtendedLevels;
+        }
+
+        public void BackupOriginalPrices() {
+            Plugin.Instance.Mls.LogInfo($"Storing original prices..");
+            OriginalPrices.Clear();
+            foreach (var level in GetLevels()) {
+                OriginalPrices.TryAdd(level.NumberlessPlanetName, level.RoutePrice);
+            }
         }
 
         public void ApplyDataFromSavefile() {
@@ -40,10 +69,10 @@ namespace LethalMoonUnlocks {
                 QuotaCount = (int)savedata["LMU_QuotaCount"];
         }
 
-        public void ApplyPrices(Dictionary<string, int> unlockedMoons) {
+        public void ApplyPrices() {
             if (Plugin.DiscountMode) Plugin.Instance.Mls.LogInfo($"Applying discounts..");
             else Plugin.Instance.Mls.LogInfo($"Applying unlocks..");
-            if (unlockedMoons.Count == 0) {
+            if (UnlockedMoons.Count == 0) {
                 if (Plugin.DiscountMode) Plugin.Instance.Mls.LogInfo($"No discounts to apply");
                 else Plugin.Instance.Mls.LogInfo($"No discounts to apply");
                 return;
@@ -68,9 +97,9 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        public void RestorePrices(Dictionary<string, int> originalPrices) {
+        public void RestorePrices() {
             Plugin.Instance.Mls.LogInfo($"Restoring original prices..");
-            if (originalPrices.Count == 0) {
+            if (OriginalPrices.Count == 0) {
                 Plugin.Instance.Mls.LogInfo($"No prices to restore");
                 return;
             }
@@ -80,7 +109,7 @@ namespace LethalMoonUnlocks {
             foreach (var kv in originalPrices) {
                 foreach (var level in extendedLevels) {
                     if (level != null && level.NumberlessPlanetName == kv.Key) {
-                        Plugin.Instance.Mls.LogInfo($"Restoring price of {level.NumberlessPlanetName} to: {kv.Value}");
+                        //Plugin.Instance.Mls.LogInfo($"Restoring price of {level.NumberlessPlanetName} to: {kv.Value}");
                         level.RoutePrice = kv.Value;
                         break;
                     }
@@ -88,7 +117,7 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        public void ServerUnlockMoon(string moon, int price) {
+        public void ServerUnlockMoon(string moon) {
             if (!Plugin.Instance.IsServer()) return;
             if (!UnlockedMoons.ContainsKey(moon)) {
                 Plugin.Instance.Mls.LogInfo($"New moon bought: {moon}");
@@ -97,11 +126,8 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Adding visit to moon: {moon}");
                 UnlockedMoons[moon]++;
             }
-            if (!OriginalPrices.ContainsKey(moon)) {
-                Plugin.Instance.Mls.LogInfo($"Saving original price for {moon}: {price}");
-                OriginalPrices.Add(moon, price);
-            }
-            ServerSyncData();
+            ServerSyncOriginalPrices();
+            ServerSyncUnlockedMoons();
         }
 
         public void ServerUnlockMoonNewQuota() {
@@ -113,6 +139,7 @@ namespace LethalMoonUnlocks {
                         return;
                     }
                 }
+                var candidateLevels = GetLevels().Where(level => level.RoutePrice > 0 && level.IsRouteHidden == false && level.IsRouteLocked == false).ToList();
                 if (Plugin.QuotaUnlocksMaxPrice > 0) {
                     extendedLevels.RemoveAll(level => level.RoutePrice > Plugin.QuotaUnlocksMaxPrice);
                 }
@@ -137,24 +164,32 @@ namespace LethalMoonUnlocks {
                 } else {
                     Plugin.Instance.Mls.LogWarning($"HUDManager not found!");
                 }
-                ServerUnlockMoon(randomLevel.NumberlessPlanetName, randomLevel.RoutePrice);
+                ServerUnlockMoon(randomLevel.NumberlessPlanetName);
             }
         }
 
-        public void ClientUnlockMoon(string moon, int price) {
+        public void ClientUnlockMoon(string moon) {
             if (Plugin.Instance.IsServer()) return;
             Plugin.Instance.Mls.LogInfo($"Sending buy message to server..");
-            BuyMoonMessage.SendServer(new KeyValuePair<string, int>(moon, price));
+            BuyMoonMessage.SendServer(new KeyValuePair<string, int>(moon, 0));
         }
 
-        public void ServerSyncData(ulong client_id = 0) {
+        public void ServerSyncUnlockedMoons(ulong client_id = 0) {
             if (!Plugin.Instance.IsServer()) return;
             if (client_id > 0) {
-                Plugin.Instance.Mls.LogInfo($"Syncing data to client with id {client_id}");
+                Plugin.Instance.Mls.LogInfo($"Syncing bought moons to client with id {client_id}");
             } else {
-                Plugin.Instance.Mls.LogInfo($"Syncing data to all clients..");
+                Plugin.Instance.Mls.LogInfo($"Syncing bought moons to all clients..");
             }
-            Plugin.Instance.Mls.LogInfo($"Sending original prices: {string.Join(", ", OriginalPrices)}");
+            if (client_id > 0) {
+                UnlockedMoonsMessage.SendClient(UnlockedMoons, client_id);
+            } else {
+                UnlockedMoonsMessage.SendClients(UnlockedMoons);
+            }
+            }
+        
+        public void ServerSyncOriginalPrices(ulong client_id = 0) {
+            if (!Plugin.Instance.IsServer()) return;
             if (client_id > 0) {
                 Plugin.Instance.Mls.LogInfo($"Syncing original prices to client with id {client_id}");
             } else {
@@ -162,9 +197,9 @@ namespace LethalMoonUnlocks {
             }
             Plugin.Instance.Mls.LogInfo($"Sending bought moons: {string.Join(", ", UnlockedMoons)}");
             if (client_id > 0) {
-                UnlockedMoonsMessage.SendClient(UnlockedMoons, client_id);
+                OriginalPricesMessage.SendClient(OriginalPrices, client_id);
             } else {
-                UnlockedMoonsMessage.SendClients(UnlockedMoons);
+                OriginalPricesMessage.SendClients(OriginalPrices);
             }
         }
         public void ServerSendResetMoonsEvent() {
@@ -183,31 +218,30 @@ namespace LethalMoonUnlocks {
             string moon = payload.Key;
             int originalPrice = payload.Value;
             Plugin.Instance.Mls.LogInfo($"Received buy message from client with id {id}.");
-            ServerUnlockMoon(moon, originalPrice);
+            ServerUnlockMoon(payload.Key);
         }
 
         private void ClientReceiveOriginalPricesMessage(Dictionary<string, int> payload) {
             Plugin.Instance.Mls.LogInfo($"Received original prices: {string.Join(", ", payload)}");
             OriginalPrices = new Dictionary<string, int>(payload);
-            RestorePrices(OriginalPrices);
+            RestorePrices();
         }
 
         private void ClientReceiveUnlockedMoonsMessage(Dictionary<string, int> payload) {
             Plugin.Instance.Mls.LogInfo($"Received bought moons: {string.Join(", ", payload)}");
             UnlockedMoons = new Dictionary<string, int>(payload);
-            ApplyPrices(UnlockedMoons);
+            ApplyPrices();
         }
 
         private void ServerReceiveRequestSyncEvent(ulong client_id) {
             Plugin.Instance.Mls.LogInfo($"Received sync request from client with id {client_id}..");
-            ServerSyncData(client_id);
+            ServerSyncOriginalPrices(client_id);
+            ServerSyncUnlockedMoons(client_id);
         }
 
         private void ClientReceiveResetMoonsEvent() {
-            Plugin.Instance.Mls.LogInfo($"Received reset bought moons event..");
-            OriginalPrices.Clear();
-            UnlockedMoons.Clear();
-            QuotaCount = 0;
+            Plugin.Instance.Mls.LogInfo($"Received reset event..");
+            Reset();
         }
     }
 }
