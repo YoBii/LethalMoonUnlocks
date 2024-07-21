@@ -64,8 +64,6 @@ namespace LethalMoonUnlocks {
             Dictionary<string, object> savedata = SaveManager.Load();
             if (savedata.ContainsKey("LMU_UnlockedMoons"))
                 UnlockedMoons = (Dictionary<string, int>)savedata["LMU_UnlockedMoons"];
-            if (savedata.ContainsKey("LMU_OriginalMoonPrices"))
-                OriginalPrices = (Dictionary<string, int>)savedata["LMU_OriginalMoonPrices"];
             if (savedata.ContainsKey("LMU_QuotaCount"))
                 QuotaCount = (int)savedata["LMU_QuotaCount"];
         }
