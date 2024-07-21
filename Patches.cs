@@ -25,8 +25,7 @@ namespace LethalMoonUnlocks {
         [HarmonyPatch(typeof(Terminal), "LoadNewNodeIfAffordable")]
         [HarmonyPrefix]
         private static void TerminalLoadNewNodeIfAffordablePrefix(TerminalNode node) {
-            List<ExtendedLevel> LLLMoons = PatchedContent.ExtendedLevels;
-            foreach (ExtendedLevel level in LLLMoons) {
+            foreach (ExtendedLevel level in UnlockManager.Instance.GetLevels()) {
                 if (level.SelectableLevel.levelID == node.buyRerouteToMoon) {
                     buyMoon = level.NumberlessPlanetName;
                     buyCredits = Plugin.Instance.terminal.groupCredits;

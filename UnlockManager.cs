@@ -10,6 +10,7 @@ namespace LethalMoonUnlocks {
         public Dictionary<string, int> UnlockedMoons { get; private set; } = new Dictionary<string, int>();
         public Dictionary<string, int> OriginalPrices { get; set; } = new Dictionary<string, int>();
         public int QuotaCount { get; set; } = 0;
+        private List<ExtendedLevel> AllExtendedLevels { get; set; } = null;
 
         private static LNetworkMessage<Dictionary<string, int>> UnlockedMoonsMessage;
         private static LNetworkMessage<Dictionary<string, int>> OriginalPricesMessage;
@@ -78,12 +79,10 @@ namespace LethalMoonUnlocks {
                 return;
             }
             //Plugin.Instance.Mls.LogInfo($"Bought moons: {string.Join(", ", unlockedMoons)}");
-            List<ExtendedLevel> extendedLevels = PatchedContent.ExtendedLevels;
-            Plugin.Instance.Mls.LogInfo($"Found levels: [{string.Join(", ", extendedLevels.Select(level => level.NumberlessPlanetName))}]");
             if (Plugin.DiscountMode)
                 Plugin.Instance.Mls.LogInfo($"Discount rates (% off): {string.Join(", ", Plugin.Discounts.Split(",").Select(discount => discount + "%"))}");
-            foreach (var unlock in unlockedMoons) {
-                foreach (var level in extendedLevels) {
+            foreach (var unlock in UnlockedMoons) {
+                foreach (var level in GetLevels()) {
                     if (level != null && level.NumberlessPlanetName == unlock.Key) {
                         if (Plugin.DiscountMode) {
                             level.RoutePrice = (int)(OriginalPrices.GetValueSafe(level.NumberlessPlanetName) * Plugin.GetDiscountRate(unlock.Value));
@@ -104,10 +103,8 @@ namespace LethalMoonUnlocks {
                 return;
             }
             //Plugin.Instance.Mls.LogInfo($"Original Prices: {string.Join(", ", originalPrices)}");
-            List<ExtendedLevel> extendedLevels = PatchedContent.ExtendedLevels;
-            Plugin.Instance.Mls.LogInfo($"Found levels: [{string.Join(", ", extendedLevels.Select(level => level.NumberlessPlanetName))}]");
-            foreach (var kv in originalPrices) {
-                foreach (var level in extendedLevels) {
+            foreach (var kv in OriginalPrices) {
+                foreach (var level in GetLevels()) {
                     if (level != null && level.NumberlessPlanetName == kv.Key) {
                         //Plugin.Instance.Mls.LogInfo($"Restoring price of {level.NumberlessPlanetName} to: {kv.Value}");
                         level.RoutePrice = kv.Value;
@@ -132,7 +129,6 @@ namespace LethalMoonUnlocks {
 
         public void ServerUnlockMoonNewQuota() {
             if (Plugin.QuotaUnlocks) {
-                var extendedLevels = PatchedContent.ExtendedLevels.Where(level => level.RoutePrice > 0 && level.IsRouteHidden == false && level.IsRouteLocked == false).ToList();
                 if (Plugin.QuotaUnlockMaxCount > 0) {
                     if (QuotaCount > Plugin.QuotaUnlockMaxCount) {
                         Plugin.Instance.Mls.LogInfo($"New quota random unlock limit ({Plugin.QuotaUnlockMaxCount}) reached! No more unlocks.");
@@ -141,13 +137,14 @@ namespace LethalMoonUnlocks {
                 }
                 var candidateLevels = GetLevels().Where(level => level.RoutePrice > 0 && level.IsRouteHidden == false && level.IsRouteLocked == false).ToList();
                 if (Plugin.QuotaUnlocksMaxPrice > 0) {
-                    extendedLevels.RemoveAll(level => level.RoutePrice > Plugin.QuotaUnlocksMaxPrice);
+                    candidateLevels.RemoveAll(level => level.RoutePrice > Plugin.QuotaUnlocksMaxPrice);
                 }
-                if (extendedLevels.Count == 0) {
-                    Plugin.Instance.Mls.LogInfo($"New quota random unlock limit reached! No more unlocks.");
+                if (candidateLevels.Count == 0) {
+                    Plugin.Instance.Mls.LogInfo($"No suitable levels for random unlock available!");
                     return;
                 }
-                var randomLevel = extendedLevels[UnityEngine.Random.Range(0, extendedLevels.Count)];
+                var randomLevel = candidateLevels[UnityEngine.Random.Range(0, candidateLevels.Count)];
+                Plugin.Instance.Mls.LogInfo($"{(Plugin.DiscountMode ? "New random discount unlocked for moon" : "New random moon unlocked")} {randomLevel.NumberlessPlanetName}");
                 if (HUDManager.Instance != null) {
                     if (Plugin.DiscountMode) {
                         Plugin.Instance.Mls.LogInfo($"New random discount unlocked for moon: {randomLevel.NumberlessPlanetName}");
@@ -195,7 +192,6 @@ namespace LethalMoonUnlocks {
             } else {
                 Plugin.Instance.Mls.LogInfo($"Syncing original prices to all clients..");
             }
-            Plugin.Instance.Mls.LogInfo($"Sending bought moons: {string.Join(", ", UnlockedMoons)}");
             if (client_id > 0) {
                 OriginalPricesMessage.SendClient(OriginalPrices, client_id);
             } else {
@@ -205,7 +201,6 @@ namespace LethalMoonUnlocks {
         public void ServerSendResetMoonsEvent() {
             if (!Plugin.Instance.IsServer()) return;
             Plugin.Instance.Mls.LogInfo($"Sending reset bought moons event to all clients..");
-            OriginalPricesMessage.SendClients(OriginalPrices);
             ResetMoonsEvent.InvokeClients();
         }
 
@@ -215,8 +210,6 @@ namespace LethalMoonUnlocks {
         }
 
         private void ServerReceiveBuyMoonMessage(KeyValuePair<string, int> payload, ulong id) {
-            string moon = payload.Key;
-            int originalPrice = payload.Value;
             Plugin.Instance.Mls.LogInfo($"Received buy message from client with id {id}.");
             ServerUnlockMoon(payload.Key);
         }

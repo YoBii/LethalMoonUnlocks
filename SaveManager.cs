@@ -28,7 +28,7 @@ namespace LethalMoonUnlocks {
                 List<string> PMunlockedMoons = ES3.Load<List<string>>("UnlockedMoons", GameNetworkManager.Instance.currentSaveFileName);
                 Dictionary<string, int> unlockedMoons = new Dictionary<string, int>();
                 foreach (var moon in PMunlockedMoons) {
-                    foreach (var level in extendedLevels) {
+                    foreach (var level in UnlockManager.Instance.GetLevels()) {
                         if (moon.Contains(level.NumberlessPlanetName, System.StringComparison.OrdinalIgnoreCase)) {
                             unlockedMoons.TryAdd(level.NumberlessPlanetName, 1);
                         }
