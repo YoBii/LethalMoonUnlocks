@@ -129,6 +129,13 @@ namespace LethalMoonUnlocks {
                         Plugin.Instance.Mls.LogInfo($"New random moon unlocked: {randomLevel.NumberlessPlanetName}");
                         HUDManager.Instance.AddTextToChatOnServer($"New moon unlocked:\n<color=green>{randomLevel.NumberlessPlanetName}</color>");
                     }
+                if (HUDManager.Instance != null) {
+                    if (Plugin.DiscountMode)
+                        HUDManager.Instance.AddTextToChatOnServer($"<color=white>New moon discount unlocked:</color>\n<color=green> {randomLevel.NumberlessPlanetName}</color>");
+                    else
+                        HUDManager.Instance.AddTextToChatOnServer($"<color=white>New moon unlocked:</color>\n<color=green>{randomLevel.NumberlessPlanetName}</color>");
+                } else {
+                    Plugin.Instance.Mls.LogWarning($"HUDManager not found!");
                 }
                 ServerUnlockMoon(randomLevel.NumberlessPlanetName, randomLevel.RoutePrice);
             }
