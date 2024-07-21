@@ -3,6 +3,7 @@ using LethalLevelLoader;
 using LethalNetworkAPI;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.UIElements;
 
 namespace LethalMoonUnlocks {
     public class UnlockManager {
@@ -144,18 +145,7 @@ namespace LethalMoonUnlocks {
                 var randomLevel = candidateLevels[UnityEngine.Random.Range(0, candidateLevels.Count)];
                 Plugin.Instance.Mls.LogInfo($"{(Plugin.DiscountMode ? "New random discount unlocked for moon" : "New random moon unlocked")} {randomLevel.NumberlessPlanetName}");
                 if (HUDManager.Instance != null) {
-                    if (Plugin.DiscountMode) {
-                        Plugin.Instance.Mls.LogInfo($"New random discount unlocked for moon: {randomLevel.NumberlessPlanetName}");
-                        HUDManager.Instance.AddTextToChatOnServer($"New discount unlocked:\n<color=green> {randomLevel.NumberlessPlanetName}</color>");
-                    } else {
-                        Plugin.Instance.Mls.LogInfo($"New random moon unlocked: {randomLevel.NumberlessPlanetName}");
-                        HUDManager.Instance.AddTextToChatOnServer($"New moon unlocked:\n<color=green>{randomLevel.NumberlessPlanetName}</color>");
-                    }
-                if (HUDManager.Instance != null) {
-                    if (Plugin.DiscountMode)
-                        HUDManager.Instance.AddTextToChatOnServer($"<color=white>New moon discount unlocked:</color>\n<color=green> {randomLevel.NumberlessPlanetName}</color>");
-                    else
-                        HUDManager.Instance.AddTextToChatOnServer($"<color=white>New moon unlocked:</color>\n<color=green>{randomLevel.NumberlessPlanetName}</color>");
+                    HUDManager.Instance.AddTextToChatOnServer($"{(Plugin.DiscountMode ? "New moon discount unlocked:" : "New moon unlocked:")}\n<color=green> {randomLevel.NumberlessPlanetName}</color>");
                 } else {
                     Plugin.Instance.Mls.LogWarning($"HUDManager not found!");
                 }
@@ -181,7 +171,7 @@ namespace LethalMoonUnlocks {
             } else {
                 UnlockedMoonsMessage.SendClients(UnlockedMoons);
             }
-            }
+        }
         
         public void ServerSyncOriginalPrices(ulong client_id = 0) {
             if (!Plugin.Instance.IsServer()) return;
