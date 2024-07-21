@@ -6,7 +6,6 @@ namespace LethalMoonUnlocks {
         public static Dictionary<string, object> Load() {
             Dictionary<string, object> savedata = new Dictionary<string, object>();
             if (!ES3.KeyExists("LMU_UnlockedMoons", GameNetworkManager.Instance.currentSaveFileName) &&
-                //!ES3.KeyExists("LMU_OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName) &&
                 !ES3.KeyExists("LMU_QuotaCount", GameNetworkManager.Instance.currentSaveFileName)) {
                 Plugin.Instance.Mls.LogInfo($"No LMU save data found. Checking for Permanent Moons save data to import..");
                 savedata = ImportPermanentMoonsData();
@@ -45,21 +44,6 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"No Permanent moons data found.");
                 return dictionary;
             }
-            //if (ES3.KeyExists("OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName)) {
-            //    Dictionary<string, int> PMoriginalPrices = ES3.Load<Dictionary<string, int>>("OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName);
-            //    Dictionary<string, int> originalPrices = new Dictionary<string, int>();
-            //    foreach (var price in PMoriginalPrices) {
-            //        foreach (var level in UnlockManager.Instance.allLevelsLLL) {
-            //            if (price.Key.Contains(level.NumberlessPlanetName, System.StringComparison.OrdinalIgnoreCase)) {
-            //                originalPrices.TryAdd(level.NumberlessPlanetName, price.Value);
-            //            }
-            //        }
-            //    }
-            //    if (originalPrices.Count > 0) {
-            //        dictionary.Add("LMU_OriginalMoonPrices", originalPrices);
-            //        Plugin.Instance.Mls.LogInfo($"Imported OriginalMoonPrices from Permanent Moons: {string.Join(", ", originalPrices)}");
-            //    }
-            //}
             if (ES3.KeyExists("MoonQuotaNum", GameNetworkManager.Instance.currentSaveFileName)) {
                 int quotaCount = ES3.Load<int>("MoonQuotaNum", GameNetworkManager.Instance.currentSaveFileName);
                 dictionary.Add("LMU_QuotaCount", quotaCount);
@@ -77,11 +61,6 @@ namespace LethalMoonUnlocks {
                 dictionary.Add("LMU_UnlockedMoons", unlockedMoons);
                 Plugin.Instance.Mls.LogInfo($"Loaded LMU_UnlockedMoons: {string.Join(", ", unlockedMoons)}");
             }
-            //if (ES3.KeyExists("LMU_OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName)) {
-            //    Dictionary<string, int> originalPrices = ES3.Load<Dictionary<string, int>>("LMU_OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName);
-            //    dictionary.Add("LMU_OriginalMoonPrices", originalPrices);
-            //    Plugin.Instance.Mls.LogInfo($"Loaded LMU_OriginalMoonPrices: {string.Join(", ", originalPrices)}");
-            //}
             if (ES3.KeyExists("LMU_QuotaCount", currentSave)) {
                 int quotaCount = ES3.Load<int>("LMU_QuotaCount", currentSave);
                 dictionary.Add("LMU_QuotaCount", quotaCount);
@@ -99,12 +78,6 @@ namespace LethalMoonUnlocks {
             } else if (ES3.KeyExists("LMU_UnlockedMoons", currentSave)) {
                 ES3.DeleteKey("LMU_UnlockedMoons", currentSave);
             }
-            //if (UnlockManager.Instance.OriginalPrices.Count != 0) {
-            //    ES3.Save<Dictionary<string, int>>("LMU_OriginalMoonPrices", UnlockManager.Instance.OriginalPrices, GameNetworkManager.Instance.currentSaveFileName);
-            //    Plugin.Instance.Mls.LogInfo($"Saved LMU_OriginalMoonPrices: {string.Join(", ", UnlockManager.Instance.OriginalPrices)}");
-            //} else if (ES3.KeyExists("LMU_OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName)) {
-            //    ES3.DeleteKey("LMU_OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName);
-            //}
             if (ES3.KeyExists("LMU_OriginalMoonPrices", currentSave)) {
                 // Delete deprecated original prices field in existing savefiles
                 ES3.DeleteKey("LMU_OriginalMoonPrices", currentSave);
