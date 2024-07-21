@@ -109,7 +109,7 @@ namespace LethalMoonUnlocks {
                 var extendedLevels = PatchedContent.ExtendedLevels.Where(level => level.RoutePrice > 0 && level.IsRouteHidden == false && level.IsRouteLocked == false).ToList();
                 if (Plugin.QuotaUnlockMaxCount > 0) {
                     if (QuotaCount > Plugin.QuotaUnlockMaxCount) {
-                        Plugin.Instance.Mls.LogInfo($"New quota random unlock limit reached! No more unlocks.");
+                        Plugin.Instance.Mls.LogInfo($"New quota random unlock limit ({Plugin.QuotaUnlockMaxCount}) reached! No more unlocks.");
                         return;
                     }
                 }
@@ -156,9 +156,9 @@ namespace LethalMoonUnlocks {
             }
             Plugin.Instance.Mls.LogInfo($"Sending original prices: {string.Join(", ", OriginalPrices)}");
             if (client_id > 0) {
-                OriginalPricesMessage.SendClient(OriginalPrices, client_id);
+                Plugin.Instance.Mls.LogInfo($"Syncing original prices to client with id {client_id}");
             } else {
-                OriginalPricesMessage.SendClients(OriginalPrices);
+                Plugin.Instance.Mls.LogInfo($"Syncing original prices to all clients..");
             }
             Plugin.Instance.Mls.LogInfo($"Sending bought moons: {string.Join(", ", UnlockedMoons)}");
             if (client_id > 0) {

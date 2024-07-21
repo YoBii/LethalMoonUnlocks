@@ -24,6 +24,7 @@ namespace LethalMoonUnlocks {
             Dictionary<string, object> dictionary = new Dictionary<string, object>();
             List<ExtendedLevel> extendedLevels = PatchedContent.ExtendedLevels;
             if (ES3.KeyExists("UnlockedMoons", GameNetworkManager.Instance.currentSaveFileName)) {
+                Plugin.Instance.Mls.LogInfo($"Permanent moons save data found! Importing..");
                 List<string> PMunlockedMoons = ES3.Load<List<string>>("UnlockedMoons", GameNetworkManager.Instance.currentSaveFileName);
                 Dictionary<string, int> unlockedMoons = new Dictionary<string, int>();
                 foreach (var moon in PMunlockedMoons) {
@@ -37,7 +38,7 @@ namespace LethalMoonUnlocks {
                     dictionary.Add("LMU_UnlockedMoons", unlockedMoons);
                     Plugin.Instance.Mls.LogInfo($"Imported UnlockedMoons from Permanent Moons: {string.Join(", ", unlockedMoons)}");
                 } else {
-                    Plugin.Instance.Mls.LogInfo($"No Permanent moons data found.");
+                    Plugin.Instance.Mls.LogInfo($"No moons match the Permanent moons save data.");
                     return dictionary;
                 }
             } else {

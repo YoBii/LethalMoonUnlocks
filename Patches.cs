@@ -30,7 +30,7 @@ namespace LethalMoonUnlocks {
                 if (level.SelectableLevel.levelID == node.buyRerouteToMoon) {
                     buyMoon = level.NumberlessPlanetName;
                     buyCredits = Plugin.Instance.terminal.groupCredits;
-                    Plugin.Instance.Mls.LogInfo($"Attempting to buy moon {buyMoon} (ID {node.buyRerouteToMoon})");
+                    Plugin.Instance.Mls.LogInfo($"Buying moon {buyMoon} (ID {node.buyRerouteToMoon})");
                     break;
                 }
             }
@@ -58,7 +58,7 @@ namespace LethalMoonUnlocks {
         private static void SetNewProfitQuotaPatch() {
             if (Plugin.Instance.IsServer()) {
                 UnlockManager.Instance.QuotaCount++;
-                Plugin.Instance.Mls.LogInfo($"New quota! Increase quota count to: {UnlockManager.Instance.QuotaCount}");
+                Plugin.Instance.Mls.LogInfo($"New quota! Completed quota count: {UnlockManager.Instance.QuotaCount}");
                 UnlockManager.Instance.ServerUnlockMoonNewQuota();
             }
         }
