@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace LethalMoonUnlocks
 {
@@ -60,10 +61,24 @@ namespace LethalMoonUnlocks
         public void Initialize()
         {
             UnlockManager = new UnlockManager();
-            ConfigManager.RefreshConfig();
+
+            SceneManager.sceneUnloaded += AfterGameInit;
 
             Mls.LogInfo($"LethalMoonUnlocks " + PluginInfo.PLUGIN_VERSION + " initialized!");
             _loaded = true;
+        }
+
+        private void AfterGameInit(Scene scene) {
+            //Mls.LogInfo($"Scene name: {scene.name}");
+            if (scene.name != "InitScene" && scene.name != "InitSceneLANMode") {
+                return;
+            }
+
+            // Refresh config
+            ConfigManager.RefreshConfig();
+
+            // Unload this
+            SceneManager.sceneUnloaded -= AfterGameInit;
         }
 
         public bool IsServer() {
