@@ -98,13 +98,13 @@ namespace LethalMoonUnlocks {
             }
             if (UnlockManager.Instance.OriginalPrices.Count != 0) {
                 ES3.Save<Dictionary<string, int>>("LMU_OriginalMoonPrices", UnlockManager.Instance.OriginalPrices, GameNetworkManager.Instance.currentSaveFileName);
-                Plugin.Instance.Mls.LogInfo($"Saved LMU_OriginalMoonPrices: {string.Join(", ", UnlockManager.Instance.UnlockedMoons)}");
+                Plugin.Instance.Mls.LogInfo($"Saved LMU_OriginalMoonPrices: {string.Join(", ", UnlockManager.Instance.OriginalPrices)}");
             } else if (ES3.KeyExists("LMU_OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName)) {
                 ES3.DeleteKey("LMU_OriginalMoonPrices", GameNetworkManager.Instance.currentSaveFileName);
             }
             if (UnlockManager.Instance.QuotaCount > 0) {
                 ES3.Save<int>("LMU_QuotaCount", UnlockManager.Instance.QuotaCount, GameNetworkManager.Instance.currentSaveFileName);
-                Plugin.Instance.Mls.LogInfo($"Saved LMU_QuotaCount: {string.Join(", ", UnlockManager.Instance.UnlockedMoons)}");
+                Plugin.Instance.Mls.LogInfo($"Saved LMU_QuotaCount: {string.Join(", ", UnlockManager.Instance.QuotaCount)}");
             } else if (ES3.KeyExists("LMU_QuotaCount", GameNetworkManager.Instance.currentSaveFileName)) {
                 ES3.DeleteKey("LMU_QuotaCount", GameNetworkManager.Instance.currentSaveFileName);
             }
