@@ -139,7 +139,7 @@ namespace LethalMoonUnlocks {
                     candidateLevels.RemoveAll(level => level.RoutePrice > Plugin.QuotaUnlocksMaxPrice);
                 }
                 if (candidateLevels.Count == 0) {
-                    Plugin.Instance.Mls.LogInfo($"No suitable levels for random unlock available!");
+                    Plugin.Instance.Mls.LogInfo($"No suitable levels for random unlock available! Either no paid levels left or they are more expensive than your max price limit ({Plugin.QuotaUnlocksMaxPrice}).");
                     return;
                 }
                 var randomLevel = candidateLevels[UnityEngine.Random.Range(0, candidateLevels.Count)];
