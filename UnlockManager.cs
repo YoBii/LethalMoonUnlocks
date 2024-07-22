@@ -9,7 +9,7 @@ namespace LethalMoonUnlocks {
     public class UnlockManager {
         public static UnlockManager Instance { get; private set; }
         public Dictionary<string, int> UnlockedMoons { get; private set; } = new Dictionary<string, int>();
-        public Dictionary<string, int> OriginalPrices { get; set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> OriginalPrices { get; private set; } = new Dictionary<string, int>();
         public int QuotaCount { get; set; } = 0;
         private List<ExtendedLevel> AllExtendedLevels { get; set; } = null;
 
