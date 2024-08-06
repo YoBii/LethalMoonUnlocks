@@ -187,6 +187,7 @@ namespace LethalMoonUnlocks {
             Dictionary<string, List<string>> customGroups = new Dictionary<string, List<string>>();
             if (MoonGroupMatchingCustom == string.Empty) {
                 Plugin.Instance.Mls.LogInfo($"No custom moon group defined. Skip parsing..");
+                return customGroups;
             }
             string[] groupStrings = MoonGroupMatchingCustom.Split('|');
             foreach (string groupString in groupStrings) {
