@@ -9,10 +9,8 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPatch(nameof(TimeOfDay.SetNewProfitQuota))]
         [HarmonyPrefix]
         private static void SetNewProfitQuotaPatch() {
-            if (Plugin.Instance.IsServer()) {
+            if (NetworkManager.Instance.IsServer()) {
                 UnlockManager.Instance.OnNewQuota();
-                Plugin.Instance.Mls.LogInfo($"New quota! Completed quota count: {NetworkManager.Instance.QuotaCount}");
-                
             }
         }
     }
