@@ -8,8 +8,9 @@ namespace LethalMoonUnlocks.Patches {
     internal class RoundManagerPatch {
         [HarmonyPatch(nameof(RoundManager.LoadNewLevel))]
         [HarmonyPostfix]
-        private static void LoadNewLevelPatch(ref SelectableLevel level) {
-            Plugin.Instance.Mls.LogInfo($"Visiting moon {level.PlanetName} with id {level.levelID}");
+        private static void LoadNewLevelPatch(ref SelectableLevel newLevel) {
+            Plugin.Instance.Mls.LogInfo($"Landing on moon {newLevel.PlanetName} with id {newLevel.levelID}");
+            UnlockManager.Instance.OnLanding(newLevel);
         }
     }
 }
