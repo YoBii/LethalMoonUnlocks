@@ -1,10 +1,10 @@
 # LethalMoonUnlocks
 
 Permanently unlock moons or progressively unlock discounts.  
-Explore your very own universe as you keep discovering new moons for travel.  
+Enhance variety of your custom moon collection as you keep discovering new moons for travel.
 Progress from free moons to more expensive and difficult ones.
 
-- Featuring custom moon groups, random moon sales, displaying tags in terminal and more  
+- Featuring custom moon groups, displaying tags in terminal, random moon sales and more  
 
 - Well suited for modpacks with a lot of moons  
 
@@ -243,58 +243,6 @@ New Day Discoveries are a mechanic that randomly grants moons when a new day beg
 
 </details>
 
-## Moon Sales
-Moons have a random chance to go on sale.
-<details>
-  <summary><strong style="">Learn more</strong></summary>
-<br>
-
-Each moon has a random chance to go on sale every time the sales are shuffled.  
-Moon Sales are multiplicative with other price reductions like discounts from [**Discount Mode**](#discount-mode).
-
-You can configure the chance as well as minimum and maximum sale rate.  
-They can either be shuffled every quota or every day.
-> Shuffling Moon Sales daily can incentivize buying moons even days into a quota.
-
-
-</details>
-
-</details>
-
-## Moon Groups
-LethalMoonUnlocks supports matching moons by group. This is relevant for certain discovery mechanics.
-
-<details>
-  <summary><strong style="">Learn more</strong></summary>
-<br>
-
-In Discovery mode all new discoveries are randomly selected. With moon group matching LethalMoonUnlocks will prefer selecting from group matches instead of all moons.
-
-This is always in reference to a *matching moon*. For [**Travel Discoveries**](#optional-travel-discoveries) that is the moon you've routed to and for [**New Day Discoveries**](#optional-new-day-discoveries) it's the moon you're currently at.
-
-Moon group matching can be disabled individually for each of these mechanics.
-
-There are multiple group matching methods available.
-
-### Price, PriceRange, PriceRangeUpper
-All of these methods use the moon's original prices to match them into groups.
-
-**Price** matches all moons that share the exact same price.
-
-**PriceRange** matches all moons within a configurable +- price range.
-
-**PriceRangeUpper** same as PriceRange but only considers equally or more expensive moons.
-
-### Tag
-Selects a random LLL content tag and matches all other moons sharing that tag.
-
-### Custom
-Custom allows you to define completely custom groups. A group is defined by name and a list of members (moons).  
-Moons can be members of multiple groups.
-
-The group name will be displayed in various locations in-game e.g. *Autopilot discovered new moons during travel to Zeekers Galaxy*.
-</details>
-
 ## Terminal Tags
 LethalMoonUnlocks supports displaying various conditions directly in the Terminal's moon catalogue.
 <details>
@@ -341,6 +289,59 @@ Tags are added to the moon catalogue using an event provided by LLL and will als
 
 </details>
 
+## Moon Sales
+Moons have a random chance to go on sale.
+<details>
+  <summary><strong style="">Learn more</strong></summary>
+<br>
+
+Each moon has a random chance to go on sale every time the sales are shuffled.  
+Moon Sales are multiplicative with other price reductions like discounts from [**Discount Mode**](#discount-mode).
+
+You can configure the chance as well as minimum and maximum sale rate.  
+They can either be shuffled every quota or every day.
+> Shuffling Moon Sales daily can incentivize buying moons even days into a quota.
+
+
+</details>
+
+## Moon Groups
+LethalMoonUnlocks supports matching moons by group. This is relevant for certain discovery mechanics.
+
+<details>
+  <summary><strong style="">Learn more</strong></summary>
+<br>
+
+In Discovery mode all new discoveries are randomly selected. With moon group matching LethalMoonUnlocks will prefer selecting from group matches instead of all moons.
+
+This is always in reference to a *matching moon*. For [**Travel Discoveries**](#optional-travel-discoveries) that is the moon you've routed to and for [**New Day Discoveries**](#optional-new-day-discoveries) it's the moon you're currently at.
+
+Moon group matching can be disabled individually for each of these mechanics.
+
+There are multiple group matching methods available.
+
+### Price, PriceRange, PriceRangeUpper
+All of these methods use the moon's original prices to match them into groups.
+
+**Price** matches all moons that share the exact same price.
+
+**PriceRange** matches all moons within a configurable +- price range.
+
+**PriceRangeUpper** same as PriceRange but only considers equally or more expensive moons.
+
+### Tag
+Selects a random LLL content tag and matches all other moons sharing that tag.
+
+### Custom
+Custom allows you to define fully custom groups. A group is defined by name and a list of members (moons).  
+
+A moon will always match with all members of the same group.  
+If a moon is member of multiple groups, a random group will be selected for matching.  
+When all members of every group are already discovered a random moon will be chosen instead.
+
+The group name will be displayed in various locations in-game e.g. *Autopilot discovered new moons during travel to Zeekers Galaxy*.
+</details>
+
 ## Other stuff
 
 ### Cheap Moon Bias
@@ -355,22 +356,26 @@ In Discovery Mode moons will be randomly selected (as new discoveries) e.g. when
 The bias value is configurable. The bias in its entirety can be enabled or disabled for each applicable discovery mechanic.
 </details>
 
-### Compatiblity
+### Compatibility
 <details>
   <summary><strong style="">Learn more</strong></summary>
+
+#### LethalConstellations
+*Planned!*
 
 #### TerminalFormatter
 Tags are shown in TerminalFormatter moons node. Thanks @mrov!
 
 #### LethalQuantities
-Option to prefer LQ risk levels in moon catalogue.
+Advanced config option to prefer LQ risk levels in moon catalogue.
 
 #### Malfunctions
-Option to interpret Malfunctions Navigation malfunction as routing to a moon.  
+Advanced config option to enable interpreting Malfunctions' Navigation malfunction as routing to a moon.  
 If it's a paid moon LethalMoonUnlocks will see it as buying the moon - even though you didn't pay.
 
 #### All mods displaying alert messages
-LethalMoonUnlocks uses a queue for sending alert messages. Alerts from other mods and the vanilla game are added to the same queue to avoid overlapping and missing messages.
+LethalMoonUnlocks uses a queue for sending alert messages.  
+Alerts from other mods and the vanilla game are added to the same queue to avoid overlapping and missing messages.
 </details>
 
 ## Example configurations
