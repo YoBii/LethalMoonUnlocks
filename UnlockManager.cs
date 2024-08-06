@@ -271,7 +271,7 @@ namespace LethalMoonUnlocks {
                 if (quotaFullDiscounts.Count == 1) HUDManager.Instance.AddTextToChatOnServer($"Full discount granted:\n <color=green>{quotaFullDiscounts.FirstOrDefault().Name}</color>");
                 else if (quotaFullDiscounts.Count > 1) HUDManager.Instance.AddTextToChatOnServer($"Full discounts granted:\n <color=green>{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}</color>");
             }
-            NotificationHelper.AddNotificationToQueue(new Notification() { Header = $" Full {quotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned full discounts for:{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaFullDiscount" });
+            NotificationHelper.AddNotificationToQueue(new Notification() { Header = $" Full {quotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned full discounts for:\n{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaFullDiscount" });
             Plugin.Instance.Mls.LogInfo($"New Quota Full Discounts: {string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}");
         }
 
