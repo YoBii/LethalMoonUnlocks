@@ -185,6 +185,9 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogWarning($"{string.Join(", ", PatchedContent.ExtendedLevels.Where(level => level.NumberlessPlanetName != "Gordion" && level.NumberlessPlanetName != "Liquidation").Select(level => level.name))}");
             }
             Dictionary<string, List<string>> customGroups = new Dictionary<string, List<string>>();
+            if (MoonGroupMatchingCustom == string.Empty) {
+                Plugin.Instance.Mls.LogInfo($"No custom moon group defined. Skip parsing..");
+            }
             string[] groupStrings = MoonGroupMatchingCustom.Split('|');
             foreach (string groupString in groupStrings) {
                 string groupName = groupString.Split(":").First().Trim();
@@ -194,10 +197,13 @@ namespace LethalMoonUnlocks {
                 foreach (string member in groupMembers) {
                     members.Add(member.Trim());
                 }
-                if (groupName == null || groupName == string.Empty || groupMemberString == string.Empty || members.Count == 0) {
-                    Plugin.Instance.Mls.LogError("Parsing custom moon group failed! Name null or empty or members not found!");
+                if (groupName == null || groupName == string.Empty) {
+                    Plugin.Instance.Mls.LogWarning("Couldn't parse custom moon group name. Make sure you're using the correct format!");
                     continue;
-                } else { 
+                } else if (groupMemberString == string.Empty || members.Count == 0) {
+                    Plugin.Instance.Mls.LogWarning("Couldn't parse custom moon group! Name null or empty or members not found!");
+                    continue;
+                } else {
                     Plugin.Instance.Mls.LogInfo($"Parsed custom moon group: Name = {groupName}, Members = [ {string.Join(", ", members)} ]");
                     customGroups[groupName] = members;
                 }
@@ -375,9 +381,9 @@ namespace LethalMoonUnlocks {
             MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
             MoonGroupMatchingCustomHelper = GetConfigValue("6.2 - Moon Group Matching", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game.");
 
-            TerminalTagLineWidth = GetConfigValue("6.3 - Terminal", "Maximum tag line length", 50, "By default LMU tries to fit as many tags as possible into a single line.\n" +
+            TerminalTagLineWidth = GetConfigValue("6.3 - Terminal", "Maximum tag line length", 49, "By default LMU tries to fit as many tags as possible into a single line.\n" +
                 "Decrease this value if you want to have a more organized look at the cost of more scrolling depending on the amount of tags you see.\n" +
-                "NOTE: Don't worry about setting it too low. It will always put at least one tag per line. Only if any additional tag would exceed this value it puts a line break.", new AcceptableValueRange<int>(0, 50));
+                "NOTE: Don't worry about setting it too low. It will always put at least one tag per line. Only if any additional tag would exceed this value it puts a line break.", new AcceptableValueRange<int>(0, 49));
 
             AlertMessageQueueing = GetConfigValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
             PreferLQRisk = GetConfigValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalogue instead of the default risk levels.");
