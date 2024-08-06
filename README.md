@@ -1,7 +1,7 @@
 # LethalMoonUnlocks
 
 Permanently unlock moons or progressively unlock discounts.  
-Enhance variety of your custom moon collection as you keep discovering new moons for travel.
+Enhance variety in your custom moon collection as you keep discovering new moons for travel.  
 Progress from free moons to more expensive and difficult ones.
 
 - Featuring custom moon groups, displaying tags in terminal, random moon sales and more  
