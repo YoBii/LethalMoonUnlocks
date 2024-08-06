@@ -255,6 +255,10 @@ namespace LethalMoonUnlocks {
             if (ExtendedLevel.IsRouteLocked) {
                 preview += "\n  * (Locked)";
             }
+
+            if (!ConfigManager.DisplayTerminalTags) {
+                return preview;
+            }
             
             // LMU Tags
             string tags = string.Empty;
