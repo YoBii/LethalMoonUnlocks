@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using LethalConstellations.PluginCore;
 using LethalLevelLoader;
 using LethalMoonUnlocks.Util;
 using System;
@@ -99,6 +100,9 @@ namespace LethalMoonUnlocks {
 
             // Create LMUnlockables from LLL Extended Levels
             InitializeUnlocks();
+
+            //List<ClassMapper> classMappers = 
+            //Plugin.Instance.Mls.LogWarning(string.Join(", ", classMappers.Select(cm => cm.consName + " (hidden=" + cm.isHidden + ")")));
 
             // Load save data
             // if save exists apply all unlockable data and continue

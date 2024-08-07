@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using LethalConstellations.PluginCore;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
 using System;
@@ -20,7 +21,8 @@ namespace LethalMoonUnlocks
         private readonly Harmony _harmony = new(PluginInfo.PLUGIN_GUID);
 
         internal static Plugin Instance {  get; private set; }
-        internal static bool LQPresent = false; 
+        internal static bool LQPresent = false;
+        internal static bool LethalConPresent = false;
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
 
@@ -95,6 +97,10 @@ namespace LethalMoonUnlocks
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.zealsprince.malfunctions")) {
                 Mls.LogInfo("Malfunctions found! Enabling compatibility..");
                 _harmony.PatchAll(typeof(MalfunctionsCompatibility));
+            }
+            
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID)) {
+                LethalConPresent = true;
             }
 
             // Unload this

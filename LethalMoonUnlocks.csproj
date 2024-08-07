@@ -38,5 +38,8 @@
 		<Reference Include="LethalQuantities">
 			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\xCore\BepInEx\plugins\BananaPuncher714-LethalQuantities\LethalQuantities.dll</HintPath>
 		</Reference>
+		<Reference Include="LethalConstellations">
+			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-Lethal_Constellations\0.1.6\LethalConstellations.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 </Project>
