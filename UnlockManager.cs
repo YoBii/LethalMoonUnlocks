@@ -603,8 +603,16 @@ namespace LethalMoonUnlocks {
         }
         private void ApplyDiscoveryWhitelist() {
             if (ConfigManager.DiscoveryMode && ConfigManager.DiscoveryWhitelistMoons.Count > 0) {
+                Plugin.Instance.Mls.LogInfo($"Whitelist: {string.Join(", ", ConfigManager.DiscoveryWhitelistMoons)}");
                 foreach (var entry in ConfigManager.DiscoveryWhitelistMoons) {
-                    Unlocks.Where(unlock => unlock.Name.Contains(entry.Trim(), StringComparison.OrdinalIgnoreCase)).Do(unlock => unlock.Discovered = true);
+                    foreach (var unlock in Unlocks) {
+                        if (unlock.Name.Contains(entry.Trim(), StringComparison.OrdinalIgnoreCase)) {
+                            unlock.Discovered = true;
+                            break;
+                        } else {
+                            Plugin.Instance.Mls.LogWarning($"Couldn't match whitelist entry! Is this a valid moon name: {entry} ?");
+                        }
+                    }
                 }
             }
         }
