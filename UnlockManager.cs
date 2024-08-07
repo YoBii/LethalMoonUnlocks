@@ -533,16 +533,27 @@ namespace LethalMoonUnlocks {
                 DiscoveredPaidCount = ConfigManager.DiscoveryPaidCountBase;
                 Plugin.Instance.Mls.LogInfo($"DiscoveredPaidCount (Config value = {ConfigManager.DiscoveryPaidCountBase}, Corrected = {DiscoveredPaidCount})");
             }
-            if (DiscoveredFreeCount + DiscoveredDynamicFreeCount == 0) {
-                Plugin.Instance.Mls.LogWarning($"Moon base selection would have included 0 free moons! Forcing Dynamic Free Moons Count to 1!");
-                DiscoveredDynamicFreeCount = 1;
-            }
             
             // select new rotation
             ApplyDiscoveryWhitelist();
             AddFreeToRotation(DiscoveredFreeCount);
             AddDynamicFreeToRotation(DiscoveredDynamicFreeCount);
             AddPaidToRotation(DiscoveredPaidCount);
+            
+            // Make sure there's at least one moon discovered
+            if (Unlocks.All(unlock => !unlock.Discovered)) {
+                Plugin.Instance.Mls.LogWarning("All moons would have been hidden from the terminal! Force discovering another free moon..");
+                var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.RoutePrice == 0).FirstOrDefault();
+                if (unlock == null) {
+                    unlock = Unlocks.Where(unlock => unlock.Name == "Experimentation").FirstOrDefault();
+                }
+                if (unlock == null) {
+                    Plugin.Instance.Mls.LogError("Can't find any moon to display in moon catalogue. Please check your config. If this persists report it on GitHub or Discord with your config and log!");
+                    return;
+                } else {
+                    unlock.Discovered = true;
+                }
+            }
             
             if (DayCount > 0) {
                 HUDManager.Instance.AddTextToChatOnServer("Moon catalogue updated!");
