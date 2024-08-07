@@ -541,26 +541,29 @@ namespace LethalMoonUnlocks {
             AddPaidToRotation(DiscoveredPaidCount);
 
             // Make sure there's at least one moon discovered
-            if (Unlocks.All(unlock => !unlock.Discovered)) {
-                Plugin.Instance.Mls.LogWarning("All moons would have been hidden from the terminal! Force discovering another free moon..");
+            bool oneMoonDiscovered = Unlocks.Any(unlock => unlock.Discovered);
+            if (oneMoonDiscovered) {
+                    RerouteShipToFreeMoon();
+            } else {
+                Plugin.Instance.Mls.LogWarning("All moons would have been hidden from the terminal! Force discovering a free moon..");
                 var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.RoutePrice == 0).FirstOrDefault();
                 if (unlock == null) {
-                    unlock = Unlocks.Where(unlock => unlock.Name == "Experimentation").FirstOrDefault();
+                    Plugin.Instance.Mls.LogWarning("Can't find any free moon to display in moon catalogue! You probably want at least one free moon available at all times.. Falling back to a paid moon!");
                 }
+                unlock = Unlocks.FirstOrDefault();
                 if (unlock == null) {
-                    Plugin.Instance.Mls.LogError("Can't find any moon to display in moon catalogue. Please check your config. If this persists report it on GitHub or Discord with your config and log!");
+                    Plugin.Instance.Mls.LogError("Can't find any moon! No moons initialized. Please check your configs (LMU + LLL). If this persists report it on GitHub or Discord.");
                     return;
-                } else {
+                }
+                if (unlock != null) {
                     unlock.Discovered = true;
                 }
             }
-            
             if (DayCount > 0) {
                 HUDManager.Instance.AddTextToChatOnServer("Moon catalogue updated!");
                 NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Moon catalogue updated!", Text = $"New moons available. Use the computer terminal to route the ship.", Key = "LMU_Shuffle" });
             }
             Plugin.Instance.Mls.LogInfo($"After shuffling check if we have to reroute to a discovered free moon..");
-            RerouteShipToFreeMoon();
         }
 
         private void RerouteShipToFreeMoon() {
@@ -568,6 +571,10 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Current moon is discovered. Not rerouting ship.");
             } else {
                 var currentDiscoveredFreeMoons = DynamicFreeMoons.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered)).ToList();
+                if (currentDiscoveredFreeMoons.Count < 1) {
+                    Plugin.Instance.Mls.LogWarning("Can't find any free and discovered moon! You probably want at least one free moon available at all times.. Abort auto routing ship!");
+                    return;
+                }
                 var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[UnityEngine.Random.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
                 Plugin.Instance.Mls.LogInfo($"Current moon is not discovered! Rerouting ship to {randomDiscoveredFreeMoon.NumberlessPlanetName}..");
                 if (DayCount > 0) {
@@ -605,14 +612,15 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.DiscoveryMode && ConfigManager.DiscoveryWhitelistMoons.Count > 0) {
                 Plugin.Instance.Mls.LogInfo($"Whitelist: {string.Join(", ", ConfigManager.DiscoveryWhitelistMoons)}");
                 foreach (var entry in ConfigManager.DiscoveryWhitelistMoons) {
+                    bool matched = false;
                     foreach (var unlock in Unlocks) {
                         if (unlock.Name.Contains(entry.Trim(), StringComparison.OrdinalIgnoreCase)) {
+                            matched = true;
                             unlock.Discovered = true;
                             break;
-                        } else {
-                            Plugin.Instance.Mls.LogWarning($"Couldn't match whitelist entry! Is this a valid moon name: {entry} ?");
                         }
                     }
+                    if (!matched) Plugin.Instance.Mls.LogWarning($"Couldn't match whitelist entry! Is this a valid moon name: {entry} ?");
                 }
             }
         }
