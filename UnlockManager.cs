@@ -112,7 +112,7 @@ namespace LethalMoonUnlocks {
 
             // Apply everything
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-            DelayHelper.Instance.ExecuteAfterDelay(() => { DelayHelper.Instance.StartCoroutine(NotificationHelper.SendQueuedNotifications()); }, 2);
+            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 2);
         }
 
 
@@ -167,7 +167,7 @@ namespace LethalMoonUnlocks {
             // APPLY ALL
             LogUnlockables(false);
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-            DelayHelper.Instance.ExecuteAfterDelay(() => { DelayHelper.Instance.StartCoroutine(NotificationHelper.SendQueuedNotifications()); }, 5);
+            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 5);
         }
 
         private void QuotaDiscovery() {
@@ -191,7 +191,7 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.ChatMessages) {
                 HUDManager.Instance.AddTextToChatOnServer($"{(quotaDiscoveries.Count > 1 ? "Moons" : "Moon")} discovered:\n <color=white>{(quotaDiscoveries.Count > 1 ? string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name)) :  quotaDiscoveries.FirstOrDefault().Name)}</color>");
             }
-            NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received new coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received new coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery" });
             Plugin.Instance.Mls.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
         }
 
@@ -220,7 +220,7 @@ namespace LethalMoonUnlocks {
                     HUDManager.Instance.AddTextToChatOnServer($"New moon unlocked:\n <color=green>{quotaUnlocks.FirstOrDefault().Name}</color>");
                 }
             }
-            NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"{quotaUnlocks.Count.SinglePluralWord("Unlock")} granted!", Text = $"You earned unlocks for:\n{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaUnlock" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaUnlocks.Count.SinglePluralWord("Unlock")} granted!", Text = $"You earned unlocks for:\n{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaUnlock" });
             Plugin.Instance.Mls.LogInfo($"New Quota Unlocks: {string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}");
         }
 
@@ -242,7 +242,7 @@ namespace LethalMoonUnlocks {
                 if (quotaDiscounts.Count == 1) HUDManager.Instance.AddTextToChatOnServer($"Discount granted:\n <color=green>{quotaDiscounts.FirstOrDefault().Name}</color>");
                 else if (quotaDiscounts.Count > 1) HUDManager.Instance.AddTextToChatOnServer($"Discounts granted:\n <color=green>{string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}</color>");
             }
-            NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"{quotaDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned discounts for:\n{string.Join(", ", quotaDiscounts.Select(discount => discount.Name + " " + (100 - (int)(Plugin.GetDiscountRate(discount.BuyCount) * 100)) + "%"))}", Key = "LMU_NewQuotaDiscount" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned discounts for:\n{string.Join(", ", quotaDiscounts.Select(discount => discount.Name + " " + (100 - (int)(Plugin.GetDiscountRate(discount.BuyCount) * 100)) + "%"))}", Key = "LMU_NewQuotaDiscount" });
             Plugin.Instance.Mls.LogInfo($"New Quota Discounts: {string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}");
         }
 
@@ -271,7 +271,7 @@ namespace LethalMoonUnlocks {
                 if (quotaFullDiscounts.Count == 1) HUDManager.Instance.AddTextToChatOnServer($"Full discount granted:\n <color=green>{quotaFullDiscounts.FirstOrDefault().Name}</color>");
                 else if (quotaFullDiscounts.Count > 1) HUDManager.Instance.AddTextToChatOnServer($"Full discounts granted:\n <color=green>{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}</color>");
             }
-            NotificationHelper.AddNotificationToQueue(new Notification() { Header = $" Full {quotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned full discounts for:\n{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaFullDiscount" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $" Full {quotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned full discounts for:\n{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaFullDiscount" });
             Plugin.Instance.Mls.LogInfo($"New Quota Full Discounts: {string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}");
         }
 
@@ -292,7 +292,7 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogInfo($"Rerouting ship to company!");
                     // wait a bit or the level change fails
                     DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(company.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
-                    NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
                 } else {
                     Plugin.Instance.Mls.LogInfo($"Already at company. No need to reroute.");
                 }
@@ -323,7 +323,7 @@ namespace LethalMoonUnlocks {
             }
             LogUnlockables(false);
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-            DelayHelper.Instance.ExecuteAfterDelay(() => { DelayHelper.Instance.StartCoroutine(NotificationHelper.SendQueuedNotifications()); }, 3);
+            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 3);
         }
 
         private void NewDayDiscovery() {
@@ -362,7 +362,7 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogInfo($"New Day Discovery: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
                 }
             }
-            NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"New Day {newDayDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {newDayDiscoveries.Count.SinglePluralWord("moon")} suitable for landing {ndDiscoveryGroupName}.\n" +
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New Day {newDayDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {newDayDiscoveries.Count.SinglePluralWord("moon")} suitable for landing {ndDiscoveryGroupName}.\n" +
                 $"Moon catalogue updated!", Key = "LMU_NewDayDiscovery" });
             Plugin.Instance.Mls.LogInfo($"New Day Discoveries: {string.Join(", ", newDayDiscoveries.Select(unlock => unlock.Name))}");
 
@@ -427,7 +427,7 @@ namespace LethalMoonUnlocks {
                 }
             }
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-            DelayHelper.Instance.ExecuteAfterDelay(() => { DelayHelper.Instance.StartCoroutine(NotificationHelper.SendQueuedNotifications()); }, 2);
+            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 2);
         }
 
         private void TravelDiscovery(LMUnlockable unlock) {
@@ -468,7 +468,7 @@ namespace LethalMoonUnlocks {
                     HUDManager.Instance.AddTextToChatOnServer($"Discovered new moon on route{tdMessageGroupName}:\n <color=white>{travelDiscoveries.FirstOrDefault().Name}</color>");
                     Plugin.Instance.Mls.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
                 }
-                NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
                     $"Moon catalogue updated!", Key = "LMU_TravelDiscovery" });
                 Plugin.Instance.Mls.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
             }
@@ -539,7 +539,7 @@ namespace LethalMoonUnlocks {
             AddFreeToRotation(DiscoveredFreeCount);
             AddDynamicFreeToRotation(DiscoveredDynamicFreeCount);
             AddPaidToRotation(DiscoveredPaidCount);
-            
+
             // Make sure there's at least one moon discovered
             if (Unlocks.All(unlock => !unlock.Discovered)) {
                 Plugin.Instance.Mls.LogWarning("All moons would have been hidden from the terminal! Force discovering another free moon..");
@@ -557,7 +557,7 @@ namespace LethalMoonUnlocks {
             
             if (DayCount > 0) {
                 HUDManager.Instance.AddTextToChatOnServer("Moon catalogue updated!");
-                NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"Moon catalogue updated!", Text = $"New moons available. Use the computer terminal to route the ship.", Key = "LMU_Shuffle" });
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Moon catalogue updated!", Text = $"New moons available. Use the computer terminal to route the ship.", Key = "LMU_Shuffle" });
             }
             Plugin.Instance.Mls.LogInfo($"After shuffling check if we have to reroute to a discovered free moon..");
             RerouteShipToFreeMoon();
@@ -571,7 +571,7 @@ namespace LethalMoonUnlocks {
                 var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[UnityEngine.Random.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
                 Plugin.Instance.Mls.LogInfo($"Current moon is not discovered! Rerouting ship to {randomDiscoveredFreeMoon.NumberlessPlanetName}..");
                 if (DayCount > 0) {
-                    NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing the ship to a safe moon..", Key = "LMU_RerouteFree" });
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing the ship to a safe moon..", Key = "LMU_RerouteFree" });
                 }
                 DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(randomDiscoveredFreeMoon.SelectableLevel.levelID, Terminal.groupCredits); }, 3.5f);
             }
