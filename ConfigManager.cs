@@ -261,8 +261,8 @@ namespace LethalMoonUnlocks {
                 "Discount rates are separated by commas and can contain any number of rates");
             Plugin.Instance.Mls.LogInfo($"Discount rates (% off): {string.Join(", ", Discounts.Select(discount => discount + "%"))}");
             DiscountsResetAfterVisits = GetConfigValue("3 - Discount Mode", "Discounts expire", 0, "Discounts will expire after a set number of free routes, after which they will return to their original price.\n" +
-                "Set to 0 to disable this feature." +
-                "NOTE: The final discount rate must be set to '100' to use this setting!");
+                "Set to 0 to disable this feature.\n" +
+                "NOTE: The final discount rate must be set to '100' for this to work!");
             DiscoveryKeepDiscounts = GetConfigValue("3 - Discount Mode", "Discounted moons are permanently discovered", false, "Discovery Mode only: Every discounted moon is also permanently discovered i.e. added to the moon catalogue on top of your base selection.");
             DiscountsResetAfterVisitsPermDiscovery = GetConfigValue("3 - Discount Mode", "Reset permanent discoveries on discount expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its discount expires.\n" +
                 "This is the only way permanent discoveries can vanish during a run in Discount Mode.\n");
