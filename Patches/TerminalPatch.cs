@@ -18,6 +18,7 @@ namespace LethalMoonUnlocks.Patches {
             if (NetworkManager.Instance.IsServer()) {
                 UnlockManager.Instance.OnLobbyStart();
             } else {
+                ConfigManager.RefreshConfig();
                 UnlockManager.Instance.InitializeUnlocks();
                 NetworkManager.Instance.ClientRequestSync();
             }
