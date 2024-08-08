@@ -357,16 +357,18 @@ namespace LethalMoonUnlocks {
         private void NewDayDiscovery() {
             Plugin.Instance.Mls.LogInfo($"New Day Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
 
-            var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel == LevelManager.CurrentExtendedLevel).FirstOrDefault();
+            var currentLevelUnlock = Unlocks.Where(unlock => unlock.ExtendedLevel == LevelManager.CurrentExtendedLevel).FirstOrDefault();
             List<LMUnlockable> newDayDiscoveries;
             List<LMUnlockable> nddCandidates = DiscoveryCandidates;
             string ndDiscoveryGroupName = "nearby";
-            if (ConfigManager.NewDayDiscoveryMatchGroup && unlock != null) {
-                LMGroup moonGroup = MatchMoonGroup(unlock, DiscoveryCandidates);
-                if (moonGroup.Members != null && moonGroup.Members.Count > 0) {
+            if (ConfigManager.NewDayDiscoveryMatchGroup && currentLevelUnlock != null) {
+                LMGroup moonGroup = MatchMoonGroup(currentLevelUnlock, DiscoveryCandidates);
                     nddCandidates = moonGroup.Members;
                     if (!string.IsNullOrEmpty(moonGroup.Name)) ndDiscoveryGroupName = $"in <color=red>{moonGroup.Name}</color>";
                 }
+            if (nddCandidates.Count < 1) {
+                Plugin.Instance.Mls.LogInfo($"No discoverable moons found!");
+                return;
             }
             if (ConfigManager.CheapMoonBias > 0f && ConfigManager.CheapMoonBiasNewDayDiscovery) {
                 newDayDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(nddCandidates), ConfigManager.NewDayDiscoveryCount);
@@ -390,7 +392,7 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogInfo($"New Day Discovery: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
                 }
             }
-            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New Day {newDayDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {newDayDiscoveries.Count.SinglePluralWord("moon")} suitable for landing {ndDiscoveryGroupName}.\n" +
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New Day {newDayDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {newDayDiscoveries.Count.SinglePluralWord("moon")} {ndDiscoveryGroupName}.\n" +
                 $"Moon catalogue updated!", Key = "LMU_NewDayDiscovery" });
             Plugin.Instance.Mls.LogInfo($"New Day Discoveries: {string.Join(", ", newDayDiscoveries.Select(unlock => unlock.Name))}");
 
@@ -463,6 +465,7 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
                 Plugin.Instance.Mls.LogInfo($"Travel Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
                 List<LMUnlockable> tdCandidates = DiscoveryCandidates;
+            List<LMUnlockable> travelDiscoveries;
                 
                 string tdMessageGroupName = string.Empty;
                 if (ConfigManager.TravelDiscoveryMatchGroup) {
@@ -472,6 +475,9 @@ namespace LethalMoonUnlocks {
                         tdCandidates = moonGroup.Members;
                         if (!string.IsNullOrEmpty(moonGroup.Name)) tdMessageGroupName = $" to <color=red>{moonGroup.Name}</color>";
                     }
+            if (tdCandidates.Count < 1) {
+                Plugin.Instance.Mls.LogInfo($"No discoverable moons found!");
+                return;
                 }
 
                 List<LMUnlockable> travelDiscoveries;
@@ -731,6 +737,9 @@ namespace LethalMoonUnlocks {
                     return new LMGroup();
             }    
             Plugin.Instance.Mls.LogInfo($"No matching moons found!");
+            if (ConfigManager.MoonGroupMatchingFallback) {
+                return new LMGroup() { Members = unlocksToMatch};
+            } else {
             return new LMGroup();
         }
         private string ReplaceTerminalPreview(ExtendedLevel extendedLevel, PreviewInfoType infoType) {

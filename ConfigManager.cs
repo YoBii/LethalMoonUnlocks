@@ -157,6 +157,7 @@ namespace LethalMoonUnlocks {
         public static bool CheapMoonBiasTravelDiscovery { get; private set; }
         public static string MoonGroupMatchingMethod { get; private set; }
         public static int MoonGroupMatchingPriceRange { get; private set; }
+        public static bool MoonGroupMatchingFallback{ get; private set; }
         private static string MoonGroupMatchingCustom {  get; set; }
         public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict {  get; private set; }
         private static bool MoonGroupMatchingCustomHelper { get; set; }
@@ -379,6 +380,8 @@ namespace LethalMoonUnlocks {
                 Array.Empty<object>())).Value;
             MoonGroupMatchingPriceRange = GetConfigValue("6.2 - Moon Group Matching", "Price range", 200, "The price range used for matching moons via 'PriceRange' and 'PriceRangeUpper' methods.\n" +
                 "It will match all moons priced within the original price +- this value (+ this value for upper range).");
+            MoonGroupMatchingFallback = GetConfigValue("6.2 - Moon Group Matching", "Fallback on no matches", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+                "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
             MoonGroupMatchingCustom = GetConfigValue("6.2 - Moon Group Matching", "Custom moon groups", "", "Define your own custom moon groups.\n" +
                 "Expected Format: Separate moon groups by \"|\" and moons by \",\".\n" +
                 "Example: 'Group name 1: Experimentation, Assurance, Vow | Group name 2: Offense, March, Adamance'\n" +
