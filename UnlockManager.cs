@@ -172,6 +172,9 @@ namespace LethalMoonUnlocks {
 
         private void QuotaDiscovery() {
             var quotaDiscoveries = DiscoveryCandidates;
+            if (ConfigManager.QuotaDiscoveryCheapestGroup && ConfigManager.MoonGroupMatchingMethod == "Custom") {
+                quotaDiscoveries = QuotaDiscoveryGroup(quotaDiscoveries);
+            }
             if (ConfigManager.CheapMoonBias > 0f && ConfigManager.CheapMoonBiasQuotaDiscovery) {
                 quotaDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaDiscoveries), ConfigManager.QuotaDiscoveryCount);
             } else {
@@ -189,10 +192,35 @@ namespace LethalMoonUnlocks {
                 }
             }
             if (ConfigManager.ChatMessages) {
-                HUDManager.Instance.AddTextToChatOnServer($"{(quotaDiscoveries.Count > 1 ? "Moons" : "Moon")} discovered:\n <color=white>{(quotaDiscoveries.Count > 1 ? string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name)) :  quotaDiscoveries.FirstOrDefault().Name)}</color>");
+                HUDManager.Instance.AddTextToChatOnServer($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n <color=white>{(quotaDiscoveries.Count > 1 ? string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name)) :  quotaDiscoveries.FirstOrDefault().Name)}</color>");
             }
-            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received new coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery" });
             Plugin.Instance.Mls.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
+        }
+
+        private List<LMUnlockable> QuotaDiscoveryGroup(List<LMUnlockable> candidates) {
+            List<LMUnlockable> discoveryGroup = new List<LMUnlockable>();
+            foreach (var candidate in candidates.OrderBy(c => c.OriginalPrice)) {
+                Plugin.Instance.Mls.LogInfo($"Got cheapest candidate: {candidate.Name}");
+                Plugin.Instance.Mls.LogInfo($"Checking for groups..");
+                Dictionary<string, List<string>> groups = candidate.GetMatchingCustomGroups();
+                List<string> groupNames = groups.Keys.ToList();
+                if (groupNames.Count > 0) {
+                    string randomGroupName = groupNames[UnityEngine.Random.Range(0, groupNames.Count)];
+                    var randomGroup = groups[randomGroupName];
+                    foreach (var member in randomGroup) {
+                        var unlock = Unlocks.Where(unlock => unlock.Name == member).FirstOrDefault();
+                        if (unlock != null && !unlock.OriginallyHidden && !unlock.OriginallyLocked && (!unlock.Discovered || !unlock.PermanentlyDiscovered)) {
+                            discoveryGroup.Add(unlock);
+                        }
+                    }
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nAccess granted to: <color=red>{randomGroupName}</color>", Key = "LMU_NewQuotaDiscovery" });
+                    break;  
+                } else {
+                    Plugin.Instance.Mls.LogInfo("Candidate has no group matches. Try next..");
+                }
+            }
+            return discoveryGroup;
         }
 
         private void QuotaUnlock() {
