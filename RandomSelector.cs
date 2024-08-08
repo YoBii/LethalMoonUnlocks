@@ -50,6 +50,7 @@ namespace LethalMoonUnlocks {
 
         public static Dictionary<LMUnlockable, int> CalculateBiasedWeights(List<LMUnlockable> unlocks) {
             var weights = new Dictionary<LMUnlockable, int>();
+            if (unlocks.Count < 1) {  return weights; }
             var sumAllPrices = unlocks.Sum(unlock => unlock.OriginalPrice);
             foreach (var unlock in unlocks) {
                 int price = Math.Clamp(unlock.OriginalPrice, 1, int.MaxValue);

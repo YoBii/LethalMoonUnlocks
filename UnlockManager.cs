@@ -4,7 +4,9 @@ using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace LethalMoonUnlocks {
     internal class UnlockManager {
@@ -363,9 +365,9 @@ namespace LethalMoonUnlocks {
             string ndDiscoveryGroupName = "nearby";
             if (ConfigManager.NewDayDiscoveryMatchGroup && currentLevelUnlock != null) {
                 LMGroup moonGroup = MatchMoonGroup(currentLevelUnlock, DiscoveryCandidates);
-                    nddCandidates = moonGroup.Members;
-                    if (!string.IsNullOrEmpty(moonGroup.Name)) ndDiscoveryGroupName = $"in <color=red>{moonGroup.Name}</color>";
-                }
+                nddCandidates = moonGroup.Members;
+                if (!string.IsNullOrEmpty(moonGroup.Name)) ndDiscoveryGroupName = $"in <color=red>{moonGroup.Name}</color>";
+            }
             if (nddCandidates.Count < 1) {
                 Plugin.Instance.Mls.LogInfo($"No discoverable moons found!");
                 return;
@@ -453,7 +455,10 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.DiscoveryMode) {
                 // TRAVEL DISCOVERY
                 if (ConfigManager.TravelDiscoveries && DiscoveryCandidates.Count > 0) {
-                    TravelDiscovery(unlock);
+                    if (UnityEngine.Random.Range(0, 100) < ConfigManager.TravelDiscoveryChance) {
+                        Plugin.Instance.Mls.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
+                        TravelDiscovery(unlock);
+                    }
                 }
             }
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
@@ -461,51 +466,44 @@ namespace LethalMoonUnlocks {
         }
 
         private void TravelDiscovery(LMUnlockable unlock) {
-            if (UnityEngine.Random.Range(0, 100) < ConfigManager.TravelDiscoveryChance) {
-                Plugin.Instance.Mls.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
-                Plugin.Instance.Mls.LogInfo($"Travel Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
-                List<LMUnlockable> tdCandidates = DiscoveryCandidates;
+            Plugin.Instance.Mls.LogInfo($"Travel Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
+            List<LMUnlockable> tdCandidates = DiscoveryCandidates;
             List<LMUnlockable> travelDiscoveries;
                 
-                string tdMessageGroupName = string.Empty;
-                if (ConfigManager.TravelDiscoveryMatchGroup) {
-                    LMGroup moonGroup = MatchMoonGroup(unlock, DiscoveryCandidates);
-                    if (moonGroup.Members != null && moonGroup.Members.Count > 0) {
-                        Plugin.Instance.Mls.LogDebug($"Group name: {moonGroup.Name}");
-                        tdCandidates = moonGroup.Members;
-                        if (!string.IsNullOrEmpty(moonGroup.Name)) tdMessageGroupName = $" to <color=red>{moonGroup.Name}</color>";
-                    }
+            string tdMessageGroupName = string.Empty;
+            if (ConfigManager.TravelDiscoveryMatchGroup) {
+                LMGroup moonGroup = MatchMoonGroup(unlock, DiscoveryCandidates);
+                tdCandidates = moonGroup.Members;
+                if (!string.IsNullOrEmpty(moonGroup.Name)) tdMessageGroupName = $" to <color=red>{moonGroup.Name}</color>";
+            }
             if (tdCandidates.Count < 1) {
                 Plugin.Instance.Mls.LogInfo($"No discoverable moons found!");
                 return;
-                }
-
-                List<LMUnlockable> travelDiscoveries;
-                if (ConfigManager.CheapMoonBias > 0f && ConfigManager.CheapMoonBiasTravelDiscovery) {
-                    travelDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(tdCandidates), ConfigManager.TravelDiscoveryCount);
-                } else {
-                    travelDiscoveries = RandomSelector.Get(tdCandidates, ConfigManager.TravelDiscoveryCount);
-                }
-
-                foreach (var d in travelDiscoveries) {
-                    d.Discovered = true;
-                    if (ConfigManager.TravelDiscoveryPermanent) {
-                        d.PermanentlyDiscovered = true;
-                        Plugin.Instance.Mls.LogDebug($"{d.Name}: Discovery is permanent");
-                    }
-                }
-
-                if (travelDiscoveries.Count > 1) {
-                    HUDManager.Instance.AddTextToChatOnServer($"Discovered new moons on route{tdMessageGroupName}:\n <color=white>{string.Join(", ", travelDiscoveries.Select(td => td.Name))}</color>");
-                    Plugin.Instance.Mls.LogInfo($"Travel Discoveries: [ {string.Join(", ", travelDiscoveries)} ]");
-                } else if (travelDiscoveries.Count == 1) {
-                    HUDManager.Instance.AddTextToChatOnServer($"Discovered new moon on route{tdMessageGroupName}:\n <color=white>{travelDiscoveries.FirstOrDefault().Name}</color>");
-                    Plugin.Instance.Mls.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
-                }
-                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
-                    $"Moon catalogue updated!", Key = "LMU_TravelDiscovery" });
-                Plugin.Instance.Mls.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
             }
+            if (ConfigManager.CheapMoonBias > 0f && ConfigManager.CheapMoonBiasTravelDiscovery) {
+                travelDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(tdCandidates), ConfigManager.TravelDiscoveryCount);
+            } else {
+                travelDiscoveries = RandomSelector.Get(tdCandidates, ConfigManager.TravelDiscoveryCount);
+            }
+
+            foreach (var d in travelDiscoveries) {
+                d.Discovered = true;
+                if (ConfigManager.TravelDiscoveryPermanent) {
+                    d.PermanentlyDiscovered = true;
+                    Plugin.Instance.Mls.LogDebug($"{d.Name}: Discovery is permanent");
+                }
+            }
+
+            if (travelDiscoveries.Count > 1) {
+                HUDManager.Instance.AddTextToChatOnServer($"Discovered new moons on route{tdMessageGroupName}:\n <color=white>{string.Join(", ", travelDiscoveries.Select(td => td.Name))}</color>");
+                Plugin.Instance.Mls.LogInfo($"Travel Discoveries: [ {string.Join(", ", travelDiscoveries)} ]");
+            } else if (travelDiscoveries.Count == 1) {
+                HUDManager.Instance.AddTextToChatOnServer($"Discovered new moon on route{tdMessageGroupName}:\n <color=white>{travelDiscoveries.FirstOrDefault().Name}</color>");
+                Plugin.Instance.Mls.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
+            }
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
+                $"Moon catalogue updated!", Key = "LMU_TravelDiscovery" });
+            Plugin.Instance.Mls.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
         }
 
         internal void InitializeUnlocks() {
@@ -538,7 +536,7 @@ namespace LethalMoonUnlocks {
 
         private void ShuffleDiscoverable() {
             // Reset rotation
-            foreach (var candidate in Unlocks.Where(unlock => unlock.OriginallyHidden == false && unlock.OriginallyLocked == false)) {
+            foreach (var candidate in Unlocks.Where(unlock => unlock.OriginallyHidden == false && unlock.OriginallyLocked == false && !unlock.PermanentlyDiscovered)) {
                 if (candidate.NewDiscovery) candidate.NewDiscovery = false;
                 candidate.Discovered = false;
             }
@@ -619,26 +617,31 @@ namespace LethalMoonUnlocks {
         }
 
         private void AddFreeToRotation(int amount) {
-            foreach (var candidate in RandomSelector.Get(DiscoveryFreeCandidates, amount)) {
+            var freeMoons = RandomSelector.Get(DiscoveryFreeCandidates, amount);
+            Plugin.Instance.Mls.LogInfo($"New free rotation: [ {string.Join(", ", freeMoons.Select(moon => moon.Name))} ]");
+            foreach (var candidate in freeMoons) {
                 candidate.Discovered = true;
             }
         }
 
         private void AddDynamicFreeToRotation(int amount) {
-            foreach (var candidate in RandomSelector.Get(DiscoveryDynamicFreeCandidates, amount)) {
+            var dynamicFreeMoons = RandomSelector.Get(DiscoveryDynamicFreeCandidates, amount);
+            Plugin.Instance.Mls.LogInfo($"New dynamic free rotation: [ {string.Join(", ", dynamicFreeMoons.Select(moon => moon.Name))} ]");
+            foreach (var candidate in dynamicFreeMoons) {
                 candidate.Discovered = true;
             }
         }
         
         private void AddPaidToRotation(int amount) {
-            List<LMUnlockable> candidates = new List<LMUnlockable>();
+            List<LMUnlockable> paidMoons = new List<LMUnlockable>();
             if (ConfigManager.CheapMoonBias > 0f && ConfigManager.CheapMoonBiasPaidRotation) {
-                candidates.AddRange(RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(DiscoveryPaidCandidates),amount));
+                paidMoons.AddRange(RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(DiscoveryPaidCandidates),amount));
             }
             else {
-                candidates.AddRange(RandomSelector.Get(DiscoveryPaidCandidates, amount));
+                paidMoons.AddRange(RandomSelector.Get(DiscoveryPaidCandidates, amount));
             }
-            foreach (var candidate in candidates) {
+            Plugin.Instance.Mls.LogInfo($"New paid rotation: [ {string.Join(", ", paidMoons.Select(moon => moon.Name))} ]");
+            foreach (var candidate in paidMoons) {
                 candidate.Discovered = true;
             }
         }
@@ -659,7 +662,7 @@ namespace LethalMoonUnlocks {
             }
         }
         private LMGroup MatchMoonGroup(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch) {
-            Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matching against = [ {string.Join(", ", unlocksToMatch.Select(unlock => unlock.Name))} ]");
+            Plugin.Instance.Mls.LogDebug($"Matching moon {matchingUnlock.Name}: Matching against = [ {string.Join(", ", unlocksToMatch.Select(unlock => unlock.Name))} ]");
             if (matchingUnlock == null) return new LMGroup() { Members = unlocksToMatch };
             switch (ConfigManager.MoonGroupMatchingMethod) {
                 case "Price":
@@ -672,8 +675,9 @@ namespace LethalMoonUnlocks {
                     if (priceMatches.Count > 0) {
                         Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price = [ {string.Join(", ", priceMatches.Select(unlock => unlock.Name))} ]");
                         return new LMGroup() { Members = priceMatches };
+                    } else {
+                        break;
                     }
-                    break;
                 case "PriceRange":
                     List<LMUnlockable> pricerangeMatches = new List<LMUnlockable>();
                     foreach (var unlock in unlocksToMatch) {
@@ -684,8 +688,9 @@ namespace LethalMoonUnlocks {
                     if (pricerangeMatches.Count > 0) {
                         Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price range = [ {string.Join(", ", pricerangeMatches.Select(unlock => unlock.Name))} ]");
                         return new LMGroup() { Members = pricerangeMatches };
+                    } else {
+                        break;
                     }
-                    break;
                 case "PriceRangeUpper":
                     List<LMUnlockable> pricerangeUpperMatches = new List<LMUnlockable>();
                     foreach (var unlock in unlocksToMatch) {
@@ -696,8 +701,9 @@ namespace LethalMoonUnlocks {
                     if (pricerangeUpperMatches.Count > 0) {
                         Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price range = [ {string.Join(", ", pricerangeUpperMatches.Select(unlock => unlock.Name))} ]");
                         return new LMGroup() { Members = pricerangeUpperMatches };
+                    } else {
+                        break;
                     }
-                    break;
                 case "Tag":
                     List<LMUnlockable> tagMatches = new List<LMUnlockable>();
                     List<ContentTag> matchingTags = matchingUnlock.ExtendedLevel.ContentTags;
@@ -709,8 +715,9 @@ namespace LethalMoonUnlocks {
                     if (tagMatches.Count > 0) {
                         Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by LLL tags = [ {string.Join(", ", tagMatches.Select(unlock => unlock.Name))} ]");
                         return new LMGroup() { Members = tagMatches };
+                    } else {
+                        break;
                     }
-                    break;
                 case "Custom":
                     Dictionary<string, List<string>> matchingCustomGroups = matchingUnlock.GetMatchingCustomGroups();
                     if (matchingCustomGroups == null || matchingCustomGroups.Count == 0)
@@ -728,19 +735,21 @@ namespace LethalMoonUnlocks {
                         }
                     }
                     if (groupMatches.Count > 0) {
-                        Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by custom groups = [ {string.Join(", ", groupMatches.Select(unlock => unlock.Name))} ]");
+                        Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by custom group [{randomCustomGroupName}]; Matches = [ {string.Join(", ", groupMatches.Select(unlock => unlock.Name))} ]");
                         return new LMGroup() { Name = randomCustomGroupName, Members = groupMatches };
+                    } else {
+                        break;
                     }
-                    break;
                 default:
                     Plugin.Instance.Mls.LogError($"Missing moon group matching method!");
-                    return new LMGroup();
+                    break;
             }    
             Plugin.Instance.Mls.LogInfo($"No matching moons found!");
             if (ConfigManager.MoonGroupMatchingFallback) {
                 return new LMGroup() { Members = unlocksToMatch};
             } else {
-            return new LMGroup();
+                return new LMGroup();
+            }
         }
         private string ReplaceTerminalPreview(ExtendedLevel extendedLevel, PreviewInfoType infoType) {
             var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel == extendedLevel).FirstOrDefault();
