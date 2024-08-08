@@ -17,7 +17,10 @@ namespace LethalMoonUnlocks.Util {
         }
 
         internal static IEnumerator SendQueuedNotifications() {
-            if (IsSending) yield break;
+            if (IsSending) {
+                Plugin.Instance.Mls.LogDebug("Trying to start queue but it's already sending..");
+                yield break;
+            }
             if (!ConfigManager.ShowAlerts) Queue.Clear();
             while (Queue.Count > 0) {
                 IsSending = true;
@@ -26,7 +29,6 @@ namespace LethalMoonUnlocks.Util {
                 HUDManager.Instance.DisplayTip(notification.Header, notification.Text, notification.IsWarning, notification.UseSave, notification.Key);
                 Queue.Remove(notification);
                 yield return new WaitForSeconds(8f);
-                //yield return HUDManager.Instance.displayTipTextTimer();
             }
             IsSending = false;
         }

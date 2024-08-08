@@ -173,11 +173,11 @@ namespace LethalMoonUnlocks {
                     if (FreeVisitCount > ConfigManager.UnlocksResetAfterVisits) {
                         Plugin.Instance.Mls.LogInfo($"{Name}: Reset unlock due to free visit count ({FreeVisitCount - 1}) reached.");
                         HUDManager.Instance.AddTextToChatOnServer($"Unlock expired:\n <color=red>{Name}</color>");
-                        NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"Unlock expired!", Text = $"Your unlock for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_UnlockExpired" });
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Unlock expired!", Text = $"Your unlock for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_UnlockExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;
                     } else if (FreeVisitCount > 1) {
-                        NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"Unlock: {Name}", Text = $"Unlock used! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_UnlockUsed" });
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Unlock: {Name}", Text = $"Unlock used! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_UnlockUsed" });
                     }
                     if (ConfigManager.UnlocksResetAfterVisitsPermDiscovery) {
                         PermanentlyDiscovered = false;
@@ -188,11 +188,11 @@ namespace LethalMoonUnlocks {
                     if (FreeVisitCount > ConfigManager.DiscountsResetAfterVisits) {
                         Plugin.Instance.Mls.LogInfo($"{Name}: Reset discount due to free visit count ({FreeVisitCount - 1}) reached.");
                         HUDManager.Instance.AddTextToChatOnServer($"Discount expired:\n <color=red>{Name}</color>");
-                        NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"Discount expired!", Text = $"Your discount for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_DiscountExpired" });
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Discount expired!", Text = $"Your discount for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_DiscountExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;
                     } else if (FreeVisitCount > 1) {
-                        NotificationHelper.AddNotificationToQueue(new Notification() { Header = $"Discount: {Name}", Text = $"Discount redeemed! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_DiscountUsed" });
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Discount: {Name}", Text = $"Discount redeemed! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_DiscountUsed" });
                     }
                     if (ConfigManager.DiscountsResetAfterVisitsPermDiscovery) {
                         PermanentlyDiscovered = false;
@@ -200,7 +200,7 @@ namespace LethalMoonUnlocks {
                     }
                 }
             }
-            DelayHelper.Instance.ExecuteAfterDelay(() => { DelayHelper.Instance.StartCoroutine(NotificationHelper.SendQueuedNotifications());}, 1);
+            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 1);
         }
 
         public void Land() {

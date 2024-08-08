@@ -111,6 +111,7 @@ namespace LethalMoonUnlocks {
         private static int _quotaDiscoveryCountMin;
         private static int _quotaDiscoveryCountMax;
         public static bool QuotaDiscoveryPermanent { get; private set; }
+        public static bool QuotaDiscoveryCheapestGroup { get; private set; }
         public static bool TravelDiscoveries { get; private set; }
         public static int TravelDiscoveryChance { get; private set; }
         public static int TravelDiscoveryCount {
@@ -156,6 +157,7 @@ namespace LethalMoonUnlocks {
         public static bool CheapMoonBiasTravelDiscovery { get; private set; }
         public static string MoonGroupMatchingMethod { get; private set; }
         public static int MoonGroupMatchingPriceRange { get; private set; }
+        public static bool MoonGroupMatchingFallback{ get; private set; }
         private static string MoonGroupMatchingCustom {  get; set; }
         public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict {  get; private set; }
         private static bool MoonGroupMatchingCustomHelper { get; set; }
@@ -261,8 +263,8 @@ namespace LethalMoonUnlocks {
                 "Discount rates are separated by commas and can contain any number of rates");
             Plugin.Instance.Mls.LogInfo($"Discount rates (% off): {string.Join(", ", Discounts.Select(discount => discount + "%"))}");
             DiscountsResetAfterVisits = GetConfigValue("3 - Discount Mode", "Discounts expire", 0, "Discounts will expire after a set number of free routes, after which they will return to their original price.\n" +
-                "Set to 0 to disable this feature." +
-                "NOTE: The final discount rate must be set to '100' to use this setting!");
+                "Set to 0 to disable this feature.\n" +
+                "NOTE: The final discount rate must be set to '100' for this to work!");
             DiscoveryKeepDiscounts = GetConfigValue("3 - Discount Mode", "Discounted moons are permanently discovered", false, "Discovery Mode only: Every discounted moon is also permanently discovered i.e. added to the moon catalogue on top of your base selection.");
             DiscountsResetAfterVisitsPermDiscovery = GetConfigValue("3 - Discount Mode", "Reset permanent discoveries on discount expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its discount expires.\n" +
                 "This is the only way permanent discoveries can vanish during a run in Discount Mode.\n");
@@ -328,6 +330,9 @@ namespace LethalMoonUnlocks {
             _quotaDiscoveryCountMin  = GetConfigValue("4.1 - Quota Discoveries", "Minimum quota discovery moon count", 1, "The minimum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
             _quotaDiscoveryCountMax  = GetConfigValue("4.1 - Quota Discoveries", "Maximum quota discovery moon count", 1, "The maximum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
             QuotaDiscoveryPermanent = GetConfigValue("4.1 - Quota Discoveries", "Quota Discoveries are permanent", false, "Moons discovered through Quota Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
+            QuotaDiscoveryCheapestGroup = GetConfigValue("4.1 - Quota Discoveries", "Discover cheapest custom group", false, "Limits discoveries to the custom group the currently cheapest moon belongs to.\n" +
+                "Can effectively discover the 'next tier' or group of moons. Set counts high to discover the entire group.\n" +
+                "NOTE: Highly recommended to only use this with 'Quota Discoveries are permanent' or 'Never shuffle'!");
 
             TravelDiscoveries = GetConfigValue("4.2 - Travel Discoveries", "Enable Travel Discoveries", false, "Travel Discoveries grant additional moon discoveries when routing to a paid moon\n" +
                 "The moons that are discovered are randomly selected.");
@@ -375,6 +380,8 @@ namespace LethalMoonUnlocks {
                 Array.Empty<object>())).Value;
             MoonGroupMatchingPriceRange = GetConfigValue("6.2 - Moon Group Matching", "Price range", 200, "The price range used for matching moons via 'PriceRange' and 'PriceRangeUpper' methods.\n" +
                 "It will match all moons priced within the original price +- this value (+ this value for upper range).");
+            MoonGroupMatchingFallback = GetConfigValue("6.2 - Moon Group Matching", "Fallback on no matches", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+                "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
             MoonGroupMatchingCustom = GetConfigValue("6.2 - Moon Group Matching", "Custom moon groups", "", "Define your own custom moon groups.\n" +
                 "Expected Format: Separate moon groups by \"|\" and moons by \",\".\n" +
                 "Example: 'Group name 1: Experimentation, Assurance, Vow | Group name 2: Offense, March, Adamance'\n" +

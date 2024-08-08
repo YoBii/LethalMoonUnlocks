@@ -10,7 +10,7 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPatch(nameof(HUDManager.DisplayTip))]
         [HarmonyPrefix]
         private static bool DisplayTipPatch(string headerText, string bodyText, bool isWarning, bool useSave, string prefsKey) {
-            if (!ConfigManager.AlertMessageQueueing)
+            if (!ConfigManager.AlertMessageQueueing || !ConfigManager.ShowAlerts)
                 return true;
             if (!HUDManager.Instance.CanTipDisplay(isWarning, useSave, prefsKey)) {
                 return false;
