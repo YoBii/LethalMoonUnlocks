@@ -22,7 +22,7 @@ namespace LethalMoonUnlocks
 
         internal static Plugin Instance {  get; private set; }
         internal static bool LQPresent = false;
-        internal static bool LethalConPresent = false;
+        internal static bool LethalConstellationsPresent = false;
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
 
@@ -100,7 +100,8 @@ namespace LethalMoonUnlocks
             }
             
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID)) {
-                LethalConPresent = true;
+                LethalConstellationsPresent = true;
+                _harmony.PatchAll(typeof(Patches.LethalConstellationsPatch));
             }
 
             // Unload this
