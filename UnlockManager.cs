@@ -178,7 +178,7 @@ namespace LethalMoonUnlocks {
 
         private void QuotaDiscovery() {
             var quotaDiscoveries = DiscoveryCandidates;
-            if (ConfigManager.QuotaDiscoveryCheapestGroup && ConfigManager.MoonGroupMatchingMethod == "Custom") {
+            if (ConfigManager.QuotaDiscoveryCheapestGroup && (ConfigManager.MoonGroupMatchingMethod == "Custom" || ConfigManager.MoonGroupMatchingMethod == "LethalConstellations")) {
                 quotaDiscoveries = QuotaDiscoveryGroup(quotaDiscoveries);
             }
             if (ConfigManager.CheapMoonBias > 0f && ConfigManager.CheapMoonBiasQuotaDiscovery) {
@@ -209,18 +209,14 @@ namespace LethalMoonUnlocks {
             foreach (var candidate in candidates.OrderBy(c => c.OriginalPrice)) {
                 Plugin.Instance.Mls.LogInfo($"Got cheapest candidate: {candidate.Name}");
                 Plugin.Instance.Mls.LogInfo($"Checking for groups..");
-                Dictionary<string, List<string>> groups = candidate.GetMatchingCustomGroups();
-                List<string> groupNames = groups.Keys.ToList();
-                if (groupNames.Count > 0) {
-                    string randomGroupName = groupNames[UnityEngine.Random.Range(0, groupNames.Count)];
-                    var randomGroup = groups[randomGroupName];
-                    foreach (var member in randomGroup) {
-                        var unlock = Unlocks.Where(unlock => unlock.Name == member).FirstOrDefault();
-                        if (unlock != null && !unlock.OriginallyHidden && !unlock.OriginallyLocked && (!unlock.Discovered || !unlock.PermanentlyDiscovered)) {
-                            discoveryGroup.Add(unlock);
+                LMGroup group = MatchMoonGroup(candidate, candidates, ConfigManager.QuotaDiscoveryCheapestGroupFallback);
+                if (group.Members.Count > 0) {
+                    foreach (var member in group.Members) {
+                        if (!member.Discovered || !member.PermanentlyDiscovered) {
+                            discoveryGroup.Add(member);
                         }
                     }
-                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nAccess granted to: <color=red>{randomGroupName}</color>", Key = "LMU_NewQuotaDiscovery" });
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nAccess granted to: <color=red>{group.Name}</color>", Key = "LMU_NewQuotaDiscovery" });
                     break;  
                 } else {
                     Plugin.Instance.Mls.LogInfo("Candidate has no group matches. Try next..");
