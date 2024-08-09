@@ -722,6 +722,23 @@ namespace LethalMoonUnlocks {
                     } else {
                         break;
                     }
+                case "LethalConstellations":
+                    ClassMapper constellation = Collections.ConstellationStuff.Where(con => con.constelMoons.Any(moon => moon == matchingUnlock.Name)).FirstOrDefault();
+                    List<LMUnlockable> constellationMatches = new List<LMUnlockable>();
+                    if (constellation != null) {
+                        foreach (var moon in constellation.constelMoons) {
+                            var unlock = unlocksToMatch.Where(unlock => unlock.Name == moon).FirstOrDefault();
+                            if (unlock != null) {
+                                constellationMatches.Add(unlock);
+                            }
+                        }
+                    }
+                    if (constellationMatches.Count > 0) { 
+                        Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by constellation [{constellation.consName}]; Matches = [ {string.Join(", ", constellationMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Name = constellation.consName, Members = constellationMatches };
+                    } else {
+                        break;
+                    }
                 case "Custom":
                     Dictionary<string, List<string>> matchingCustomGroups = matchingUnlock.GetMatchingCustomGroups();
                     if (matchingCustomGroups == null || matchingCustomGroups.Count == 0)

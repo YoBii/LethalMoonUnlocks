@@ -375,8 +375,9 @@ namespace LethalMoonUnlocks {
                 "'PriceRange': All moons within a set price range are considered a group. Upper and lower range is defined by the price range setting below.\n" +
                 "'PriceRangeUpper': All moons within a set upper price range are considered a group. Upper range is defined by the price range setting below.\n" +
                 "'Tag': All moons that have at least one tag in common are considered a group.\n" +
+                "'LethalConstellations': Match moons to their constellations as they are configured in LethalConstellations\n" +
                 "'Custom': Define custom named groups of moons below.",
-                new AcceptableValueList<string>(["Price", "PriceRange", "PriceRangeUpper", "Tag", "Custom"]),
+                new AcceptableValueList<string>(["Price", "PriceRange", "PriceRangeUpper", "Tag", "LethalConstellations", "Custom"]),
                 Array.Empty<object>())).Value;
             MoonGroupMatchingPriceRange = GetConfigValue("6.2 - Moon Group Matching", "Price range", 200, "The price range used for matching moons via 'PriceRange' and 'PriceRangeUpper' methods.\n" +
                 "It will match all moons priced within the original price +- this value (+ this value for upper range).");
