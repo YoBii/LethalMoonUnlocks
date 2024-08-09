@@ -770,6 +770,7 @@ namespace LethalMoonUnlocks {
                     unlock.ApplyDiscoverability();
                 }
             }
+            LethalConstellationsExtension.ApplyUnlocks();
         }
 
         private void Reset() {
