@@ -309,6 +309,11 @@ namespace LethalMoonUnlocks {
                     groupTag = customGroupsDict.Keys.First();
                 }
                 tags = AddTagToPreviewText($"[{groupTag.Trim()}]", tags);
+            } else if (ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup) && ConfigManager.ShowTagGroups) {
+                ClassMapper constellation = Collections.ConstellationStuff.Where(con => con.constelMoons.Any(moon => moon == Name)).FirstOrDefault();
+                if (constellation != null) {
+                    tags = AddTagToPreviewText($"[{constellation.consName}]", tags);
+                }
             } else if (ConfigManager.MoonGroupMatchingMethod == "Tag") {
                 var contentTags = ExtendedLevel.ContentTags;
                 string tagsTag = string.Empty;
