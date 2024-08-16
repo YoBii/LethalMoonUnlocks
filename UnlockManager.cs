@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using LethalConstellations.PluginCore;
 using LethalLevelLoader;
+using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
@@ -102,9 +103,6 @@ namespace LethalMoonUnlocks {
 
             // Create LMUnlockables from LLL Extended Levels
             InitializeUnlocks();
-
-            //List<ClassMapper> classMappers = 
-            //Plugin.Instance.Mls.LogWarning(string.Join(", ", classMappers.Select(cm => cm.consName + " (hidden=" + cm.isHidden + ")")));
 
             // Load save data
             // if save exists apply all unlockable data and continue
@@ -239,7 +237,7 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.CheapMoonBiasQuotaUnlock) {
                 quotaUnlocks = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaUnlocks, ConfigManager.CheapMoonBiasQuotaUnlockValue), ConfigManager.QuotaUnlockCount);
             } else {
-            quotaUnlocks = RandomSelector.Get(quotaUnlocks, ConfigManager.QuotaUnlockCount);
+                quotaUnlocks = RandomSelector.Get(quotaUnlocks, ConfigManager.QuotaUnlockCount);
             }
             if (quotaUnlocks.Count == 0) {
                 Plugin.Instance.Mls.LogInfo($"No moons for Quota Unlock available!");
@@ -273,7 +271,7 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.CheapMoonBiasQuotaDiscount) {
                 quotaDiscounts = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaDiscounts, ConfigManager.CheapMoonBiasQuotaDiscountValue), ConfigManager.QuotaDiscountCount);
             } else {
-            quotaDiscounts = RandomSelector.Get(quotaDiscounts, ConfigManager.QuotaDiscountCount);
+                quotaDiscounts = RandomSelector.Get(quotaDiscounts, ConfigManager.QuotaDiscountCount);
             }
             if (quotaDiscounts.Count == 0) {
                 Plugin.Instance.Mls.LogInfo($"No moons for Quota Discount available!");
@@ -305,7 +303,7 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.CheapMoonBiasQuotaFullDiscount) {
                 quotaFullDiscounts = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaFullDiscounts, ConfigManager.CheapMoonBiasQuotaFullDiscountValue), ConfigManager.QuotaFullDiscountCount);
             } else {
-            quotaFullDiscounts = RandomSelector.Get(quotaFullDiscounts, ConfigManager.QuotaFullDiscountCount);
+                quotaFullDiscounts = RandomSelector.Get(quotaFullDiscounts, ConfigManager.QuotaFullDiscountCount);
             }
             if (quotaFullDiscounts.Count == 0) {
                 Plugin.Instance.Mls.LogInfo($"No moons for Quota Full Discount available!");
@@ -515,7 +513,6 @@ namespace LethalMoonUnlocks {
 
             if (travelDiscoveries.Count > 1) {
                 HUDManager.Instance.AddTextToChatOnServer($"Discovered new moons on route{tdMessageGroupName}:\n <color=white>{string.Join(", ", travelDiscoveries.Select(td => td.Name))}</color>");
-                Plugin.Instance.Mls.LogInfo($"Travel Discoveries: [ {string.Join(", ", travelDiscoveries)} ]");
             } else if (travelDiscoveries.Count == 1) {
                 HUDManager.Instance.AddTextToChatOnServer($"Discovered new moon on route{tdMessageGroupName}:\n <color=white>{travelDiscoveries.FirstOrDefault().Name}</color>");
                 Plugin.Instance.Mls.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
@@ -594,30 +591,30 @@ namespace LethalMoonUnlocks {
             // Make sure there's at least one moon discovered
             bool oneMoonDiscovered = Unlocks.Any(unlock => unlock.Discovered);
             if (oneMoonDiscovered) {
-                    RerouteShipToFreeMoon();
+                RerouteShipToFreeMoon();
             } else {
                 Plugin.Instance.Mls.LogWarning("All moons would have been hidden from the terminal! Force discovering a free moon..");
                 var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.RoutePrice == 0).FirstOrDefault();
                 if (unlock == null) {
                     Plugin.Instance.Mls.LogWarning("Can't find any free moon to display in moon catalogue! You probably want at least one free moon available at all times.. Falling back to a paid moon!");
-                }
-                unlock = Unlocks.FirstOrDefault();
+                    unlock = Unlocks.FirstOrDefault();
+                } 
                 if (unlock == null) {
-                    Plugin.Instance.Mls.LogError("Can't find any moon! No moons initialized. Please check your configs (LMU + LLL). If this persists report it on GitHub or Discord.");
+                    Plugin.Instance.Mls.LogError("Can't find any moon! No unlockable data initialized. Please check your configs (LMU + LLL). If this persists report it on GitHub or Discord.");
                     return;
-                }
-                if (unlock != null) {
+                } else {
                     unlock.Discovered = true;
+                    RerouteShipToFreeMoon();
                 }
             }
             if (DayCount > 0) {
                 HUDManager.Instance.AddTextToChatOnServer("Moon catalogue updated!");
                 NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Moon catalogue updated!", Text = $"New moons available. Use the computer terminal to route the ship.", Key = "LMU_Shuffle" });
             }
-            Plugin.Instance.Mls.LogInfo($"After shuffling check if we have to reroute to a discovered free moon..");
         }
 
         private void RerouteShipToFreeMoon() {
+            Plugin.Instance.Mls.LogInfo($"After shuffling check if we have to reroute to a discovered free moon..");
             if (Unlocks.Any(unlock => (unlock.Discovered || unlock.PermanentlyDiscovered ) && unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName) || LevelManager.CurrentExtendedLevel.NumberlessPlanetName == "Gordion") {
                 Plugin.Instance.Mls.LogInfo($"Current moon is discovered. Not rerouting ship.");
             } else {

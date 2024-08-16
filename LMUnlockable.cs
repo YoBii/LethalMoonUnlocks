@@ -1,4 +1,5 @@
-﻿using LethalLevelLoader;
+﻿using LethalConstellations.PluginCore;
+using LethalLevelLoader;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
 using System;

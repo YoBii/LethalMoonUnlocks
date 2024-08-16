@@ -147,14 +147,6 @@ namespace LethalMoonUnlocks {
         private static int _salesRateMin;
         private static int _salesRateMax;
         public static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
-            get {
-                return Math.Clamp(_cheapMoonBiasValue, 0.0f, 1.0f);
-            }
-            set {
-                _cheapMoonBiasValue = value;
-            }
-        }
-        private static float _cheapMoonBiasValue;
         public static bool CheapMoonBiasPaidRotation { get; private set; }
         public static float CheapMoonBiasPaidRotationValue { get; private set; }
         public static bool CheapMoonBiasQuotaDiscovery { get; private set; }
@@ -171,7 +163,6 @@ namespace LethalMoonUnlocks {
         public static float CheapMoonBiasQuotaFullDiscountValue { get; private set; }
         public static string MoonGroupMatchingMethod { get; private set; }
         public static int MoonGroupMatchingPriceRange { get; private set; }
-        public static bool MoonGroupMatchingFallback{ get; private set; }
         private static string MoonGroupMatchingCustom {  get; set; }
         public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict {  get; private set; }
         private static bool MoonGroupMatchingCustomHelper { get; set; }
@@ -307,8 +298,7 @@ namespace LethalMoonUnlocks {
             DiscoveryMode = GetConfigValue("4 - Discovery Mode", "Enable Discovery Mode", false, "In Discovery Mode, you start with a limited selection of moons in the Terminal's moon catalogue.\n" +
                 "By default, this base selection of moons will be shuffled after every quota, and can also be configured to expand over time.\n" +
                 "There are also various options to discover additional moons as you play.\n" +
-                "Permanently discovered moons are added to the moon catalogue on top of the base selection, and are not lost on shuffle.\n" +
-                "Use the configuration options below to customize your experience!");
+                "Permanently discovered moons are added to the moon catalogue on top of the base selection, and are not lost on shuffle.");
             
             DiscoveryNeverShuffle = GetConfigValue("4 - Discovery Mode", "Never shuffle", false, "Never shuffle the rotation of moons available in the moon catalogue.\n" +
                 "New moons must be discovered through other means, but once discovered, they won't vanish, since the selection is never shuffled.\n" +
