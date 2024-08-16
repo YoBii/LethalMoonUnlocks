@@ -165,6 +165,7 @@ namespace LethalMoonUnlocks {
         public static bool PreferLQRisk {  get; private set; }
         public static bool MalfunctionsNavigation {  get; private set; }
         public static bool AlertMessageQueueing {  get; private set; }
+        public static bool LethalConstellationsOverridePrice {  get; private set; }
 
 
         public ConfigManager() {
@@ -375,7 +376,7 @@ namespace LethalMoonUnlocks {
                 "'PriceRange': All moons within a set price range are considered a group. Upper and lower range is defined by the price range setting below.\n" +
                 "'PriceRangeUpper': All moons within a set upper price range are considered a group. Upper range is defined by the price range setting below.\n" +
                 "'Tag': All moons that have at least one tag in common are considered a group.\n" +
-                "'LethalConstellations': Match moons to their constellations as they are configured in LethalConstellations\n" +
+                "'LethalConstellations': Match moons to their constellations as they are configured in LethalConstellations. See settings in Advanced section." +
                 "'Custom': Define custom named groups of moons below.",
                 new AcceptableValueList<string>(["Price", "PriceRange", "PriceRangeUpper", "Tag", "LethalConstellations", "Custom"]),
                 Array.Empty<object>())).Value;
@@ -397,6 +398,8 @@ namespace LethalMoonUnlocks {
             AlertMessageQueueing = GetConfigValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
             PreferLQRisk = GetConfigValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalogue instead of the default risk levels.");
             MalfunctionsNavigation = GetConfigValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
+            LethalConstellationsOverridePrice = GetConfigValue("6.4 - Compatibility", "LethalConstellations override price", false, "When enabled and LethalConstellations is present override the constellation routing price with the default moon's routing price.\n" + "Routing to the constellation will be considered buying the default moon. Consequently unlocks, discounts and sales of the default moon will be granted and will also apply to the constellation routing price.\n" +
+                "NOTE: In Discovery Mode the default moon will always be set to the cheapest currently discovered moon of that constellation regardless of this setting.");
         }
         private static T GetConfigValue<T>(string section, string key, T defaultValue, string description) {
             return _configFile.Bind(section, key, defaultValue, description).Value;
