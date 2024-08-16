@@ -235,7 +235,7 @@ namespace LethalMoonUnlocks {
             ShowTagPermanentDiscovery = GetConfigValue("1.1 - Terminal moon tags", "Permanent discovery tag", true, "Discovery Mode only: display a tag to indicate permanently discovered moons.\n" +
                 "Displays as [PINNED].");
             ShowTagSale = GetConfigValue("1.1 - Terminal moon tags", "Sales tag", true, "Moon Sales only: display a tag to indicate which moons are on sale, as well as the percentage of the sale.");
-            ShowTagGroups = GetConfigValue("1.1 - Terminal moon tags", "Group tag", true, "Moon Group Matching only: display a tag to indicate groups a moon belongs to. Limited to custom group and LLL tag matching methods.");
+            ShowTagGroups = GetConfigValue("1.1 - Terminal moon tags", "Group tag", true, "Moon Group Matching only: display a tag to indicate groups a moon belongs to. Limited to custom group, LethalConstellations and LLL tag matching methods.");
 
             UnlockMode = GetConfigValue("2 - Unlock Mode (Default)", "Enable Unlock Mode", true, "Unlock Mode is the default mode, akin to the original Permanent Moons mod. In Unlock Mode, when you buy a paid moon, it will be 'unlocked'.\n" +
                 "Once unlocked, moons are completely free, and by default, will stay free permanently.\n" +
