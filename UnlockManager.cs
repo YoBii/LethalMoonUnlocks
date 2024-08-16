@@ -211,12 +211,15 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Checking for groups..");
                 LMGroup group = MatchMoonGroup(candidate, candidates, ConfigManager.QuotaDiscoveryCheapestGroupFallback);
                 if (group.Members.Count > 0) {
+                    int groupSize = group.Members.Count;
                     foreach (var member in group.Members) {
-                        if (!member.Discovered || !member.PermanentlyDiscovered) {
+                        if (!member.Discovered && !member.PermanentlyDiscovered) {
                             discoveryGroup.Add(member);
                         }
                     }
-                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nAccess granted to: <color=red>{group.Name}</color>", Key = "LMU_NewQuotaDiscovery" });
+                    if (group.Members.Count <= discoveryGroup.Count) {
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nRoute to: <color=red>{group.Name}</color> established.", Key = "LMU_NewQuotaDiscovery" });
+                    }
                     break;  
                 } else {
                     Plugin.Instance.Mls.LogInfo("Candidate has no group matches. Try next..");

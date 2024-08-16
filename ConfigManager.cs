@@ -347,7 +347,7 @@ namespace LethalMoonUnlocks {
             _quotaDiscoveryCountMin  = GetConfigValue("4.1 - Quota Discoveries", "Minimum quota discovery moon count", 1, "The minimum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
             _quotaDiscoveryCountMax  = GetConfigValue("4.1 - Quota Discoveries", "Maximum quota discovery moon count", 1, "The maximum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
             QuotaDiscoveryPermanent = GetConfigValue("4.1 - Quota Discoveries", "Quota Discoveries are permanent", false, "Moons discovered through Quota Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
-            QuotaDiscoveryCheapestGroup = GetConfigValue("4.1 - Quota Discoveries", "Discover cheapest custom group", false, "Limits discoveries to the custom group the currently cheapest moon belongs to.\n" +
+            QuotaDiscoveryCheapestGroup = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest group", false, "Only considers moons from the group/constellation that has the currently cheapest undiscovered moon.\n" +
                 "Can effectively discover the 'next tier' or group of moons. Set counts high to discover the entire group.\n" +
                 "NOTE: Highly recommended to only use this with 'Quota Discoveries are permanent' or 'Never shuffle'!");
             QuotaDiscoveryCheapestGroupFallback = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest group fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
