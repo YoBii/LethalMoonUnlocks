@@ -53,8 +53,14 @@ namespace LethalMoonUnlocks {
             if (unlocks.Count < 1) {  return weights; }
             var sumAllPrices = unlocks.Sum(unlock => unlock.OriginalPrice);
             foreach (var unlock in unlocks) {
-                int price = Math.Clamp(unlock.OriginalPrice, 1, int.MaxValue);
-                weights[unlock] = (int) Math.Clamp(Math.Pow(sumAllPrices / Math.Clamp(unlock.ExtendedLevel.RoutePrice, 50, int.MaxValue), ConfigManager.CheapMoonBias), 1, int.MaxValue);
+                int price;
+                if (ConfigManager.CheapMoonBiasIgnorePriceChanges) {
+                    price = Math.Clamp(unlock.OriginalPrice, 1, int.MaxValue);
+                } else {
+                    price = Math.Clamp(unlock.ExtendedLevel.RoutePrice, 1, int.MaxValue);
+                }
+                long result = Math.Clamp((long)Math.Pow(sumAllPrices / price * bias, bias), 1, int.MaxValue / (unlocks.Count + 1));
+                weights[unlock] = (int)result;
             }
             Plugin.Instance.Mls.LogDebug($"Cheap moon bias: Assigned the following weights: [ {string.Join(", ", weights.Select(weight => weight.Key.Name + ":" + weight.Value ))} ]");
             return weights;

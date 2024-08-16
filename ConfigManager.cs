@@ -146,7 +146,7 @@ namespace LethalMoonUnlocks {
         }
         private static int _salesRateMin;
         private static int _salesRateMax;
-        public static float CheapMoonBias {
+        public static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
             get {
                 return Math.Clamp(_cheapMoonBiasValue, 0.0f, 1.0f);
             }
