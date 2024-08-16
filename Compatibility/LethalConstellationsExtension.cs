@@ -30,9 +30,11 @@ namespace LethalMoonUnlocks.Compatibility {
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = "New Discovery!", Text = $"{LethalConstellations.ConfigManager.Configuration.ConstellationWord.Value} <color=yellow>{constellation.consName}</color> available for routing.", IsWarning = true, Key = "LMU_ConstellationDiscovered" });
                     }
                     constellation.isHidden = false;
+                    constellation.isLocked = false;
                     Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: There are discovered moons in this constellation. Constellation is also discovered.");
                 } else {
                     constellation.isHidden = true;
+                    constellation.isLocked = true;
                     Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: No moon in this constellation is discovered. Hiding constellation.");
                 }
             }
