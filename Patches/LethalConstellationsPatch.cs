@@ -22,17 +22,19 @@ namespace LethalMoonUnlocks.Patches {
             var currentConstellation = Collections.ConstellationStuff.Where(c => c.consName == Collections.CurrentConstellation).FirstOrDefault();
             var unlock = UnlockManager.Instance.Unlocks.Where(unlock => unlock.ExtendedLevel.NumberlessPlanetName == currentConstellation.defaultMoon).FirstOrDefault();
             if (unlock != null) {
-                Plugin.Instance.Mls.LogInfo($"Routing to moon {unlock.Name} with ID {unlock.ExtendedLevel.SelectableLevel.levelID}!");
-                if (unlock.ExtendedLevel.RoutePrice > 0) { 
-                    Plugin.Instance.Mls.LogInfo($"Route to {unlock.Name} was paid ({unlock.ExtendedLevel.RoutePrice} credits).");
+                Plugin.Instance.Mls.LogInfo($"Routing to constellation {currentConstellation.consName} -> default moon {unlock.Name} with ID {unlock.ExtendedLevel.SelectableLevel.levelID}!");
+                if (unlock.ExtendedLevel.RoutePrice > 0) {
+                    if (ConfigManager.LethalConstellationsOverridePrice) {
+                        Plugin.Instance.Mls.LogInfo($"Route to {unlock.Name} was paid ({unlock.ExtendedLevel.RoutePrice} credits).");
+                    }
                     if (NetworkManager.Instance.IsServer()) {
                         UnlockManager.Instance.BuyMoon(unlock.Name);
+                    } else {
+                        NetworkManager.Instance.ClientBuyMoon(unlock.Name);
                     }
                 } else {
-                    NetworkManager.Instance.ClientBuyMoon(unlock.Name);
-                }
-            } else {
                     Plugin.Instance.Mls.LogInfo($"Route to {unlock.Name} was free.");
+                }
             }
         }
     }

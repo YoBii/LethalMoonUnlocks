@@ -14,6 +14,11 @@ namespace LethalMoonUnlocks.Compatibility {
                 }
                 ApplyDefaultMoons();
                 HideUnlocksNotInCurrentConstellation();
+                } else {
+                    HideUnlocksNotInCurrentConstellation();
+                    ShowUnlocksInCurrentConstellation();
+            }
+        }
             }
         }
         private static void ApplyVisibility() {
@@ -41,11 +46,11 @@ namespace LethalMoonUnlocks.Compatibility {
         private static void HideUnlocksNotInCurrentConstellation() {
             var currentConstellation = Collections.ConstellationStuff.Where(constellation => constellation.consName == Collections.CurrentConstellation).FirstOrDefault();
             if (currentConstellation == null) return;
-            foreach (var unlock in UnlockManager.Instance.Unlocks.Where(unlock => unlock.Discovered)) {
+            foreach (var unlock in UnlockManager.Instance.Unlocks) {
                 if (currentConstellation.constelMoons.All(moon => moon != unlock.Name)) {
                     unlock.ExtendedLevel.IsRouteHidden = true;
                     unlock.ExtendedLevel.IsRouteLocked = true;
-                    Plugin.Instance.Mls.LogDebug($"Hiding moon {unlock.Name} because it's not part of the current constellation!");
+                }
                 }
             }
         }
