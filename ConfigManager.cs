@@ -156,9 +156,19 @@ namespace LethalMoonUnlocks {
         }
         private static float _cheapMoonBiasValue;
         public static bool CheapMoonBiasPaidRotation { get; private set; }
+        public static float CheapMoonBiasPaidRotationValue { get; private set; }
         public static bool CheapMoonBiasQuotaDiscovery { get; private set; }
+        public static float CheapMoonBiasQuotaDiscoveryValue { get; private set; }
         public static bool CheapMoonBiasNewDayDiscovery { get; private set; }
+        public static float CheapMoonBiasNewDayDiscoveryValue { get; private set; }
         public static bool CheapMoonBiasTravelDiscovery { get; private set; }
+        public static float CheapMoonBiasTravelDiscoveryValue { get; private set; }
+        public static bool CheapMoonBiasQuotaUnlock { get; private set; }
+        public static float CheapMoonBiasQuotaUnlockValue { get; private set; }
+        public static bool CheapMoonBiasQuotaDiscount { get; private set; }
+        public static float CheapMoonBiasQuotaDiscountValue { get; private set; }
+        public static bool CheapMoonBiasQuotaFullDiscount { get; private set; }
+        public static float CheapMoonBiasQuotaFullDiscountValue { get; private set; }
         public static string MoonGroupMatchingMethod { get; private set; }
         public static int MoonGroupMatchingPriceRange { get; private set; }
         public static bool MoonGroupMatchingFallback{ get; private set; }
@@ -375,12 +385,35 @@ namespace LethalMoonUnlocks {
             GetConfigValue("6 - Advanced settings", "I have read this", "false", "This section contains advanced configuration options for various features of the mod. Incorrectly tweaking these might cause unexpected behaviour!\n" +
                 "This setting has no effect.");
 
-            CheapMoonBias = GetConfigValue("6.1 - Discovery Mode: Cheap Moon Bias", "Cheap Moon Bias", 0.66f, "With Cheap Moon Bias, cheap moons are more likely to be unlocked than expensive moons.\n" +
-                "Adjust the value below to modify the bias. 0.0 = no bias, all moons are equally considered. 1.0 = heavily prefer cheaper moons.", new AcceptableValueRange<float>(0.0f, 1.0f));
-            CheapMoonBiasPaidRotation = GetConfigValue("6.1 - Discovery Mode: Cheap Moon Bias", "Enable for paid moon rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
-            CheapMoonBiasQuotaDiscovery = GetConfigValue("6.1 - Discovery Mode: Cheap Moon Bias", "Enable for Quota Discovery", true, "Use Cheap Moon Bias when selecting moons during Quota Discovery.");
-            CheapMoonBiasNewDayDiscovery = GetConfigValue("6.1 - Discovery Mode: Cheap Moon Bias", "Enable for New Day Discovery", true, "Use Cheap Moon Bias when selecting moons during New Day Discovery.");
-            CheapMoonBiasTravelDiscovery = GetConfigValue("6.1 - Discovery Mode: Cheap Moon Bias", "Enable for Travel Discovery", true, "Use Cheap Moon Bias when selecting moons to discover during Travel Discovery.");
+            CheapMoonBiasPaidRotation = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
+            CheapMoonBiasPaidRotationValue = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
+                "NOTE: the bias is exponential to the inverse proportion of moon price to the total of all moon prices. Let's say we have Moon A (100 credits) and Moon B (400 credits).\n" +
+                "B is four times the price of A => Weight of A = (4^bias) * weight of B. So at 1.0 A is four times the chance of B, at 2.0 16 times, at 0.5 sqrt(4) = 2 times and at 0.0 both have equal weights.", new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaDiscovery = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discovery", true, "Use Cheap Moon Bias when selecting moons during Quota Discovery.");
+            CheapMoonBiasQuotaDiscoveryValue = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discovery bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
+                "NOTE: the bias is exponential to the inverse proportion of moon price to the total of all moon prices. Let's say we have Moon A (100 credits) and Moon B (400 credits).\n" +
+                "B is four times the price of A => Weight of A = (4^bias) * weight of B. So at 1.0 A is four times the chance of B, at 2.0 16 times, at 0.5 sqrt(4) = 2 times and at 0.0 both have equal weights.", new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasTravelDiscovery = GetConfigValue("6.1 - Cheap Moon Bias", "Travel Discovery", true, "Use Cheap Moon Bias when selecting moons to discover during Travel Discovery.");
+            CheapMoonBiasTravelDiscoveryValue = GetConfigValue("6.1 - Cheap Moon Bias", "Travel Discovery bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
+                "NOTE: the bias is exponential to the inverse proportion of moon price to the total of all moon prices. Let's say we have Moon A (100 credits) and Moon B (400 credits).\n" +
+                "B is four times the price of A => Weight of A = (4^bias) * weight of B. So at 1.0 A is four times the chance of B, at 2.0 16 times, at 0.5 sqrt(4) = 2 times and at 0.0 both have equal weights.", new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasNewDayDiscovery = GetConfigValue("6.1 - Cheap Moon Bias", "New Day Discovery", true, "Use Cheap Moon Bias when selecting moons during New Day Discovery.");
+            CheapMoonBiasNewDayDiscoveryValue = GetConfigValue("6.1 - Cheap Moon Bias", "New Day Discovery bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
+                "NOTE: the bias is exponential to the inverse proportion of moon price to the total of all moon prices. Let's say we have Moon A (100 credits) and Moon B (400 credits).\n" +
+                "B is four times the price of A => Weight of A = (4^bias) * weight of B. So at 1.0 A is four times the chance of B, at 2.0 16 times, at 0.5 sqrt(4) = 2 times and at 0.0 both have equal weights.", new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaUnlock = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Unlock", true, "Use Cheap Moon Bias when selecting moons during Quota Unlocks.");
+            CheapMoonBiasQuotaUnlockValue = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Unlock bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
+                "NOTE: the bias is exponential to the inverse proportion of moon price to the total of all moon prices. Let's say we have Moon A (100 credits) and Moon B (400 credits).\n" +
+                "B is four times the price of A => Weight of A = (4^bias) * weight of B. So at 1.0 A is four times the chance of B, at 2.0 16 times, at 0.5 sqrt(4) = 2 times and at 0.0 both have equal weights.", new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaDiscount = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discount", true, "Use Cheap Moon Bias when selecting moons during Quota Discounts.");
+            CheapMoonBiasQuotaDiscountValue = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discount bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
+                "NOTE: the bias is exponential to the inverse proportion of moon price to the total of all moon prices. Let's say we have Moon A (100 credits) and Moon B (400 credits).\n" +
+                "B is four times the price of A => Weight of A = (4^bias) * weight of B. So at 1.0 A is four times the chance of B, at 2.0 16 times, at 0.5 sqrt(4) = 2 times and at 0.0 both have equal weights.", new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaFullDiscount = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Full Discount", true, "Use Cheap Moon Bias when selecting moons during Quota Full Discounts.");
+            CheapMoonBiasQuotaFullDiscountValue= GetConfigValue("6.1 - Cheap Moon Bias", "Quota Full Discount bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
+                "NOTE: the bias is exponential to the inverse proportion of moon price to the total of all moon prices. Let's say we have Moon A (100 credits) and Moon B (400 credits).\n" +
+                "B is four times the price of A => Weight of A = (4^bias) * weight of B. So at 1.0 A is four times the chance of B, at 2.0 16 times, at 0.5 sqrt(4) = 2 times and at 0.0 both have equal weights.", new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasIgnorePriceChanges = GetConfigValue("6.1 - Cheap Moon Bias", "Ignore price changes", true, "Ignore any changes to moon prices by discounts or sales and only consider original price for biased selections.");
             
             MoonGroupMatchingMethod = _configFile.Bind("6.2 - Moon Group Matching", "Group Matching Method", "Price",
                 new ConfigDescription("The method used to group moons. Group Matching can be used to limit some discoveries to moons of the same group.\n" +
@@ -394,8 +427,6 @@ namespace LethalMoonUnlocks {
                 Array.Empty<object>())).Value;
             MoonGroupMatchingPriceRange = GetConfigValue("6.2 - Moon Group Matching", "Price range", 200, "The price range used for matching moons via 'PriceRange' and 'PriceRangeUpper' methods.\n" +
                 "It will match all moons priced within the original price +- this value (+ this value for upper range).");
-            MoonGroupMatchingFallback = GetConfigValue("6.2 - Moon Group Matching", "Fallback on no matches", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
-                "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
             MoonGroupMatchingCustom = GetConfigValue("6.2 - Moon Group Matching", "Custom moon groups", "", "Define your own custom moon groups.\n" +
                 "Expected Format: Separate moon groups by \"|\" and moons by \",\".\n" +
                 "Example: 'Group name 1: Experimentation, Assurance, Vow | Group name 2: Offense, March, Adamance'\n" +
