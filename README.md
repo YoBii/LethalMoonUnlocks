@@ -136,7 +136,8 @@ Quota Discounts are a mechanic that rewards your for meeting the quota by granti
 
 - set the chance to trigger Quota Discounts
 - set a min and max for the amount of moons to receive a discount (rate) when triggered
-- limit the total number of times Quota Unlocks can be triggered
+- limit Quota Discounts to moons up to a certain price
+- limit the total number of times Quota Discounts can be triggered
 </details>
 
 ### (Optional) Quota Full Discounts
@@ -217,6 +218,7 @@ Quota Discoveries are a mechanic that rewards your for meeting the quota by gran
 - set the chance to trigger Quota Discoveries
 - set a min and max for the amount of moons discovered
 - make moons discovered this way permanent discoveries
+- prefer discovering moons from the group of the currently cheapest undiscovered moon
 </details>
 
 ### (Optional) Travel Discoveries
@@ -349,11 +351,11 @@ The group name will be displayed in various locations in-game e.g. *Autopilot di
   <summary><strong style="">Learn more</strong></summary>
 <br>
 
-In Discovery Mode moons will be randomly selected (as new discoveries) e.g. when a the paid selection is shuffled. 
-**Cheap Moon Bias** will increase the odds of cheaper moons being selected.
->Makes it less likely - especially in the early game - to only discover moons you can't afford yet.
+LethalMoonUnlocks randomly selects moons e.g. during Travel Discovery or for your paid rotation.
+You can use **Cheap Moon Bias** to increase the odds of cheaper moons being selected. 
+>Makes it less likely - especially in the early game - to only discover moons you can't afford yet or are considered too valuable.
 
-The bias value is configurable. The bias in its entirety can be enabled or disabled for each applicable discovery mechanic.
+The bias can be enabled and tweaked individually for every mechanic that randomly selects moons.
 </details>
 
 ### Compatibility
@@ -361,7 +363,16 @@ The bias value is configurable. The bias in its entirety can be enabled or disab
   <summary><strong style="">Learn more</strong></summary>
 
 #### LethalConstellations
-*Planned!*
+LethalMoonUnlocks is compatible with LethalConstellations!  
+You can even choose to group match moons by their constellation.
+
+In Discovery Mode only constellations with discovered moons will be visible and available for routing in the LethalConstellations screen on the Terminal.  
+That screen will also show the number of moons currently discovered for every constellation.  
+Default moons will be set to the cheapest discovered moon in each constellation.  
+
+Independent of Discovery Mode you have the option to override the constellation prices with that of the cheapest (currently discovered) moon
+which will consequently also apply unlocks, discounts and sales to constellations.
+
 
 #### TerminalFormatter
 Tags are shown in TerminalFormatter moons node. Thanks @mrov!
