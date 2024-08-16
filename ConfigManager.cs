@@ -70,6 +70,7 @@ namespace LethalMoonUnlocks {
         private static int _quotaDiscountCountMin;
         private static int _quotaDiscountCountMax;
         public static int QuotaDiscountMaxCount { get; private set; }
+        public static int QuotaDiscountMaxPrice { get; private set; }
         public static bool QuotaFullDiscounts { get; private set; }
         public static int QuotaFullDiscountChance { get; private set; }
         public static int QuotaFullDiscountCount {
@@ -278,6 +279,8 @@ namespace LethalMoonUnlocks {
             QuotaDiscountChance = GetConfigValue("3.1 - Quota Discounts", "Quota Discount trigger chance", 100, "The chance to trigger a Quota Discount every time you meet the quota.\n", new AcceptableValueRange<int>(0, 100));
             _quotaDiscountCountMin = GetConfigValue("3.1 - Quota Discounts", "Minimum discounted moon count", 1, "The minimum number of moons that will receive a discount each time a Quota Discount is triggered.", new AcceptableValueRange<int>(1, 10));
             _quotaDiscountCountMax = GetConfigValue("3.1 - Quota Discounts", "Maximum discounted moon count", 1, "The maximum number of moons that will receive a discount each time a Quota Discount is triggered.", new AcceptableValueRange<int>(1, 10));
+            QuotaDiscountMaxPrice = GetConfigValue("3.1 - Quota Discounts", "Maximum moon price to discount", 0, "Only consider moons up to this price to receive a discount.\n" +
+                "Set to 0 to disable this feature");
             QuotaDiscountMaxCount = GetConfigValue("3.1 - Quota Discounts", "Limit number of discounts", 0, "Limit how many Quota Discounts you can receive during a run. After reaching the limit, Quota Discounts will no longer be granted.\n" +
                 "Set to 0 to disable this feature");
 

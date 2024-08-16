@@ -259,7 +259,15 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.DiscoveryMode) {
                 quotaDiscounts = quotaDiscounts.Where(unlock => unlock.Discovered || unlock.PermanentlyDiscovered).ToList();
             }
+            if (ConfigManager.QuotaDiscountMaxPrice > 0) {
+                quotaDiscounts = quotaDiscounts.Where(moon => moon.ExtendedLevel.RoutePrice <= ConfigManager.QuotaDiscountMaxPrice).ToList();
+            }
+
+            if (ConfigManager.CheapMoonBiasQuotaDiscount) {
+                quotaDiscounts = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaDiscounts, ConfigManager.CheapMoonBiasQuotaDiscountValue), ConfigManager.QuotaDiscountCount);
+            } else {
             quotaDiscounts = RandomSelector.Get(quotaDiscounts, ConfigManager.QuotaDiscountCount);
+            }
             if (quotaDiscounts.Count == 0) {
                 Plugin.Instance.Mls.LogInfo($"No moons for Quota Discount available!");
                 return;
