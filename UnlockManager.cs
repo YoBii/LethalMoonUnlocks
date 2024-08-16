@@ -364,7 +364,7 @@ namespace LethalMoonUnlocks {
             List<LMUnlockable> nddCandidates = DiscoveryCandidates;
             string ndDiscoveryGroupName = "nearby";
             if (ConfigManager.NewDayDiscoveryMatchGroup && currentLevelUnlock != null) {
-                LMGroup moonGroup = MatchMoonGroup(currentLevelUnlock, DiscoveryCandidates);
+                LMGroup moonGroup = MatchMoonGroup(currentLevelUnlock, DiscoveryCandidates, ConfigManager.NewDayDiscoveryMatchGroupFallback);
                 nddCandidates = moonGroup.Members;
                 if (!string.IsNullOrEmpty(moonGroup.Name)) ndDiscoveryGroupName = $"in <color=red>{moonGroup.Name}</color>";
             }
@@ -472,7 +472,7 @@ namespace LethalMoonUnlocks {
                 
             string tdMessageGroupName = string.Empty;
             if (ConfigManager.TravelDiscoveryMatchGroup) {
-                LMGroup moonGroup = MatchMoonGroup(unlock, DiscoveryCandidates);
+                LMGroup moonGroup = MatchMoonGroup(unlock, DiscoveryCandidates, ConfigManager.TravelDiscoveryMatchGroupFallback);
                 tdCandidates = moonGroup.Members;
                 if (!string.IsNullOrEmpty(moonGroup.Name)) tdMessageGroupName = $" to <color=red>{moonGroup.Name}</color>";
             }
@@ -661,7 +661,7 @@ namespace LethalMoonUnlocks {
                 }
             }
         }
-        private LMGroup MatchMoonGroup(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch) {
+        private LMGroup MatchMoonGroup(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch, bool fallback) {
             Plugin.Instance.Mls.LogDebug($"Matching moon {matchingUnlock.Name}: Matching against = [ {string.Join(", ", unlocksToMatch.Select(unlock => unlock.Name))} ]");
             if (matchingUnlock == null) return new LMGroup() { Members = unlocksToMatch };
             switch (ConfigManager.MoonGroupMatchingMethod) {
@@ -762,7 +762,7 @@ namespace LethalMoonUnlocks {
                     break;
             }    
             Plugin.Instance.Mls.LogInfo($"No matching moons found!");
-            if (ConfigManager.MoonGroupMatchingFallback) {
+            if (fallback) {
                 return new LMGroup() { Members = unlocksToMatch};
             } else {
                 return new LMGroup();

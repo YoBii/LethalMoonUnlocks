@@ -112,6 +112,7 @@ namespace LethalMoonUnlocks {
         private static int _quotaDiscoveryCountMax;
         public static bool QuotaDiscoveryPermanent { get; private set; }
         public static bool QuotaDiscoveryCheapestGroup { get; private set; }
+        public static bool QuotaDiscoveryCheapestGroupFallback { get; private set; }
         public static bool TravelDiscoveries { get; private set; }
         public static int TravelDiscoveryChance { get; private set; }
         public static int TravelDiscoveryCount {
@@ -123,6 +124,7 @@ namespace LethalMoonUnlocks {
         private static int _travelDiscoveryCountMax;
         public static bool TravelDiscoveryPermanent { get; private set; }
         public static bool TravelDiscoveryMatchGroup { get; private set; }
+        public static bool TravelDiscoveryMatchGroupFallback { get; private set; }
         public static bool NewDayDiscoveries { get; private set; }
         public static int NewDayDiscoveryChance { get; private set; }
         public static int NewDayDiscoveryCount {
@@ -134,6 +136,7 @@ namespace LethalMoonUnlocks {
         private static int _newDayDiscoveryCountMax;
         public static bool NewDayDiscoveryPermanent { get; private set; }
         public static bool NewDayDiscoveryMatchGroup { get; private set; }
+        public static bool NewDayDiscoveryMatchGroupFallback { get; private set; }
         public static bool Sales { get; private set; }
         public static int SalesChance { get; private set; }
         public static bool SalesShuffleDaily { get; private set; }
@@ -334,6 +337,8 @@ namespace LethalMoonUnlocks {
             QuotaDiscoveryCheapestGroup = GetConfigValue("4.1 - Quota Discoveries", "Discover cheapest custom group", false, "Limits discoveries to the custom group the currently cheapest moon belongs to.\n" +
                 "Can effectively discover the 'next tier' or group of moons. Set counts high to discover the entire group.\n" +
                 "NOTE: Highly recommended to only use this with 'Quota Discoveries are permanent' or 'Never shuffle'!");
+            QuotaDiscoveryCheapestGroupFallback = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest group fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+                "NOTE: Only relevant when you have moons that are not assigned to any group/constellation.");
 
             TravelDiscoveries = GetConfigValue("4.2 - Travel Discoveries", "Enable Travel Discoveries", false, "Travel Discoveries grant additional moon discoveries when routing to a paid moon\n" +
                 "The moons that are discovered are randomly selected.");
@@ -342,6 +347,8 @@ namespace LethalMoonUnlocks {
             _travelDiscoveryCountMax  = GetConfigValue("4.2 - Travel Discoveries", "Maximum travel discovery moon count", 1, "The maximum number of moons that will be discovered each time a Travel Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
             TravelDiscoveryPermanent = GetConfigValue("4.2 - Travel Discoveries", "Travel Discoveries are permanent", false, "Moons discovered through Travel Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
             TravelDiscoveryMatchGroup = GetConfigValue("4.2 - Travel Discoveries", "Travel Discovery group matching", false, "Only consider moons of the same group you're routing to for Travel Discoveries.");
+            TravelDiscoveryMatchGroupFallback = GetConfigValue("4.2 - Travel Discoveries", "Travel Discovery group matching fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+                "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
 
             NewDayDiscoveries = GetConfigValue("4.3 - New Day Discoveries", "Enable New Day Discoveries", false, "New Day Discoveries grant additional moon discoveries at the start of a new day.\n" +
                 "The moons that are discovered are randomly selected.");
@@ -351,6 +358,8 @@ namespace LethalMoonUnlocks {
             _newDayDiscoveryCountMax  = GetConfigValue("4.3 - New Day Discoveries", "Maximum new day discovery moon count", 1, "The maximum number of moons to be discovered each time a New Day Discovery is granted.", new AcceptableValueRange<int>(1, 10));
             NewDayDiscoveryPermanent = GetConfigValue("4.3 - New Day Discoveries", "New Day Discoveries are permanent", false, "Moons discovered through New Day Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
             NewDayDiscoveryMatchGroup = GetConfigValue("4.3 - New Day Discoveries", "New Day Discovery group matching", false, "Only consider moons of the same group as the moon you're currently orbiting for New Day Discoveries.");
+            NewDayDiscoveryMatchGroupFallback = GetConfigValue("4.3 - New Day Discoveries", "New Day Discovery group matching fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+                "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
 
             Sales = GetConfigValue("5 - Moon Sales", "Moon Sales", false, "Each moon has a chance to go on sale for a reduced routing price.\n" +
                 "By default, Moon Sales are shuffled after every quota. Only non-free moons can go on sale.\n" +
