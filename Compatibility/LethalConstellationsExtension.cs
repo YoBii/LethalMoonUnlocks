@@ -11,16 +11,16 @@ namespace LethalMoonUnlocks.Compatibility {
             if (Plugin.LethalConstellationsPresent) {
                 if (ConfigManager.DiscoveryMode) {
                     ApplyVisibility();
-                }
-                ApplyDefaultMoons();
-                HideUnlocksNotInCurrentConstellation();
+                    ApplyDefaultMoons();
+                    AddDiscoveryCount();
+                    HideUnlocksNotInCurrentConstellation();
                 } else {
                     HideUnlocksNotInCurrentConstellation();
                     ShowUnlocksInCurrentConstellation();
-            }
+                }
                 if (ConfigManager.LethalConstellationsOverridePrice) {
                     ApplyPrices();
-        }
+                }
             }
         }
         private static void ApplyVisibility() {
@@ -41,18 +41,27 @@ namespace LethalMoonUnlocks.Compatibility {
         }
         private static void ApplyDefaultMoons() {
             foreach (ClassMapper constellation in Collections.ConstellationStuff.Where(constellation => constellation.isHidden == false)) {
-                var constellationUnlocks = UnlockManager.Instance.Unlocks.Where(unlock => unlock.Discovered && constellation.constelMoons.Any(moon => unlock.Name == moon)).OrderBy(unlock => unlock.ExtendedLevel.RoutePrice);
+                var constellationUnlocks = UnlockManager.Instance.Unlocks.Where(unlock => unlock.Discovered && constellation.constelMoons.Any(moon => unlock.Name == moon)).OrderBy(unlock => unlock.ExtendedLevel.RoutePrice).ToList();
                 constellation.defaultMoon = constellationUnlocks.First().Name;
-                constellation.constelPrice = constellationUnlocks.First().ExtendedLevel.RoutePrice;
                 Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: set default moon to {constellationUnlocks.First().Name} ({constellation.defaultMoon})");
             }
+        }
+        private static void AddDiscoveryCount() {
+            foreach (ClassMapper constellation in Collections.ConstellationStuff.Where(constellation => constellation.isHidden == false)) {
+                var constellationUnlocks = UnlockManager.Instance.Unlocks.Where(unlock => unlock.Discovered && constellation.constelMoons.Any(moon => unlock.Name == moon)).ToList();
+                constellation.optionalParams = $"\nMoons discovered: {constellationUnlocks.Count}";
+                if (constellationUnlocks.Count == constellation.constelMoons.Count) {
+                    constellation.optionalParams = $"\nAll moons discovered!";
+                }
+            }
+        }
         private static void ApplyPrices() {
             foreach (ClassMapper constellation in Collections.ConstellationStuff.Where(constellation => constellation.isHidden == false)) {
                 var constellationDefaultMoonUnlock = UnlockManager.Instance.Unlocks.Where(unlock => unlock.Name == constellation.defaultMoon).FirstOrDefault();
                 if (constellationDefaultMoonUnlock != null) {
                     constellation.constelPrice = constellationDefaultMoonUnlock.ExtendedLevel.RoutePrice;
                     Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: set constellation price to {constellation.constelPrice}");
-        }
+                }
             }
         }
         private static void HideUnlocksNotInCurrentConstellation() {
