@@ -15,7 +15,7 @@ namespace LethalMoonUnlocks
 {
     [BepInPlugin("com.xmods.lethalmoonunlocks", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("imabatby.lethallevelloader", "1.3.8")]
-    [BepInDependency("LethalNetworkAPI", "3.1.1")]
+    [BepInDependency("LethalNetworkAPI", "3.2.0")]
     public class Plugin : BaseUnityPlugin
     {
         private readonly Harmony _harmony = new(PluginInfo.PLUGIN_GUID);

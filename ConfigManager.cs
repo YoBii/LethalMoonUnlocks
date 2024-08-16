@@ -3,13 +3,8 @@ using System.IO;
 using BepInEx;
 using System.Linq;
 using System;
-using HarmonyLib;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection;
 using LethalLevelLoader;
-using DunGen;
-using UnityEngine.Networking;
 
 namespace LethalMoonUnlocks {
     public class ConfigManager {
