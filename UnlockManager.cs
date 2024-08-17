@@ -735,20 +735,12 @@ namespace LethalMoonUnlocks {
                         break;
                     }
                 case "LethalConstellations":
-                    if (!Plugin.LethalConstellationsPresent) break;
-                    ClassMapper constellation = Collections.ConstellationStuff.Where(con => con.constelMoons.Any(moon => moon == matchingUnlock.Name)).FirstOrDefault();
-                    List<LMUnlockable> constellationMatches = new List<LMUnlockable>();
-                    if (constellation != null) {
-                        foreach (var moon in constellation.constelMoons) {
-                            var unlock = unlocksToMatch.Where(unlock => unlock.Name == moon).FirstOrDefault();
-                            if (unlock != null) {
-                                constellationMatches.Add(unlock);
-                            }
-                        }
-                    }
+                    if (!Plugin.LethalConstellationsPresent || Plugin.LethalConstellationsExtension == null) break;
+                    string constellationName = Plugin.LethalConstellationsExtension.GetConstellationName(matchingUnlock);
+                    List<LMUnlockable> constellationMatches = Plugin.LethalConstellationsExtension.GetConstellationMatchesForMoon(matchingUnlock, unlocksToMatch);
                     if (constellationMatches.Count > 0) {
-                        Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by constellation [{constellation.consName}]; Matches = [ {string.Join(", ", constellationMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Name = constellation.consName, Members = constellationMatches };
+                        Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by constellation [{constellationName}]; Matches = [ {string.Join(", ", constellationMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Name = constellationName, Members = constellationMatches };
                     } else {
                         break;
                     }

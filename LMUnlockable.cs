@@ -308,7 +308,7 @@ namespace LethalMoonUnlocks {
                     groupTag = customGroupsDict.Keys.First();
                 }
                 tags = AddTagToPreviewText($"[{groupTag.Trim()}]", tags);
-            } else if (Plugin.LethalConstellationsPresent && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup || ConfigManager.QuotaDiscoveryCheapestGroup) && ConfigManager.ShowTagGroups) {
+            } else if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension!= null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup || ConfigManager.QuotaDiscoveryCheapestGroup) && ConfigManager.ShowTagGroups) {
                 tags = AddTagToPreviewText($"[{Plugin.LethalConstellationsExtension.GetConstellationName(this)}]", tags);
             } else if (ConfigManager.MoonGroupMatchingMethod == "Tag") {
                 var contentTags = ExtendedLevel.ContentTags;
