@@ -4,12 +4,24 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <AssemblyName>LethalMoonUnlocks</AssemblyName>
         <Description>Permanently unlock moons and more</Description>
-        <Version>2.1.0</Version>
+        <Version>2.1.2</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
-    <ItemGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+      <DebugType>portable</DebugType>
+    </PropertyGroup>
+
+	<PropertyGroup Label="Normalise stack trace file locations">
+		<PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=G:\</PathMap>
+	</PropertyGroup>
+
+	<ItemGroup>
         <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
         <PackageReference Include="BepInEx.Core" Version="5.*" />
         <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
@@ -39,7 +51,10 @@
 			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\xCore\BepInEx\plugins\BananaPuncher714-LethalQuantities\LethalQuantities.dll</HintPath>
 		</Reference>
 		<Reference Include="LethalConstellations">
-			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-Lethal_Constellations\0.2.0\LethalConstellations.dll</HintPath>
+			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-Lethal_Constellations\0.2.1\LethalConstellations.dll</HintPath>
+		</Reference>
+		<Reference Include="OpenLib">
+			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-OpenLib\0.1.8\OpenLib.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>
