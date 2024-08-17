@@ -1,5 +1,4 @@
-﻿using LethalConstellations.PluginCore;
-using LethalLevelLoader;
+﻿using LethalLevelLoader;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
 using System;
@@ -217,7 +216,6 @@ namespace LethalMoonUnlocks {
             }
             return matchingGroups;
         }
-
         public string GetMoonPreviewText(PreviewInfoType infoType) {
             // FIRST TERMINAL LINE (NEXT TO NAME)
             int moonNameLength = Name.Count();
@@ -310,11 +308,8 @@ namespace LethalMoonUnlocks {
                     groupTag = customGroupsDict.Keys.First();
                 }
                 tags = AddTagToPreviewText($"[{groupTag.Trim()}]", tags);
-            } else if (ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup) && ConfigManager.ShowTagGroups) {
-                ClassMapper constellation = Collections.ConstellationStuff.Where(con => con.constelMoons.Any(moon => moon == Name)).FirstOrDefault();
-                if (constellation != null) {
-                    tags = AddTagToPreviewText($"[{constellation.consName}]", tags);
-                }
+            } else if (Plugin.LethalConstellationsPresent && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup || ConfigManager.QuotaDiscoveryCheapestGroup) && ConfigManager.ShowTagGroups) {
+                tags = AddTagToPreviewText($"[{Plugin.LethalConstellationsExtension.GetConstellationName(this)}]", tags);
             } else if (ConfigManager.MoonGroupMatchingMethod == "Tag") {
                 var contentTags = ExtendedLevel.ContentTags;
                 string tagsTag = string.Empty;

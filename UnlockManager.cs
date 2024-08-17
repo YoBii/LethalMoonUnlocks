@@ -735,6 +735,7 @@ namespace LethalMoonUnlocks {
                         break;
                     }
                 case "LethalConstellations":
+                    if (!Plugin.LethalConstellationsPresent) break;
                     ClassMapper constellation = Collections.ConstellationStuff.Where(con => con.constelMoons.Any(moon => moon == matchingUnlock.Name)).FirstOrDefault();
                     List<LMUnlockable> constellationMatches = new List<LMUnlockable>();
                     if (constellation != null) {
@@ -745,7 +746,7 @@ namespace LethalMoonUnlocks {
                             }
                         }
                     }
-                    if (constellationMatches.Count > 0) { 
+                    if (constellationMatches.Count > 0) {
                         Plugin.Instance.Mls.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by constellation [{constellation.consName}]; Matches = [ {string.Join(", ", constellationMatches.Select(unlock => unlock.Name))} ]");
                         return new LMGroup() { Name = constellation.consName, Members = constellationMatches };
                     } else {
@@ -799,7 +800,9 @@ namespace LethalMoonUnlocks {
                     unlock.ApplyDiscoverability();
                 }
             }
-            LethalConstellationsExtension.ApplyUnlocks();
+            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
+                Plugin.LethalConstellationsExtension.ApplyUnlocks();
+            }
         }
 
         private void Reset() {

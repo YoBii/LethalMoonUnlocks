@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using LethalConstellations.PluginCore;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
 using System;
@@ -16,6 +15,8 @@ namespace LethalMoonUnlocks
     [BepInPlugin("com.xmods.lethalmoonunlocks", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("imabatby.lethallevelloader", "1.3.8")]
     [BepInDependency("LethalNetworkAPI", "3.2.0")]
+    [BepInDependency(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(OpenLib.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         private readonly Harmony _harmony = new(PluginInfo.PLUGIN_GUID);
@@ -23,6 +24,7 @@ namespace LethalMoonUnlocks
         internal static Plugin Instance {  get; private set; }
         internal static bool LQPresent = false;
         internal static bool LethalConstellationsPresent = false;
+        internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
 
@@ -77,17 +79,12 @@ namespace LethalMoonUnlocks
                 return;
             }
 
-            // Refresh config
-            ConfigManager.RefreshConfig();
-            
-            // Create Managers
-            NetworkManager = new NetworkManager();
-            UnlockManager = new UnlockManager();
+            // Check for compatible mods
+            Mls.LogInfo("Checking for compatible mods..");
 
             // print all plugin keys
             //Mls.LogFatal(string.Join(", ", BepInEx.Bootstrap.Chainloader.PluginInfos.Select(plugin => plugin.Key)));
 
-            // Check for compatible mods
             // LethalQuantities (risk level)
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalQuantities.PluginInfo.PLUGIN_GUID)) {
                 Mls.LogInfo("Lethal Quantities found! Enabling compatibility..");
@@ -98,11 +95,19 @@ namespace LethalMoonUnlocks
                 Mls.LogInfo("Malfunctions found! Enabling compatibility..");
                 _harmony.PatchAll(typeof(MalfunctionsCompatibility));
             }
-            
+            // LethalConstellations
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID)) {
+                Mls.LogInfo("LethalConstellations found! Enabling compatibility..");
                 LethalConstellationsPresent = true;
-                _harmony.PatchAll(typeof(Patches.LethalConstellationsPatch));
+                LethalConstellationsExtension = new LethalConstellationsExtension();
             }
+
+            // Refresh config
+            ConfigManager.RefreshConfig();
+            
+            // Create Managers
+            NetworkManager = new NetworkManager();
+            UnlockManager = new UnlockManager();
 
             // Unload this
             SceneManager.sceneUnloaded -= AfterGameInit;

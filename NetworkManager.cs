@@ -13,6 +13,8 @@ namespace LethalMoonUnlocks {
                 Instance = this;
             }
 
+            Plugin.Instance.Mls.LogInfo("Register Network messages..");
+
             UnlockablesMessage = LNetworkMessage<List<LMUnlockable>>.Connect("LMU_Unlocks", onClientReceived: ClientReceiveUnlockables);
             BuyMoonMessage = LNetworkMessage<string>.Connect("LMU_BuyMoonMessage", onServerReceived: ServerReceiveBuyMoon);
             RequestSyncEvent = LNetworkEvent.Connect("LMU_RequestSyncEvent", onServerReceived: ServerReceiveRequestSyncEvent);
@@ -20,7 +22,7 @@ namespace LethalMoonUnlocks {
             AlertMessage = LNetworkMessage<Notification>.Connect("LMU_AlertMessage", onClientReceived: ClientReceiveAlertMessage);
             SendAlertQueueEvent = LNetworkEvent.Connect("LMU_SendAlertQueueEvent", onClientReceived: ClientReceiveSendAlertQueueEvent);
 
-            Plugin.Instance.Mls.LogInfo($"UnlockManager created.");
+            Plugin.Instance.Mls.LogInfo($"NetworkManager created.");
         }
         public static NetworkManager Instance { get; private set; }
 
