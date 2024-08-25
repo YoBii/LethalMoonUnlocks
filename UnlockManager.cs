@@ -209,7 +209,6 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Checking for groups..");
                 LMGroup group = MatchMoonGroup(candidate, candidates, ConfigManager.QuotaDiscoveryCheapestGroupFallback);
                 if (group.Members.Count > 0) {
-                    int groupSize = group.Members.Count;
                     foreach (var member in group.Members) {
                         if (!member.Discovered && !member.PermanentlyDiscovered) {
                             discoveryGroup.Add(member);
@@ -251,7 +250,7 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.ChatMessages) {
                 if (quotaUnlocks.Count > 1) {
                     HUDManager.Instance.AddTextToChatOnServer($"New moons unlocked:\n<color=green>{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}</color>");
-                } else if (quotaUnlocks.Count > 1) {
+                } else if (quotaUnlocks.Count == 1) {
                     HUDManager.Instance.AddTextToChatOnServer($"New moon unlocked:\n<color=green>{quotaUnlocks.FirstOrDefault().Name}</color>");
                 }
             }
