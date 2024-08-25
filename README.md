@@ -5,7 +5,7 @@ Introducing new progression mechanics in Discovery Mode where you keep uncoverin
 
 ## Overview
 
-LethalMoonUnlocks gives players the power to customize their moon unlocking experience in a number of ways. Here’s a quick look at what you can do:
+LethalMoonUnlocks gives players the power to customize their moon unlocking experience in a number of ways. Here's a quick look at what you can do:
 
 - **Unlock Mode**: Permanently unlock moons after just one purchase.
 - **Discount Mode**: Gradually unlock discounts until moons are free. Alternative to Unlock Mode.
@@ -375,7 +375,7 @@ There are multiple group matching methods available.
 All of these methods use the moon's original prices to match them into groups.
 
 - **Price**: Matches all moons that share the exact same price.
-- **PriceRange**: Matches all moons within a configurable ± price range.
+- **PriceRange**: Matches all moons within a configurable Â± price range.
 - **PriceRangeUpper**: Same as PriceRange but only considers equally or more expensive moons.
 
 ### Tag

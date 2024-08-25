@@ -336,7 +336,7 @@ namespace LethalMoonUnlocks {
                 previewText = "\n  *";
             }
             string[] lines = previewText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            if (lines[lines.Length - 1].Length + newTag.Length < ConfigManager.TerminalTagLineWidth || lines[lines.Length - 1] == "  *" || newTag.Length >= ConfigManager.TerminalTagLineWidth - 3) {
+            if (lines[lines.Length - 1].Length + newTag.Length < ConfigManager.TerminalTagLineWidth || lines[lines.Length - 1] == "  *") {
                 previewText += " " + newTag;
             } else {
                 previewText += "\n  * " + newTag; 

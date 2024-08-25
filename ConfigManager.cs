@@ -424,7 +424,7 @@ namespace LethalMoonUnlocks {
             TerminalTagLineWidth = GetConfigValue("6.3 - Terminal", "Maximum tag line length", 49, "By default LMU tries to fit as many tags as possible into a single line.\n" +
                 "Decrease this value if you want to have a more organized look at the cost of more scrolling depending on the amount of tags you see.\n" +
                 "NOTE: Don't worry about setting it too low. It will always put at least one tag per line. Only if any additional tag would exceed this value it puts a line break.\n" +
-                "Do not set it larger than default unless you are also decreasing font size below.", new AcceptableValueRange<int>(0, 100));
+                "Do not set it larger than default unless you are also decreasing font size below.", new AcceptableValueRange<int>(10, 100));
             TerminalFontSizeOverride = GetConfigValue("6.3 - Terminal", "Override Terminal font size", true, "Override the font size in the Terminal's moon catalogue.\n" +
                 "Prevents inconsistencies with formatting. Disable to let LLL dynamically size the font depending on the number of moons visible\n" +
                 "NOTE: With very few moons you might see some ugly line breaks with custom weathers with long names (Meteor Shower).");
