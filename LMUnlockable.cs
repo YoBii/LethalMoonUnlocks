@@ -219,14 +219,14 @@ namespace LethalMoonUnlocks {
         public string GetMoonPreviewText(PreviewInfoType infoType) {
             // FIRST TERMINAL LINE (NEXT TO NAME)
             int moonNameLength = Name.Count();
-            string format = "{0, -" + (20 - moonNameLength) + "} {1, -6} {2, -8} {3, -10}";
+            string format = "{0, -" + (18 - moonNameLength) + "} {1, -7} {2, -9} {3, -13}";
             string preview = string.Empty;
             string empty = string.Empty;
 
             string weather = ExtendedLevel.SelectableLevel.currentWeather.ToString();
             if (ExtendedLevel.SelectableLevel.currentWeather == LevelWeatherType.None)
                 weather = string.Empty;
-            if (weather.Count() > 10) weather = weather.Substring(0, 8) + "..";
+            //if (weather.Count() > 13) weather = weather.Substring(0, 11) + "..";
             string risk = string.Empty;
             if (Plugin.LQPresent && ConfigManager.PreferLQRisk) {
                 risk = LQCompatibility.GetLQRiskLevel(this);
@@ -234,8 +234,9 @@ namespace LethalMoonUnlocks {
             if (string.IsNullOrEmpty(risk)) {
                 risk = ExtendedLevel.SelectableLevel.riskLevel;
             }
-            if (risk.Count() > 5) risk = risk.Substring(0, 3) + "..";
-
+            if (risk.Count() > 7) {
+                risk = risk.Substring(0, 5) + "..";
+            }
             if (infoType.Equals(PreviewInfoType.Weather)) {
                 preview = string.Format(format, empty, empty, "$" + ExtendedLevel.RoutePrice, weather);
             } else if (infoType.Equals(PreviewInfoType.Price)) {
@@ -325,6 +326,9 @@ namespace LethalMoonUnlocks {
             if (!string.IsNullOrEmpty(tags)) {
                     preview += tags;
                 }
+            if (ConfigManager.TerminalFontSizeOverride) {
+                UnlockManager.Instance.Terminal.screenText.textComponent.fontSize = ConfigManager.TerminalFontSize;
+            }
             return preview;
         }
 
@@ -333,7 +337,7 @@ namespace LethalMoonUnlocks {
                 previewText = "\n  *";
             }
             string[] lines = previewText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            if (lines[lines.Length - 1].Length + newTag.Length < ConfigManager.TerminalTagLineWidth || lines[lines.Length - 1] == "  *" || newTag.Length >= 46) {
+            if (lines[lines.Length - 1].Length + newTag.Length < ConfigManager.TerminalTagLineWidth || lines[lines.Length - 1] == "  *" || newTag.Length >= ConfigManager.TerminalTagLineWidth - 3) {
                 previewText += " " + newTag;
             } else {
                 previewText += "\n  * " + newTag; 

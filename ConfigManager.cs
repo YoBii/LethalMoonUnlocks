@@ -162,6 +162,8 @@ namespace LethalMoonUnlocks {
         public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict {  get; private set; }
         private static bool MoonGroupMatchingCustomHelper { get; set; }
         public static int TerminalTagLineWidth { get; set; }
+        public static bool TerminalFontSizeOverride { get; set; }
+        public static float TerminalFontSize { get; set; }
         public static bool PreferLQRisk {  get; private set; }
         public static bool MalfunctionsNavigation {  get; private set; }
         public static bool AlertMessageQueueing {  get; private set; }
@@ -301,7 +303,7 @@ namespace LethalMoonUnlocks {
             DiscoveryShuffleEveryDay = GetConfigValue("4 - Discovery Mode", "Shuffle every day", false, "Shuffle the rotation of moons available in the moon catalogue every day, instead of after every quota.");
             
             DiscoveryWhitelist = GetConfigValue("4 - Discovery Mode", "Whitelist", "", "List of moons to keep discovered at all times.\n" +
-                "For example, 'Whitelist = Experimentation, Assurance, Vow' would make these three moons start out as permanently discovered on every run.\n" +
+                "For example, 'Experimentation, Assurance, Vow' would make these three moons start out as permanently discovered on every run.\n" +
                 "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
 
             DiscoveryFreeCountBase = GetConfigValue("4 - Discovery Mode", "Free moons base count", 1, "The base amount of randomly selected free moons available in the moon catalogue.\n" +
@@ -421,7 +423,13 @@ namespace LethalMoonUnlocks {
 
             TerminalTagLineWidth = GetConfigValue("6.3 - Terminal", "Maximum tag line length", 49, "By default LMU tries to fit as many tags as possible into a single line.\n" +
                 "Decrease this value if you want to have a more organized look at the cost of more scrolling depending on the amount of tags you see.\n" +
-                "NOTE: Don't worry about setting it too low. It will always put at least one tag per line. Only if any additional tag would exceed this value it puts a line break.", new AcceptableValueRange<int>(0, 49));
+                "NOTE: Don't worry about setting it too low. It will always put at least one tag per line. Only if any additional tag would exceed this value it puts a line break.\n" +
+                "Do not set it larger than default unless you are also decreasing font size below.", new AcceptableValueRange<int>(0, 100));
+            TerminalFontSizeOverride = GetConfigValue("6.3 - Terminal", "Override Terminal font size", true, "Override the font size in the Terminal's moon catalogue.\n" +
+                "Prevents inconsistencies with formatting. Disable to let LLL dynamically size the font depending on the number of moons visible\n" +
+                "NOTE: With very few moons you might see some ugly line breaks with custom weathers with long names (Meteor Shower).");
+            TerminalFontSize = GetConfigValue("6.3 - Terminal", "Terminal font size", 15f, "Customize the Terminal's moon catalogue font size.\n" +
+                "NOTE: When using smaller fonts you can increase the maximum tag line width above.", new AcceptableValueRange<float>(8f, 15f));
 
             AlertMessageQueueing = GetConfigValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
             PreferLQRisk = GetConfigValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalogue instead of the default risk levels.");
