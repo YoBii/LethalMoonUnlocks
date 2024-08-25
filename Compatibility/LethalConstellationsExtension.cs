@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace LethalMoonUnlocks.Compatibility {
     internal class LethalConstellationsExtension {
         internal LethalConstellationsExtension() {
-            LethalConstellations.EventStuff.NewEvents.RouteConstellationSuccess.AddListener(BuyConstellations);
+            LethalConstellations.EventStuff.NewEvents.RouteConstellationSuccess.AddListener(OnConstellationBought);
         }
 
         internal void ApplyUnlocks() {
@@ -27,8 +27,7 @@ namespace LethalMoonUnlocks.Compatibility {
 
         internal string GetConstellationName(LMUnlockable unlock) {
             ClassMapper constellation = Collections.ConstellationStuff.Where(constellation => constellation.constelMoons.Any(moon => moon == unlock.Name)).FirstOrDefault();
-            if (constellation != null)
-            {
+            if (constellation != null) {
                 return constellation.consName;
             }
             return string.Empty;
@@ -48,9 +47,9 @@ namespace LethalMoonUnlocks.Compatibility {
             return constellationMatches;
         }
 
-        private void BuyConstellations() {
+        private void OnConstellationBought() {
             //ClassMapper currentConstellation = Collections.ConstellationStuff.Where(constellation => constellation.consName == Collections.CurrentConstellation).FirstOrDefault();
-            //TIL: Linq generates 'DisplayClasses' from lambda expressions. If those classes are of or contain (idk) a referenced type that's not present and they are picked up via reflection at runtime.. things can go wrong
+            //TIL: Linq generates 'DisplayClasses' from lambda expressions. If those classes are of or contain (idk) a referenced type that's not present and they are picked up via reflection at runtime.. TypeLoadException
             ClassMapper currentConstellation = null;
             foreach (var constellation in Collections.ConstellationStuff) {
                 if (constellation.consName == Collections.CurrentConstellation) {
@@ -108,8 +107,11 @@ namespace LethalMoonUnlocks.Compatibility {
                 if (constellation.isHidden) continue;
                 List<string> constellationMoons = constellation.constelMoons;
                 var constellationUnlocks = UnlockManager.Instance.Unlocks.Where(unlock => unlock.Discovered && constellationMoons.Any(moon => unlock.Name == moon)).OrderBy(unlock => unlock.ExtendedLevel.RoutePrice).ToList();
-                constellation.defaultMoon = constellationUnlocks.First().Name;
-                Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: set default moon to {constellationUnlocks.First().Name} ({constellation.defaultMoon})");
+                if (constellationUnlocks.Count > 0) {
+                    constellation.defaultMoon = constellationUnlocks.First().Name;
+                    constellation.defaultMoonLevel = constellationUnlocks.First().ExtendedLevel;
+                    Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: set default moon to {constellation.defaultMoon}");
+                }
             }
         }
 
