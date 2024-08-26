@@ -300,7 +300,7 @@ namespace LethalMoonUnlocks {
 
             // OPTIONAL GROUP TAG
             var customGroupsDict = GetMatchingCustomGroups();
-            if (ConfigManager.MoonGroupMatchingMethod == "Custom" && customGroupsDict.Count > 0 && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup) && ConfigManager.ShowTagGroups) {
+            if (ConfigManager.MoonGroupMatchingMethod == "Custom" && customGroupsDict.Count > 0 && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup || ConfigManager.QuotaDiscoveryCheapestGroup) && ConfigManager.ShowTagGroups) {
                 string groupTag = string.Empty;
                 if (customGroupsDict.Count > 1) {
                     groupTag = string.Join("/", customGroupsDict.Keys);
