@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <AssemblyName>LethalMoonUnlocks</AssemblyName>
         <Description>Permanently unlock moons and more</Description>
-        <Version>2.1.4</Version>
+        <Version>2.1.5</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
@@ -20,6 +20,13 @@
 	<PropertyGroup Label="Normalise stack trace file locations">
 		<PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=G:\</PathMap>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<ContentWithTargetPath Include=".\bin\Release\netstandard2.1\LethalMoonUnlocks.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>..\..\..\release\BepInEx\plugins\LethalMoonUnlocks.dll</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
 
 	<ItemGroup>
         <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
