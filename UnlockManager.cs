@@ -207,7 +207,7 @@ namespace LethalMoonUnlocks {
             foreach (var candidate in candidates.OrderBy(c => c.OriginalPrice)) {
                 Plugin.Instance.Mls.LogInfo($"Got cheapest candidate: {candidate.Name}");
                 Plugin.Instance.Mls.LogInfo($"Checking for groups..");
-                LMGroup group = MatchMoonGroup(candidate, candidates, ConfigManager.QuotaDiscoveryCheapestGroupFallback);
+                LMGroup group = MatchMoonGroup(candidate, candidates, false);
                 if (group.Members.Count > 0) {
                     foreach (var member in group.Members) {
                         if (!member.Discovered && !member.PermanentlyDiscovered) {
@@ -221,6 +221,9 @@ namespace LethalMoonUnlocks {
                 } else {
                     Plugin.Instance.Mls.LogInfo("Candidate has no group matches. Try next..");
                 }
+            }
+            if (discoveryGroup.Count < 1 && ConfigManager.QuotaDiscoveryCheapestGroupFallback) {
+                return candidates;
             }
             return discoveryGroup;
         }
@@ -669,6 +672,7 @@ namespace LethalMoonUnlocks {
                         if (unlock.Name.Contains(entry.Trim(), StringComparison.OrdinalIgnoreCase)) {
                             matched = true;
                             unlock.Discovered = true;
+                            Plugin.Instance.Mls.LogDebug($"Whitelist entry set to discovered: {entry}");
                             break;
                         }
                     }
