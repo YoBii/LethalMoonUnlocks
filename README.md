@@ -51,8 +51,6 @@ If you don't use LLL, you likely don't have custom moons, so you can continue us
 Report issues on GitHub: [**LethalMoonUnlocks**](https://github.com/YoBii/LethalMoonUnlocks)
 
 ## Unlock Mode
-> **Default**
-
 Unlock Mode is the only feature enabled by default and works exactly like the original Permanent Moons mod.  
 
 <details>
@@ -108,7 +106,6 @@ Quota Unlocks reward you for meeting a quota by granting random unlocks for free
 </details>
 
 ## Discount Mode
-
 In Discount Mode, instead of directly unlocking moons, you will unlock a new discount rate each time you buy a moon, eventually making it free.
 
 <details>
@@ -188,7 +185,6 @@ Quota Full Discounts reward you for meeting a quota by unlocking the final disco
 </details>
 
 ## Discovery Mode
-
 In Discovery Mode, you start with a limited selection of moons for travel. You will discover new moons as you play.
 
 <details>
@@ -367,27 +363,29 @@ In Discovery Mode, all new discoveries are randomly selected. With moon group ma
 
 This is always in reference to a *matching moon*. For [**Travel Discoveries**](#optional-travel-discoveries), that is the moon you've routed to, and for [**New Day Discoveries**](#optional-new-day-discoveries), it's the moon you're currently at.
 
-Moon group matching can be disabled individually for each of these mechanics.
+Moon group matching can be enabled or disabled individually for each of these mechanics.  
+
+Additionally, when no moons can be matched, you can set that particular discovery mechanic to fall back to choosing from all moons or not.
 
 There are multiple group matching methods available.
 
-### Price, PriceRange, PriceRangeUpper
-All of these methods use the moon's original prices to match them into groups.
+### Price
+Match moons based on their price using the following methods:  
 
 - **Price**: Matches all moons that share the exact same price.
 - **PriceRange**: Matches all moons within a configurable ± price range.
 - **PriceRangeUpper**: Same as PriceRange but only considers equally or more expensive moons.
 
+By default any price reductions (unlocks, discounts or sales) are ignored. This can be disabled. 
+
 ### Tag
-Selects a random LLL content tag and matches all other moons sharing that tag.
+Picks a random LLL content tag and matches all other moons sharing that tag.
 
 ### Custom
 Custom allows you to define fully custom groups. A group is defined by name and a list of members (moons).  
 
 A moon will always match with all members of the same group.  
 If a moon is a member of multiple groups, a random group will be selected for matching.  
-When all members of every group are already discovered, a random moon will be chosen instead.
-
 The group name will be displayed in various locations in-game, e.g., *Autopilot discovered new moons during travel to Zeekers Galaxy*.
 </details>
 
