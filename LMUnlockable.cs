@@ -172,7 +172,7 @@ namespace LethalMoonUnlocks {
                 if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.UnlocksResetAfterVisits > 0) {
                     if (FreeVisitCount > ConfigManager.UnlocksResetAfterVisits) {
                         Plugin.Instance.Mls.LogInfo($"{Name}: Reset unlock due to free visit count ({FreeVisitCount - 1}) reached.");
-                        HUDManager.Instance.AddTextToChatOnServer($"Unlock expired:\n<color=red>{Name}</color>");
+                        NotificationHelper.SendChatMessage($"Unlock expired:\n<color=red>{Name}</color>");
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Unlock expired!", Text = $"Your unlock for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_UnlockExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;
@@ -187,7 +187,7 @@ namespace LethalMoonUnlocks {
                 if (ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0) {
                     if (FreeVisitCount > ConfigManager.DiscountsResetAfterVisits) {
                         Plugin.Instance.Mls.LogInfo($"{Name}: Reset discount due to free visit count ({FreeVisitCount - 1}) reached.");
-                        HUDManager.Instance.AddTextToChatOnServer($"Discount expired:\n<color=red>{Name}</color>");
+                        NotificationHelper.SendChatMessage($"Discount expired:\n<color=red>{Name}</color>");
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Discount expired!", Text = $"Your discount for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_DiscountExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;

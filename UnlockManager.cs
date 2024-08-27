@@ -195,9 +195,7 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogInfo($"Quota Discovery is permanent: {qd.Name}");
                 }
             }
-            if (ConfigManager.ChatMessages) {
-                HUDManager.Instance.AddTextToChatOnServer($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n<color=white>{(quotaDiscoveries.Count > 1 ? string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name)) :  quotaDiscoveries.FirstOrDefault().Name)}</color>");
-            }
+            NotificationHelper.SendChatMessage($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n<color=white>{(quotaDiscoveries.Count > 1 ? string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name)) :  quotaDiscoveries.FirstOrDefault().Name)}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery" });
             Plugin.Instance.Mls.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
         }
@@ -250,12 +248,10 @@ namespace LethalMoonUnlocks {
                 unlock.FreeVisitCount = 1;
             }
             QuotaUnlocksCount++;
-            if (ConfigManager.ChatMessages) {
-                if (quotaUnlocks.Count > 1) {
-                    HUDManager.Instance.AddTextToChatOnServer($"New moons unlocked:\n<color=green>{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}</color>");
-                } else if (quotaUnlocks.Count == 1) {
-                    HUDManager.Instance.AddTextToChatOnServer($"New moon unlocked:\n<color=green>{quotaUnlocks.FirstOrDefault().Name}</color>");
-                }
+            if (quotaUnlocks.Count > 1) {
+                NotificationHelper.SendChatMessage($"New moons unlocked:\n<color=green>{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}</color>");
+            } else if (quotaUnlocks.Count == 1) {
+                NotificationHelper.SendChatMessage($"New moon unlocked:\n<color=green>{quotaUnlocks.FirstOrDefault().Name}</color>");
             }
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaUnlocks.Count.SinglePluralWord("Unlock")} granted!", Text = $"You earned unlocks for:\n{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaUnlock" });
             Plugin.Instance.Mls.LogInfo($"New Quota Unlocks: {string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}");
@@ -283,10 +279,8 @@ namespace LethalMoonUnlocks {
                 discount.BuyCount++;
             }
             QuotaDiscountsCount++;
-            if (ConfigManager.ChatMessages) {
-                if (quotaDiscounts.Count == 1) HUDManager.Instance.AddTextToChatOnServer($"Discount granted:\n<color=green>{quotaDiscounts.FirstOrDefault().Name}</color>");
-                else if (quotaDiscounts.Count > 1) HUDManager.Instance.AddTextToChatOnServer($"Discounts granted:\n<color=green>{string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}</color>");
-            }
+            if (quotaDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Discount granted:\n<color=green>{quotaDiscounts.FirstOrDefault().Name}</color>");
+            else if (quotaDiscounts.Count > 1) NotificationHelper.SendChatMessage($"Discounts granted:\n<color=green>{string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned discounts for:\n{string.Join(", ", quotaDiscounts.Select(discount => discount.Name + " " + (100 - (int)(Plugin.GetDiscountRate(discount.BuyCount) * 100)) + "%"))}", Key = "LMU_NewQuotaDiscount" });
             Plugin.Instance.Mls.LogInfo($"New Quota Discounts: {string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}");
         }
@@ -316,10 +310,8 @@ namespace LethalMoonUnlocks {
                 fullDiscount.FreeVisitCount = 1;
             }
             QuotaFullDiscountsCount++;
-            if (ConfigManager.ChatMessages) {
-                if (quotaFullDiscounts.Count == 1) HUDManager.Instance.AddTextToChatOnServer($"Full discount granted:\n<color=green>{quotaFullDiscounts.FirstOrDefault().Name}</color>");
-                else if (quotaFullDiscounts.Count > 1) HUDManager.Instance.AddTextToChatOnServer($"Full discounts granted:\n<color=green>{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}</color>");
-            }
+            if (quotaFullDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Full discount granted:\n<color=green>{quotaFullDiscounts.FirstOrDefault().Name}</color>");
+            else if (quotaFullDiscounts.Count > 1) NotificationHelper.SendChatMessage($"Full discounts granted:\n<color=green>{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $" Full {quotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned full discounts for:\n{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaFullDiscount" });
             Plugin.Instance.Mls.LogInfo($"New Quota Full Discounts: {string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}");
         }
@@ -403,15 +395,13 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogDebug($"{d.Name}: Discovery is permanent");
                 }
             }
-            if (ConfigManager.ChatMessages) {
-                if (newDayDiscoveries.Count == 1) {
-                    HUDManager.Instance.AddTextToChatOnServer($"Autopilot discovered moon suitable for landing {ndDiscoveryGroupName}:\n<color=white>{newDayDiscoveries.FirstOrDefault().Name}</color>");
-                    Plugin.Instance.Mls.LogInfo($"New Day Discoveries: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
-                }
-                if (newDayDiscoveries.Count > 1) {
-                    HUDManager.Instance.AddTextToChatOnServer($"Autopilot discovered moons suitable for landing {ndDiscoveryGroupName}:\n<color=white>{string.Join(", ", newDayDiscoveries.Select(ndd => ndd.Name))}</color>");
-                    Plugin.Instance.Mls.LogInfo($"New Day Discovery: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
-                }
+            if (newDayDiscoveries.Count == 1) {
+                NotificationHelper.SendChatMessage($"Autopilot discovered moon suitable for landing {ndDiscoveryGroupName}:\n<color=white>{newDayDiscoveries.FirstOrDefault().Name}</color>");
+                Plugin.Instance.Mls.LogInfo($"New Day Discoveries: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
+            }
+            if (newDayDiscoveries.Count > 1) {
+                NotificationHelper.SendChatMessage($"Autopilot discovered moons suitable for landing {ndDiscoveryGroupName}:\n<color=white>{string.Join(", ", newDayDiscoveries.Select(ndd => ndd.Name))}</color>");
+                Plugin.Instance.Mls.LogInfo($"New Day Discovery: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
             }
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New Day {newDayDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {newDayDiscoveries.Count.SinglePluralWord("moon")} {ndDiscoveryGroupName}.\n" +
                 $"Moon catalogue updated!", Key = "LMU_NewDayDiscovery" });
@@ -514,11 +504,11 @@ namespace LethalMoonUnlocks {
             }
 
             if (travelDiscoveries.Count > 1) {
-                HUDManager.Instance.AddTextToChatOnServer($"Discovered new moons on route{tdMessageGroupName}:\n<color=white>{string.Join(", ", travelDiscoveries.Select(td => td.Name))}</color>");
+                NotificationHelper.SendChatMessage($"Discovered new moons on route{tdMessageGroupName}:\n<color=white>{string.Join(", ", travelDiscoveries.Select(td => td.Name))}</color>");
             } else if (travelDiscoveries.Count == 1) {
-                HUDManager.Instance.AddTextToChatOnServer($"Discovered new moon on route{tdMessageGroupName}:\n<color=white>{travelDiscoveries.FirstOrDefault().Name}</color>");
-                Plugin.Instance.Mls.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
+                NotificationHelper.SendChatMessage($"Discovered new moon on route{tdMessageGroupName}:\n<color=white>{travelDiscoveries.FirstOrDefault().Name}</color>");
             }
+            Plugin.Instance.Mls.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
                 $"Moon catalogue updated!", Key = "LMU_TravelDiscovery" });
             Plugin.Instance.Mls.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
@@ -610,7 +600,7 @@ namespace LethalMoonUnlocks {
                 }
             }
             if (DayCount > 0) {
-                HUDManager.Instance.AddTextToChatOnServer("Moon catalogue updated!");
+                NotificationHelper.SendChatMessage("Moon catalogue updated!");
                 NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Moon catalogue updated!", Text = $"New moons available. Use the computer terminal to route the ship.", Key = "LMU_Shuffle" });
             }
         }

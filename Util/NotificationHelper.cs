@@ -33,6 +33,12 @@ namespace LethalMoonUnlocks.Util {
             IsSending = false;
         }
 
+        internal static void SendChatMessage(string message) {
+            if (ConfigManager.ChatMessages) {
+                HUDManager.Instance.AddTextToChatOnServer(message);
+            }
+        }
+
         internal static string CountToText(this int count) {
             if (count <= 0) return string.Empty;
             if (count > 0) {
