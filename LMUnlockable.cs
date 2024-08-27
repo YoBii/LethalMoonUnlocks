@@ -300,7 +300,7 @@ namespace LethalMoonUnlocks {
 
             // OPTIONAL GROUP TAG
             var customGroupsDict = GetMatchingCustomGroups();
-            if (ConfigManager.MoonGroupMatchingMethod == "Custom" && customGroupsDict.Count > 0 && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup || ConfigManager.QuotaDiscoveryCheapestGroup) && ConfigManager.ShowTagGroups) {
+            if (ConfigManager.MoonGroupMatchingMethod == "Custom" && customGroupsDict.Count > 0 && ConfigManager.ShowTagGroups) {
                 string groupTag = string.Empty;
                 if (customGroupsDict.Count > 1) {
                     groupTag = string.Join("/", customGroupsDict.Keys);
@@ -308,7 +308,7 @@ namespace LethalMoonUnlocks {
                     groupTag = customGroupsDict.Keys.First();
                 }
                 tags = AddTagToPreviewText($"[{groupTag.Trim().ToUpper()}]", tags);
-            } else if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension!= null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && (ConfigManager.TravelDiscoveryMatchGroup || ConfigManager.NewDayDiscoveryMatchGroup || ConfigManager.QuotaDiscoveryCheapestGroup) && ConfigManager.ShowTagGroups) {
+            } else if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension!= null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && ConfigManager.ShowTagGroups) {
                 tags = AddTagToPreviewText($"[{Plugin.LethalConstellationsExtension.GetConstellationName(this).ToUpper()}]", tags);
             } else if (ConfigManager.MoonGroupMatchingMethod == "Tag") {
                 var contentTags = ExtendedLevel.ContentTags;
