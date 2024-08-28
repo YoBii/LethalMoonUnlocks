@@ -21,7 +21,6 @@ namespace LethalMoonUnlocks.Util {
                 Plugin.Instance.Mls.LogDebug("Trying to start queue but it's already sending..");
                 yield break;
             }
-            if (!ConfigManager.ShowAlerts) Queue.Clear();
             while (Queue.Count > 0) {
                 IsSending = true;
                 var notification = Queue.First();                    

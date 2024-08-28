@@ -76,10 +76,12 @@ namespace LethalMoonUnlocks {
             UnlockManager.Instance.ApplyUnlocks();
         }
         private void ClientReceiveAlertMessage(Notification alert) {
+            if (!ConfigManager.ShowAlerts) return;
             Plugin.Instance.Mls.LogDebug($"Receiving alert message..");
             NotificationHelper.AddNotificationToQueue(alert);
         }
         private void ClientReceiveSendAlertQueueEvent() {
+            if (!ConfigManager.ShowAlerts) return;
             DelayHelper.Instance.StartCoroutine(NotificationHelper.SendQueuedNotifications());
         }
         private void ServerReceiveBuyMoon(string moon, ulong id) {
