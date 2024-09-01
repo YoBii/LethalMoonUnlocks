@@ -12,6 +12,11 @@ namespace LethalMoonUnlocks.Util {
         private static bool IsSending = false;
 
         internal static void AddNotificationToQueue(Notification notification) {
+            foreach (var alert in Queue) {
+                if (notification.ExceptWhenKey != string.Empty && alert.Key.Contains(notification.ExceptWhenKey)) {
+                    return;
+                }
+            }
             Queue.Add(notification);
             Plugin.Instance.Mls.LogDebug($"Queued new alert: header = {notification.Header}, body = {notification.Text}, warning = {notification.IsWarning}, useSave = {notification.UseSave}, key = {notification.Key}");
         }

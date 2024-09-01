@@ -213,7 +213,7 @@ namespace LethalMoonUnlocks {
                         }
                     }
                     if (group.Members.Count <= discoveryGroup.Count) {
-                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nRoute to: <color=red>{group.Name}</color> established.", Key = "LMU_NewQuotaDiscovery" });
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nRoute to: <color=red>{group.Name}</color> established.", Key = "LMU_NewQuotaDiscoveryGroup" });
                     }
                     break;  
                 } else {

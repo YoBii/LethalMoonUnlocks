@@ -17,5 +17,7 @@ namespace LethalMoonUnlocks.Util {
         internal bool UseSave { get; init; } = false;
         [SerializeField]
         internal string Key { get; init; } = "LMU_";
+        [SerializeField]
+        internal string ExceptWhenKey { get; init; } = "";
     }
 }

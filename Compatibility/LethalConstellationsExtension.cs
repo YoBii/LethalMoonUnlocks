@@ -89,7 +89,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 }
                 if (constellationIsDiscovered) {
                     if (constellation.isHidden == true && NetworkManager.Instance.IsServer()) {
-                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = "New Discovery!", Text = $"{LethalConstellations.ConfigManager.Configuration.ConstellationWord.Value} <color=yellow>{constellation.consName}</color> available for routing.", IsWarning = true, Key = "LMU_ConstellationDiscovered" });
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = "New Discovery!", Text = $"{LethalConstellations.ConfigManager.Configuration.ConstellationWord.Value} <color=yellow>{constellation.consName}</color> available for routing.", IsWarning = true, Key = "LMU_ConstellationDiscovered", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
                     }
                     constellation.isHidden = false;
                     constellation.isLocked = false;
