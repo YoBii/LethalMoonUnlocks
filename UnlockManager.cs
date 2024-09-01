@@ -390,7 +390,7 @@ namespace LethalMoonUnlocks {
             }
             foreach (var d in newDayDiscoveries) {
                 d.Discovered = true;
-                if (ConfigManager.TravelDiscoveryPermanent) {
+                if (ConfigManager.NewDayDiscoveryPermanent) {
                     d.PermanentlyDiscovered = true;
                     Plugin.Instance.Mls.LogDebug($"{d.Name}: Discovery is permanent");
                 }
