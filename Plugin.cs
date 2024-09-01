@@ -24,6 +24,7 @@ namespace LethalMoonUnlocks
         internal static Plugin Instance {  get; private set; }
         internal static bool LQPresent = false;
         internal static bool LethalConstellationsPresent = false;
+        internal static bool WeatherTweaksPresent = false;
         internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
@@ -100,6 +101,12 @@ namespace LethalMoonUnlocks
                 Mls.LogInfo("LethalConstellations found! Enabling compatibility..");
                 LethalConstellationsPresent = true;
                 LethalConstellationsExtension = new LethalConstellationsExtension();
+            }
+            // WeatherTweaks
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(WeatherTweaks.PluginInfo.PLUGIN_GUID)) {
+                Mls.LogInfo("WeatherTweaks found! Enabling compatibility..");
+                WeatherTweaksPresent = true;
+                _harmony.PatchAll(typeof(WTCompatibility));
             }
 
             // Refresh config

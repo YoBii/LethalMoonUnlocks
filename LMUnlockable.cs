@@ -222,9 +222,18 @@ namespace LethalMoonUnlocks {
             string format = "{0, -" + (18 - moonNameLength) + "} {1, -7} {2, -9} {3, -13}";
             string preview = string.Empty;
             string empty = string.Empty;
-            string weather = ExtendedLevel.SelectableLevel.currentWeather.ToString();
-            if (ExtendedLevel.SelectableLevel.currentWeather == LevelWeatherType.None)
+
+            string weather = string.Empty;
+            if (Plugin.WeatherTweaksPresent) {
+                weather = WTCompatibility.GetWeatherTweaksWeather(this);
+            } else {
+                weather = ExtendedLevel.SelectableLevel.currentWeather.ToString();
+            }
+            if (weather.Trim().Equals("None")) {
                 weather = string.Empty;
+            }
+            //if (ExtendedLevel.SelectableLevel.currentWeather == LevelWeatherType.None)
+                //weather = string.Empty;
             //if (weather.Count() > 13) weather = weather.Substring(0, 11) + "..";
             string risk = string.Empty;
             if (Plugin.LQPresent && ConfigManager.PreferLQRisk) {
