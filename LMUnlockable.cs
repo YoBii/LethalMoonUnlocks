@@ -176,12 +176,12 @@ namespace LethalMoonUnlocks {
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Unlock expired!", Text = $"Your unlock for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_UnlockExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;
+                        if (ConfigManager.UnlocksResetAfterVisitsPermDiscovery) {
+                            Plugin.Instance.Mls.LogInfo($"{Name}: Also resetting permanent discovery status.");
+                            PermanentlyDiscovered = false;
+                        }
                     } else if (FreeVisitCount > 1) {
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Unlock: {Name}", Text = $"Unlock used! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_UnlockUsed" });
-                    }
-                    if (ConfigManager.UnlocksResetAfterVisitsPermDiscovery) {
-                        PermanentlyDiscovered = false;
-                        Plugin.Instance.Mls.LogInfo($"{Name}: Also resetting permanent discovery status.");
                     }
                 }
                 if (ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0) {
@@ -191,12 +191,12 @@ namespace LethalMoonUnlocks {
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Discount expired!", Text = $"Your discount for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_DiscountExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;
+                        if (ConfigManager.DiscountsResetAfterVisitsPermDiscovery) {
+                            Plugin.Instance.Mls.LogInfo($"{Name}: Also resetting permanent discovery status.");
+                            PermanentlyDiscovered = false;
+                        }
                     } else if (FreeVisitCount > 1) {
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Discount: {Name}", Text = $"Discount redeemed! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_DiscountUsed" });
-                    }
-                    if (ConfigManager.DiscountsResetAfterVisitsPermDiscovery) {
-                        PermanentlyDiscovered = false;
-                        Plugin.Instance.Mls.LogInfo($"{Name}: Also resetting permanent discovery status.");
                     }
                 }
             }
