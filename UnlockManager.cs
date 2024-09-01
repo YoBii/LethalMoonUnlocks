@@ -196,7 +196,7 @@ namespace LethalMoonUnlocks {
                 }
             }
             NotificationHelper.SendChatMessage($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n<color=white>{(quotaDiscoveries.Count > 1 ? string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name)) :  quotaDiscoveries.FirstOrDefault().Name)}</color>");
-            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
             Plugin.Instance.Mls.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
         }
 
