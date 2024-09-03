@@ -20,12 +20,14 @@
 		<PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=G:\</PathMap>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ContentWithTargetPath Include=".\bin\Release\netstandard2.1\LethalMoonUnlocks.dll">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>..\..\..\release\BepInEx\plugins\LethalMoonUnlocks.dll</TargetPath>
-		</ContentWithTargetPath>
-	</ItemGroup>
+	<Target Name="CopyAssemblyToRelease" AfterTargets="Build">
+		<PropertyGroup>
+			<CopyToDir>.\release\BepInEx\plugins\</CopyToDir>
+		</PropertyGroup>
+		<Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="$(CopyToDir)\$(ProjectName).dll" />
+		<Message Text="Copied assembly to $(CopyToDir)." Importance="High" />
+		<ZipDirectory SourceDirectory=".\release" DestinationFile=".\release.zip" />
+	</Target>
 
 	<ItemGroup>
         <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
