@@ -219,7 +219,7 @@ namespace LethalMoonUnlocks {
         public string GetMoonPreviewText(PreviewInfoType infoType) {
             // FIRST TERMINAL LINE (NEXT TO NAME)
             int moonNameLength = Name.Count();
-            string format = "{0, -" + (18 - moonNameLength) + "} {1, -7} {2, -9} {3, -13}";
+            string format = "{0, -" + Math.Clamp(18 - moonNameLength, 0, 18) + "} {1, -7} {2, -9} {3, -13}";
             string preview = string.Empty;
             string empty = string.Empty;
 

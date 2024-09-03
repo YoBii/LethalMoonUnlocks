@@ -17,7 +17,6 @@ namespace LethalMoonUnlocks.Compatibility {
             Type type = assembly.GetType("WeatherTweaks.Variables");
             MethodBase mb = AccessTools.FirstMethod(type, method => method.Name.Contains("GetPlanetCurrentWeather"));
             return mb;
-
         }
 
         [HarmonyPostfix]
