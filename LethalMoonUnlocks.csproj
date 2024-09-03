@@ -1,10 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <AssemblyName>LethalMoonUnlocks</AssemblyName>
         <Description>Permanently unlock moons and more</Description>
-        <Version>2.1.6</Version>
+        <Version>2.1.7</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
@@ -58,10 +57,13 @@
 			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\xCore\BepInEx\plugins\BananaPuncher714-LethalQuantities\LethalQuantities.dll</HintPath>
 		</Reference>
 		<Reference Include="LethalConstellations">
-			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-Lethal_Constellations\0.2.1\LethalConstellations.dll</HintPath>
+			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-Lethal_Constellations\0.2.2\LethalConstellations.dll</HintPath>
 		</Reference>
 		<Reference Include="OpenLib">
 			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-OpenLib\0.1.8\OpenLib.dll</HintPath>
+		</Reference>
+		<Reference Include="WeatherTweaks">
+			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\mrov-BetaWeatherTweaksBeta\0.22.0\WeatherTweaks.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>
