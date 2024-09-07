@@ -16,7 +16,7 @@ namespace LethalMoonUnlocks.Patches {
                 return false;
             }
             if (!prefsKey.StartsWith("LMU_")) {
-                Plugin.Instance.Mls.LogDebug($"Intercepted alert: header = {headerText}, body = {bodyText}, warning = {isWarning}, useSave = {useSave}, key = {prefsKey}!");
+                Plugin.Instance.Mls.LogDebug($"Intercepted alert: key = {prefsKey}!");
                 NotificationHelper.AddNotificationToQueue(new Notification() { Header = headerText, Text = bodyText, IsWarning = isWarning, UseSave = false, Key = "LMU_Intercept_" + prefsKey });
                 DelayHelper.Instance.StartCoroutine(NotificationHelper.SendQueuedNotifications());
                 return false;

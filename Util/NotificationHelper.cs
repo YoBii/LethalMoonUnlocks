@@ -18,7 +18,7 @@ namespace LethalMoonUnlocks.Util {
                 }
             }
             Queue.Add(notification);
-            Plugin.Instance.Mls.LogDebug($"Queued new alert: header = {notification.Header}, body = {notification.Text}, warning = {notification.IsWarning}, useSave = {notification.UseSave}, key = {notification.Key}");
+            Plugin.Instance.Mls.LogDebug($"Queued new alert: key = {notification.Key}");
         }
 
         internal static IEnumerator SendQueuedNotifications() {
@@ -29,7 +29,7 @@ namespace LethalMoonUnlocks.Util {
             while (Queue.Count > 0) {
                 IsSending = true;
                 var notification = Queue.First();                    
-                Plugin.Instance.Mls.LogDebug($"Sending out alert: header = {notification.Header}, body = {notification.Text}, warning = {notification.IsWarning}, useSave = {notification.UseSave}, key = {notification.Key}");
+                Plugin.Instance.Mls.LogDebug($"Sending out alert: key = {notification.Key}");
                 HUDManager.Instance.DisplayTip(notification.Header, notification.Text, notification.IsWarning, notification.UseSave, notification.Key);
                 Queue.Remove(notification);
                 yield return new WaitForSeconds(8f);
