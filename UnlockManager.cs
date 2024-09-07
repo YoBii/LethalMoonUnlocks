@@ -781,9 +781,7 @@ namespace LethalMoonUnlocks {
         public void ApplyUnlocks() {
             foreach (var unlock in Unlocks) {
                 unlock.ApplyPrice();
-                if (ConfigManager.DiscoveryMode) {
-                    unlock.ApplyDiscoverability();
-                }
+                unlock.ApplyDiscoverability();
             }
             if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
                 Plugin.LethalConstellationsExtension.ApplyUnlocks();

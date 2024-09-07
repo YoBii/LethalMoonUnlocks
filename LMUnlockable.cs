@@ -94,6 +94,20 @@ namespace LethalMoonUnlocks {
         }
 
         public void ApplyDiscoverability() {
+            // make sure all moons are showing when Discovery Mode is disabled
+            if (!ConfigManager.DiscoveryMode) {
+                if (OriginallyHidden) {
+                    ExtendedLevel.IsRouteHidden = true;
+                } else {
+                    ExtendedLevel.IsRouteHidden = false;
+                }
+                if (OriginallyLocked) {
+                    ExtendedLevel.IsRouteLocked = true;
+                } else {
+                    ExtendedLevel.IsRouteLocked = false;
+                }
+                return;
+            }
             // set permanently discovered if moon was bought (if config enabled)
             if (BuyCount > 0 && PermanentlyDiscovered == false && ((ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepUnlocks) || (ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepDiscounts))) {
                 PermanentlyDiscovered = true;
@@ -354,7 +368,10 @@ namespace LethalMoonUnlocks {
         }
 
         public override string ToString() {
-            bool ignored = OriginallyHidden || OriginallyLocked;
+            string ignored = "";
+            if (OriginallyHidden && !OriginallyLocked) ignored = "LLL_H";
+            else if (OriginallyLocked && !OriginallyHidden) ignored = "LLL_L";
+            else if (OriginallyHidden && OriginallyLocked) ignored = "LLL_HL";
             return string.Format(UnlockManager.LogFormatString, Name, BuyCount, VisitCount, FreeVisitCount, Discovered, NewDiscovery, DiscoveredOnce, PermanentlyDiscovered, OnSale, SalesRate, OriginalPrice, ignored);
         }
     }
