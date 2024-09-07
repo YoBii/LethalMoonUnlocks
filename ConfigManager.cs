@@ -299,7 +299,7 @@ namespace LethalMoonUnlocks {
             
             DiscoveryNeverShuffle = GetConfigValue("4 - Discovery Mode", "Never shuffle", false, "Never shuffle the rotation of moons available in the moon catalogue.\n" +
                 "New moons must be discovered through other means, but once discovered, they won't vanish, since the selection is never shuffled.\n" +
-                "NOTE: Overrides the 'Shuffle every day' option.\n");
+                "NOTE: Overrides the 'Shuffle every day' option.");
             DiscoveryShuffleEveryDay = GetConfigValue("4 - Discovery Mode", "Shuffle every day", false, "Shuffle the rotation of moons available in the moon catalogue every day, instead of after every quota.");
             
             DiscoveryWhitelist = GetConfigValue("4 - Discovery Mode", "Whitelist", "", "List of moons to keep discovered at all times.\n" +
