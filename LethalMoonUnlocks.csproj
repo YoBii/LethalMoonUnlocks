@@ -58,13 +58,13 @@
 			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\xCore\BepInEx\plugins\BananaPuncher714-LethalQuantities\LethalQuantities.dll</HintPath>
 		</Reference>
 		<Reference Include="LethalConstellations">
-			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-Lethal_Constellations\0.2.2\LethalConstellations.dll</HintPath>
+			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-LethalConstellations\0.2.3\BepInEx\plugins\darmuh-LethalConstellations\LethalConstellations.dll</HintPath>
 		</Reference>
 		<Reference Include="OpenLib">
-			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\darmuh-OpenLib\0.1.8\OpenLib.dll</HintPath>
+			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\Debug\BepInEx\plugins\darmuh-OpenLib\OpenLib.dll</HintPath>
 		</Reference>
 		<Reference Include="WeatherTweaks">
-			<HintPath>$(APPDATA)\..\Local\com.kesomannen.gale\cache\mrov-BetaWeatherTweaksBeta\0.22.0\WeatherTweaks.dll</HintPath>
+			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\mrov-BetaWeatherTweaksBeta\0.22.0\BepInEx\plugins\mrov-BetaWeatherTweaksBeta\WeatherTweaks.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>
