@@ -39,7 +39,6 @@ namespace LethalMoonUnlocks.Patches {
         }
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
-            Plugin.Instance.Mls.LogError($"Patching PlayerControllerB");
             return new CodeMatcher(instructions).MatchForward(false,
                new(OpCodes.Ldarg_0),
                new(OpCodes.Ldfld, AccessTools.Field(typeof(PlayerControllerB), nameof(PlayerControllerB.terminalScrollVertical))))

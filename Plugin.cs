@@ -112,7 +112,7 @@ namespace LethalMoonUnlocks
             }
 
             // Patch Terminal scrolling
-            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("StoreRotationConfig")) {
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("pacoito.StoreRotationConfig")) {
                 Mls.LogInfo("StoreRotationConfig found! Not patching Terminal scrolling.");
             } else {
                 _harmony.PatchAll(typeof(PlayerControllerBPatch));
