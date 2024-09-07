@@ -2,6 +2,7 @@
 using BepInEx.Logging;
 using HarmonyLib;
 using LethalMoonUnlocks.Compatibility;
+using LethalMoonUnlocks.Patches;
 using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
@@ -108,6 +109,13 @@ namespace LethalMoonUnlocks
                 Mls.LogInfo("WeatherTweaks found! Enabling compatibility..");
                 WeatherTweaksPresent = true;
                 _harmony.PatchAll(typeof(WTCompatibility));
+            }
+
+            // Patch Terminal scrolling
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("StoreRotationConfig")) {
+                Mls.LogInfo("StoreRotationConfig found! Not patching Terminal scrolling.");
+            } else {
+                _harmony.PatchAll(typeof(PlayerControllerBPatch));
             }
 
             // Refresh config

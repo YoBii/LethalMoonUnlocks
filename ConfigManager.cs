@@ -164,6 +164,7 @@ namespace LethalMoonUnlocks {
         public static int TerminalTagLineWidth { get; set; }
         public static bool TerminalFontSizeOverride { get; set; }
         public static float TerminalFontSize { get; set; }
+        public static int TerminalScrollAmount { get; set; }
         public static bool PreferLQRisk {  get; private set; }
         public static bool MalfunctionsNavigation {  get; private set; }
         public static bool AlertMessageQueueing {  get; private set; }
@@ -430,6 +431,8 @@ namespace LethalMoonUnlocks {
                 "NOTE: With very few moons you might see some ugly line breaks with custom weathers with long names (Meteor Shower).");
             TerminalFontSize = GetConfigValue("6.3 - Terminal", "Terminal font size", 15f, "Customize the Terminal's moon catalogue font size.\n" +
                 "NOTE: When using smaller fonts you can increase the maximum tag line width above.", new AcceptableValueRange<float>(8f, 15f));
+            TerminalScrollAmount = GetConfigValue("6.3 - Terminal", "Terminal scroll amount", 0, "Override the Terminal's moon catalogue scroll amount. Lines per scroll action. 0 to disable\n" +
+                "NOTE: This can help when you have so many moons that some are skipped when scrolling.", new AcceptableValueRange<int>(0, 20));
 
             AlertMessageQueueing = GetConfigValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
             PreferLQRisk = GetConfigValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalogue instead of the default risk levels.");
