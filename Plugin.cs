@@ -111,15 +111,14 @@ namespace LethalMoonUnlocks
                 _harmony.PatchAll(typeof(WTCompatibility));
             }
 
-            // Patch Terminal scrolling
-            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("pacoito.StoreRotationConfig")) {
-                Mls.LogInfo("StoreRotationConfig found! Not patching Terminal scrolling.");
-            } else {
-                _harmony.PatchAll(typeof(PlayerControllerBPatch));
-            }
-
             // Refresh config
             ConfigManager.RefreshConfig();
+            
+            // Patch Terminal scrolling
+            if (ConfigManager.TerminalScrollAmount > 0) {
+                Mls.LogInfo("TerminalScrollAmount is set to a positive value! Patching scroll amount..");
+                _harmony.PatchAll(typeof(PlayerControllerBPatch));
+            }
             
             // Create Managers
             NetworkManager = new NetworkManager();
