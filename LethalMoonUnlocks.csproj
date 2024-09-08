@@ -24,7 +24,7 @@
 		<PropertyGroup>
 			<CopyToDir>.\release\BepInEx\plugins\</CopyToDir>
 		</PropertyGroup>
-		<Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFiles="$(CopyToDir)\$(ProjectName)\$(ProjectName).dll" />
+		<Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFiles="$(CopyToDir)\$(ProjectName).dll" />
 		<Message Text="Copied assembly to $(CopyToDir)" Importance="High" />
 	</Target>
 
