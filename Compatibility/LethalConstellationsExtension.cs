@@ -54,7 +54,11 @@ namespace LethalMoonUnlocks.Compatibility {
                 if (constellation.isHidden) {
                     List<LMUnlockable> constellationUnlockables = new List<LMUnlockable>();
                     foreach (string moon in constellation.constelMoons) {
-                        constellationUnlockables.Add(UnlockManager.Instance.Unlocks.Where(unlock => unlock.Name == moon).FirstOrDefault());
+                        foreach (var unlock in UnlockManager.Instance.Unlocks) {
+                            if (unlock.Name == moon) {
+                                constellationUnlockables.Add(unlock);
+                            }
+                        }
                     }
                     group = new LMGroup() { Members = constellationUnlockables, Name = constellation.consName };
                     break;
