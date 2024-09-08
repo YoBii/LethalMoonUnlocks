@@ -47,6 +47,24 @@ namespace LethalMoonUnlocks.Compatibility {
             return constellationMatches;
         }
 
+        internal LMGroup GetCheapestUndiscoveredConstellation() {
+            LMGroup group = new LMGroup();
+            foreach (var constellation in Collections.ConstellationStuff.OrderBy(c => c.constelPrice)) {
+                Plugin.Instance.Mls.LogInfo($"Got cheapest constellation: {constellation.consName}");
+                if (constellation.isHidden) {
+                    List<LMUnlockable> constellationUnlockables = new List<LMUnlockable>();
+                    foreach (string moon in constellation.constelMoons) {
+                        constellationUnlockables.Add(UnlockManager.Instance.Unlocks.Where(unlock => unlock.Name == moon).FirstOrDefault());
+                    }
+                    group = new LMGroup() { Members = constellationUnlockables, Name = constellation.consName };
+                    break;
+                } else {
+                    Plugin.Instance.Mls.LogInfo($"Constellation already discovered. Try next..");
+                }
+            }
+            return group;
+        }
+
         private void OnConstellationBought() {
             //ClassMapper currentConstellation = Collections.ConstellationStuff.Where(constellation => constellation.consName == Collections.CurrentConstellation).FirstOrDefault();
             //TIL: Linq generates 'DisplayClasses' from lambda expressions. If those classes are of or contain (idk) a referenced type that's not present and they are picked up via reflection at runtime.. TypeLoadException

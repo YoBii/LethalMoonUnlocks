@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.ProBuilder;
 using UnityEngine.UIElements;
 
 namespace LethalMoonUnlocks {
@@ -136,7 +137,11 @@ namespace LethalMoonUnlocks {
                 // QUOTA DISCOVERY
                 if (ConfigManager.QuotaDiscoveries && DiscoveryCandidates.Count > 0 && UnityEngine.Random.Range(0, 100) < ConfigManager.QuotaDiscoveryChance) {
                     Plugin.Instance.Mls.LogInfo($"Quota Discovery triggered! (Chance: {ConfigManager.QuotaDiscoveryChance}%)");
-                    QuotaDiscovery();
+                    if (ConfigManager.QuotaDiscoveryCheapestGroup && (ConfigManager.MoonGroupMatchingMethod == "Custom" || ConfigManager.MoonGroupMatchingMethod == "LethalConstellations")) {
+                        QuotaDiscoveryGroup();
+                    } else {
+                        QuotaDiscovery();
+                    }
                 }
             }
             // SHUFFLE SALES
@@ -176,9 +181,6 @@ namespace LethalMoonUnlocks {
 
         private void QuotaDiscovery() {
             var quotaDiscoveries = DiscoveryCandidates;
-            if (ConfigManager.QuotaDiscoveryCheapestGroup && (ConfigManager.MoonGroupMatchingMethod == "Custom" || ConfigManager.MoonGroupMatchingMethod == "LethalConstellations")) {
-                quotaDiscoveries = QuotaDiscoveryGroup(quotaDiscoveries);
-            }
             if (ConfigManager.CheapMoonBiasQuotaDiscovery) {
                 quotaDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaDiscoveries, ConfigManager.CheapMoonBiasQuotaDiscoveryValue), ConfigManager.QuotaDiscoveryCount);
             } else {
@@ -195,35 +197,71 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogInfo($"Quota Discovery is permanent: {qd.Name}");
                 }
             }
-            NotificationHelper.SendChatMessage($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n<color=white>{(quotaDiscoveries.Count > 1 ? string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name)) :  quotaDiscoveries.FirstOrDefault().Name)}</color>");
+            NotificationHelper.SendChatMessage($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n<color=white>{string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name))}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
             Plugin.Instance.Mls.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
         }
 
-        private List<LMUnlockable> QuotaDiscoveryGroup(List<LMUnlockable> candidates) {
+        private void QuotaDiscoveryGroup() {
+            var quotaDiscoveries = DiscoveryCandidates;
             List<LMUnlockable> discoveryGroup = new List<LMUnlockable>();
-            foreach (var candidate in candidates.OrderBy(c => c.OriginalPrice)) {
-                Plugin.Instance.Mls.LogInfo($"Got cheapest candidate: {candidate.Name}");
-                Plugin.Instance.Mls.LogInfo($"Checking for groups..");
-                LMGroup group = MatchMoonGroup(candidate, candidates, false);
-                if (group.Members.Count > 0) {
-                    foreach (var member in group.Members) {
-                        if (!member.Discovered && !member.PermanentlyDiscovered) {
-                            discoveryGroup.Add(member);
+            LMGroup group = new LMGroup();
+            if (ConfigManager.QuotaDiscoveryCheapestConstellation && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations") {
+                group = Plugin.LethalConstellationsExtension.GetCheapestUndiscoveredConstellation();
+                foreach (var member in group.Members) {
+                    if (!member.Discovered && !member.PermanentlyDiscovered) {
+                        discoveryGroup.Add(member);
+                    }
+                }
+            } else {
+                foreach (var candidate in quotaDiscoveries.OrderBy(c => c.OriginalPrice)) {
+                    Plugin.Instance.Mls.LogInfo($"Got cheapest candidate: {candidate.Name}");
+                    Plugin.Instance.Mls.LogInfo($"Checking for groups..");
+                    group = MatchMoonGroup(candidate, quotaDiscoveries, false);
+                    if (group.Members.Count > 0) {
+                        foreach (var member in group.Members) {
+                            if (!member.Discovered && !member.PermanentlyDiscovered) {
+                                discoveryGroup.Add(member);
+                            }
                         }
+                        break;
+                    } else {
+                        Plugin.Instance.Mls.LogInfo("Candidate has no group matches. Try next..");
                     }
-                    if (group.Members.Count <= discoveryGroup.Count) {
-                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions.\nRoute to: <color=red>{group.Name}</color> established.", Key = "LMU_NewQuotaDiscoveryGroup" });
-                    }
-                    break;  
-                } else {
-                    Plugin.Instance.Mls.LogInfo("Candidate has no group matches. Try next..");
                 }
             }
-            if (discoveryGroup.Count < 1 && ConfigManager.QuotaDiscoveryCheapestGroupFallback) {
-                return candidates;
+            if (group.Members.Count <= discoveryGroup.Count) {
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions. Route to: <color=red>{group.Name}</color> established.", Key = "LMU_NewQuotaDiscoveryGroup" });
             }
-            return discoveryGroup;
+            if (discoveryGroup.Count < 1 && ConfigManager.QuotaDiscoveryCheapestGroupFallback) {
+                Plugin.Instance.Mls.LogInfo($"Couldn't match any moons for cheapest group. Fallback to all moons..");
+                discoveryGroup = quotaDiscoveries;
+                // reset group to reset name for chat message
+                group = new LMGroup();
+            }
+            if (ConfigManager.CheapMoonBiasQuotaDiscovery) {
+                discoveryGroup = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(discoveryGroup, ConfigManager.CheapMoonBiasQuotaDiscoveryValue), ConfigManager.QuotaDiscoveryCount);
+            } else {
+                discoveryGroup = RandomSelector.Get(discoveryGroup, ConfigManager.QuotaDiscoveryCount);
+            }
+            if (discoveryGroup.Count == 0) {
+                Plugin.Instance.Mls.LogInfo($"No moons for Quota Discovery available!");
+                return;
+            }
+            foreach (var qd in discoveryGroup) {
+                qd.Discovered = true;
+                if (ConfigManager.QuotaDiscoveryPermanent) {
+                    qd.PermanentlyDiscovered = true;
+                    Plugin.Instance.Mls.LogInfo($"Quota Discovery is permanent: {qd.Name}");
+                }
+            }
+            string message_groupname = string.Empty;
+            if (group.Name != string.Empty) {
+                message_groupname = $" in <color=red>{group.Name}</color>";
+            }
+            NotificationHelper.SendChatMessage($"{discoveryGroup.Count.SinglePluralWord("Discovery")} granted{message_groupname}:\n<color=white>{string.Join(", ", discoveryGroup.Select(qd => qd.Name))}</color>");
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
+            Plugin.Instance.Mls.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
         }
 
         private void QuotaUnlock() {
