@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.ProBuilder.MeshOperations;
 
 namespace LethalMoonUnlocks {
     [Serializable]
@@ -92,8 +93,8 @@ namespace LethalMoonUnlocks {
             }
             // only apply price if we have to for compatibility with LQ
             if (newPrice != OriginalPrice) {
-            ExtendedLevel.RoutePrice = newPrice;
-        }
+                ExtendedLevel.RoutePrice = newPrice;
+            }
         }
 
         public void ApplyDiscoverability() {
@@ -270,7 +271,7 @@ namespace LethalMoonUnlocks {
                 if (ConfigManager.TerminalShowRiskWeather) {
                     preview = string.Format(format, empty, risk, empty, weather);
                 } else {
-                preview = string.Format(format, empty, risk, empty, empty);
+                    preview = string.Format(format, empty, risk, empty, empty);
                 }
             } else if (infoType.Equals(PreviewInfoType.History)) {
                 preview = string.Format(format, empty, empty, empty, empty);
@@ -288,7 +289,20 @@ namespace LethalMoonUnlocks {
             if (!ConfigManager.DisplayTerminalTags) {
                 return preview;
             }
+
+            string tags = BuildTagString();
             
+            if (!string.IsNullOrEmpty(tags)) {
+                preview += tags;
+            }
+            return preview;
+        }
+
+        public string GetMoonTagsText() {
+            return BuildTagString();
+        }
+
+        private string BuildTagString() {
             // LMU Tags
             string tags = string.Empty;
             if (ExtendedLevel == LevelManager.CurrentExtendedLevel && ConfigManager.ShowTagInOrbit) {
@@ -338,7 +352,7 @@ namespace LethalMoonUnlocks {
                     groupTag = customGroupsDict.Keys.First();
                 }
                 tags = AddTagToPreviewText($"[{groupTag.Trim().ToUpper()}]", tags);
-            } else if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension!= null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && ConfigManager.ShowTagGroups) {
+            } else if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && ConfigManager.ShowTagGroups) {
                 tags = AddTagToPreviewText($"[{Plugin.LethalConstellationsExtension.GetConstellationName(this).ToUpper()}]", tags);
             } else if (ConfigManager.MoonGroupMatchingMethod == "Tag") {
                 var contentTags = ExtendedLevel.ContentTags;
@@ -352,13 +366,7 @@ namespace LethalMoonUnlocks {
                     tags = AddTagToPreviewText($"[{tagsTag}]", tags);
                 }
             }
-            if (!string.IsNullOrEmpty(tags)) {
-                preview += tags;
-            }
-            if (ConfigManager.TerminalFontSizeOverride) {
-                UnlockManager.Instance.Terminal.screenText.textComponent.fontSize = ConfigManager.TerminalFontSize;
-            }
-            return preview;
+            return tags;
         }
 
         private string AddTagToPreviewText(string newTag, string previewText) {

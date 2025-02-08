@@ -814,6 +814,10 @@ namespace LethalMoonUnlocks {
             }
         }
         private string ReplaceTerminalPreview(ExtendedLevel extendedLevel, PreviewInfoType infoType) {
+            // override font size
+            if (ConfigManager.TerminalFontSizeOverride) {
+                Terminal.screenText.textComponent.fontSize = ConfigManager.TerminalFontSize;
+            }
             var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel == extendedLevel).FirstOrDefault();
             if (unlock == null) {
                 Plugin.Instance.Mls.LogError($"Couldn't get unlock for Terminal preview text replacement!");
