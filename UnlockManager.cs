@@ -6,6 +6,7 @@ using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TerminalStuff.SpecialStuff;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.ProBuilder;
@@ -829,6 +830,10 @@ namespace LethalMoonUnlocks {
             foreach (var unlock in Unlocks) {
                 unlock.ApplyPrice();
                 unlock.ApplyDiscoverability();
+                if (Plugin.darmuhsTerminalStuffPresent) {
+                    if (MoonsPlus.TryGetMoon(unlock.ExtendedLevel.SelectableLevel, out MoonInfo moonInfo))
+                        moonInfo.AdditionalInfo = unlock.GetMoonTagsText();
+                }
             }
             if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
                 Plugin.LethalConstellationsExtension.ApplyUnlocks();

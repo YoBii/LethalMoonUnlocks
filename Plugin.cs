@@ -4,6 +4,7 @@ using HarmonyLib;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Patches;
 using LethalMoonUnlocks.Util;
+using LethalNetworkAPI.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace LethalMoonUnlocks
     [BepInDependency("imabatby.lethallevelloader", "1.4.8")]
     [BepInDependency("LethalNetworkAPI", "3.3.2")]
     [BepInDependency(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(OpenLib.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(WeatherTweaks.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
@@ -26,6 +28,7 @@ namespace LethalMoonUnlocks
         internal static Plugin Instance {  get; private set; }
         internal static bool LQPresent = false;
         internal static bool LethalConstellationsPresent = false;
+        internal static bool darmuhsTerminalStuffPresent = false;
         internal static bool WeatherTweaksPresent = false;
         internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
@@ -106,6 +109,11 @@ namespace LethalMoonUnlocks
                 Mls.LogInfo("LethalConstellations found! Enabling compatibility..");
                 LethalConstellationsPresent = true;
                 LethalConstellationsExtension = new LethalConstellationsExtension();
+            }
+            // darmuhsTerminalStuff (MoonsPlus)
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID)) {
+                Mls.LogInfo("darmuhsTerminalStuff found! Enabling compatibility..");
+                darmuhsTerminalStuffPresent = true;
             }
             // WeatherTweaks
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(WeatherTweaks.PluginInfo.PLUGIN_GUID)) {
