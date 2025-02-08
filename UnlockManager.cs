@@ -15,7 +15,7 @@ namespace LethalMoonUnlocks {
 
         internal static UnlockManager Instance { get; private set; }
         internal static string LogFormatString { get; } = "| {0, -20} | {1, 7} | {2, 7} | {3, 6} | {4, 11} | {5, 6} | {6, 6} | {7, 10} | {8, 7} | {9, 5} | {10, 8} | {11, 8} |";
-        internal static List<string> LogHeader { get; } = ["LMUnlockable", "Bought", "Visits", "Free", "Discovered", "New", "Once",  "Permanent", "OnSale", "Rate", "OGPrice", "Ignored"];
+        internal static List<string> LogHeader { get; } = ["LMUnlockable", "Bought", "Visits", "Free", "Discovered", "New", "Once",  "Permanent", "OnSale", "Rate", "OGPrice", "Misc"];
         internal Terminal Terminal { get; set; }
         internal List<ExtendedLevel> AllLevels { get; private set; } = PatchedContent.ExtendedLevels;
         internal List<LMUnlockable> Unlocks { get; set; } = new List<LMUnlockable>();
@@ -564,6 +564,23 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogDebug($"Skipping level{levelName}..");
                     continue;
                 }
+
+                // apply hard overrides
+                if (ConfigManager.OverrideHidden) {
+                    if (ConfigManager.OverrideHiddenListMoons.Contains(level.NumberlessPlanetName)) {
+                        level.IsRouteHidden = true;
+                    } else {
+                        level.IsRouteHidden = false;
+                    }
+                }
+                if (ConfigManager.OverrideLocked) {
+                    if (ConfigManager.OverrideLockedListMoons.Contains(level.NumberlessPlanetName)) {
+                        level.IsRouteLocked = true;
+                    } else {
+                        level.IsRouteLocked = false;
+                    }
+                }
+
                 Unlocks.Add(new LMUnlockable(level.NumberlessPlanetName, level.RoutePrice, level.IsRouteHidden, level.IsRouteLocked));
             }
             LogUnlockables(true);

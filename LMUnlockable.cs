@@ -97,6 +97,22 @@ namespace LethalMoonUnlocks {
         }
 
         public void ApplyDiscoverability() {
+            // Reapply hard overrides from config (maybe this causes problems..? may have to remove)
+            if (ConfigManager.OverrideHidden) {
+                if (ConfigManager.OverrideHiddenListMoons.Contains(this.Name)) {
+                    OriginallyHidden = true;
+                } else {
+                    OriginallyHidden = false;
+                }
+            }
+            if (ConfigManager.OverrideLocked) {
+                if (ConfigManager.OverrideLockedListMoons.Contains(this.Name)) {
+                    OriginallyLocked = true;
+                } else {
+                    OriginallyLocked = false;
+                }
+            }
+
             // make sure all moons are showing when Discovery Mode is disabled
             if (!ConfigManager.DiscoveryMode) {
                 if (OriginallyHidden) {
@@ -128,6 +144,7 @@ namespace LethalMoonUnlocks {
                     PermanentlyDiscovered = true;
                 }
             }
+            
             // make sure all by default or LLL config hidden moons are hidden
             if (OriginallyHidden) {
                 Discovered = false;
@@ -382,11 +399,11 @@ namespace LethalMoonUnlocks {
         }
 
         public override string ToString() {
-            string ignored = "";
-            if (OriginallyHidden && !OriginallyLocked) ignored = "LLL_H";
-            else if (OriginallyLocked && !OriginallyHidden) ignored = "LLL_L";
-            else if (OriginallyHidden && OriginallyLocked) ignored = "LLL_HL";
-            return string.Format(UnlockManager.LogFormatString, Name, BuyCount, VisitCount, FreeVisitCount, Discovered, NewDiscovery, DiscoveredOnce, PermanentlyDiscovered, OnSale, SalesRate, OriginalPrice, ignored);
+            string misc = "";
+            if (OriginallyHidden && !OriginallyLocked) misc = "Hidden";
+            else if (OriginallyLocked && !OriginallyHidden) misc = "Locked";
+            else if (OriginallyHidden && OriginallyLocked) misc = "H&L";
+            return string.Format(UnlockManager.LogFormatString, Name, BuyCount, VisitCount, FreeVisitCount, Discovered, NewDiscovery, DiscoveredOnce, PermanentlyDiscovered, OnSale, SalesRate, OriginalPrice, misc);
         }
     }
 }

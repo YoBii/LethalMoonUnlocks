@@ -81,7 +81,7 @@ namespace LethalMoonUnlocks {
         private static string DiscoveryWhitelist { get; set; }
         public static List<string> DiscoveryWhitelistMoons {
             get {
-                return DiscoveryWhitelist.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+                return DiscoveryWhitelist.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToList();
             }
         }
         public static bool DiscoveryKeepUnlocks { get; private set; }
@@ -142,6 +142,7 @@ namespace LethalMoonUnlocks {
         }
         private static int _salesRateMin;
         private static int _salesRateMax;
+        private static bool AdvancedPrintMoonNames { get; set; }
         public static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
         public static bool CheapMoonBiasPaidRotation { get; private set; }
         public static float CheapMoonBiasPaidRotationValue { get; private set; }
@@ -161,7 +162,6 @@ namespace LethalMoonUnlocks {
         public static int MoonGroupMatchingPriceRange { get; private set; }
         private static string MoonGroupMatchingCustom {  get; set; }
         public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict {  get; private set; }
-        private static bool MoonGroupMatchingCustomHelper { get; set; }
         public static int TerminalTagLineWidth { get; set; }
         public static bool TerminalFontSizeOverride { get; set; }
         public static float TerminalFontSize { get; set; }
@@ -171,6 +171,22 @@ namespace LethalMoonUnlocks {
         public static bool MalfunctionsNavigation {  get; private set; }
         public static bool AlertMessageQueueing {  get; private set; }
         public static bool LethalConstellationsOverridePrice {  get; private set; }
+
+        public static bool OverrideHidden { get; private set; }
+        private static string OverrideHiddenList { get; set; }
+        public static List<string> OverrideHiddenListMoons {
+            get {
+                return OverrideHiddenList.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToList();
+            }
+        }
+        public static bool OverrideLocked { get; private set; }
+        private static string OverrideLockedList { get; set; }
+        public static List<string> OverrideLockedListMoons {
+            get {
+                return OverrideLockedList.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToList();
+            }
+        }
+
 
 
         public ConfigManager() {
@@ -188,7 +204,7 @@ namespace LethalMoonUnlocks {
             
         }
         public static Dictionary<string, List<string>> ParseCustomMoonGroups() {
-            if (MoonGroupMatchingCustomHelper) {
+            if (AdvancedPrintMoonNames) {
                 Plugin.Instance.Mls.LogWarning($"Printing available moon names for custom moon groups..");
                 Plugin.Instance.Mls.LogWarning($"{string.Join(", ", PatchedContent.ExtendedLevels.Where(level => level.NumberlessPlanetName != "Gordion" && level.NumberlessPlanetName != "Liquidation").Select(level => level.name))}");
             }
@@ -376,6 +392,8 @@ namespace LethalMoonUnlocks {
 
             GetConfigValue("6 - Advanced settings", "I have read this", "false", "This section contains advanced configuration options for various features of the mod. Incorrectly tweaking these might cause unexpected behaviour!\n" +
                 "This setting has no effect.");
+            AdvancedPrintMoonNames = GetConfigValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
+                "You can also grab moons names from the LMU table that is periodically printed to logs even when this is not enabled.");
 
             CheapMoonBiasPaidRotation = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
             CheapMoonBiasPaidRotationValue = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
@@ -424,7 +442,6 @@ namespace LethalMoonUnlocks {
                 "Example: 'Group name 1: Experimentation, Assurance, Vow | Group name 2: Offense, March, Adamance'\n" +
                 "Names must be exact matches. The option below can be used to get the names.");
             MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
-            MoonGroupMatchingCustomHelper = GetConfigValue("6.2 - Moon Group Matching", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game.");
 
             TerminalTagLineWidth = GetConfigValue("6.3 - Terminal", "Maximum tag line length", 49, "By default LMU tries to fit as many tags as possible into a single line.\n" +
                 "Decrease this value if you want to have a more organized look at the cost of more scrolling depending on the amount of tags you see.\n" +
@@ -444,6 +461,18 @@ namespace LethalMoonUnlocks {
             MalfunctionsNavigation = GetConfigValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
             LethalConstellationsOverridePrice = GetConfigValue("6.4 - Compatibility", "LethalConstellations override price", false, "When enabled and LethalConstellations is present override the constellation routing price with the default moon's routing price.\n" + "Routing to the constellation will be considered buying the default moon. Consequently unlocks, discounts and sales of the default moon will be granted and will also apply to the constellation routing price.\n" +
                 "NOTE: In Discovery Mode the default moon will always be set to the cheapest currently discovered moon of that constellation regardless of this setting.");
+
+            OverrideHidden = GetConfigValue("6.5 - Overrides", "Override moons hidden by default", false, "Enable to hard override any hidden by default information using the list below. Any other information will be ignored. This includes moons hidden in vanilla, via LLL config, etc.");
+            OverrideHiddenList = GetConfigValue("6.5 - Overrides", "Override hidden list", "", "List of moons LMU will consider to be hidden by default.\n" +
+                "For example, 'Vow, March, Artifice'. Those three will be the only moons hidden by default. You can still unhide them in various ways. Note that setting this would make Embrion not hidden.\n" +
+                "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
+
+            OverrideLocked = GetConfigValue("6.5 - Overrides", "Override moons locked by default", false, "Enable to hard override any locked by default information using the list below. Any other information will be ignored. This includes moons locked in vanilla, via LLL config, etc.");
+            OverrideLockedList = GetConfigValue("6.5 - Overrides", "Override locked list", "", "List of moons LMU will consider to be locked by default.\n" +
+                "For example, 'Vow, March, Artifice'. Those three will be the only moons locked by default.\n" +
+                "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
+
+
         }
         private static T GetConfigValue<T>(string section, string key, T defaultValue, string description) {
             return _configFile.Bind(section, key, defaultValue, description).Value;
