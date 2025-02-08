@@ -61,7 +61,7 @@
 			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-LethalConstellations\0.2.3\BepInEx\plugins\darmuh-LethalConstellations\LethalConstellations.dll</HintPath>
 		</Reference>
 		<Reference Include="darmuhsTerminalStuff">
-			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\Debug\BepInEx\plugins\darmuh-darmuhsTerminalStuff\darmuhsTerminalStuff.dll</HintPath>
+			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-darmuhsTerminalStuff\3.8.5\BepInEx\plugins\darmuh-darmuhsTerminalStuff\darmuhsTerminalStuff.dll</HintPath>
 		</Reference>
 		<Reference Include="OpenLib">
 			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\Debug\BepInEx\plugins\darmuh-OpenLib\OpenLib.dll</HintPath>
