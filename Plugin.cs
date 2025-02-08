@@ -39,17 +39,18 @@ namespace LethalMoonUnlocks
             if (Instance == null) {
                 Instance = this;
             }
+            Mls = BepInEx.Logging.Logger.CreateLogSource("LethalMoonUnlocks");
+
+            Mls.LogInfo("Applying patches.."); 
 
             _harmony.PatchAll(typeof(Patches.GameNetworkManagerPatch));
             _harmony.PatchAll(typeof(Patches.RoundManagerPatch));
             _harmony.PatchAll(typeof(Patches.StartOfRoundPatch));
             _harmony.PatchAll(typeof(Patches.TerminalPatch));
             _harmony.PatchAll(typeof(Patches.TimeOfDayPatch));
-
             _harmony.PatchAll(typeof(Patches.HUDManagerPatch));
 
-            Mls = BepInEx.Logging.Logger.CreateLogSource("LethalMoonUnlocks");
-
+            Mls.LogInfo("Patching complete."); 
             if (!_loaded) Initialize();
         }
 
@@ -65,6 +66,8 @@ namespace LethalMoonUnlocks
 
         public void Initialize()
         {
+            Mls.LogInfo("Initializing.."); 
+
             GameObject delayHelper = new GameObject("DelayHelper");
             DontDestroyOnLoad(delayHelper);
             delayHelper.hideFlags = (HideFlags)61;
@@ -128,7 +131,7 @@ namespace LethalMoonUnlocks
             SceneManager.sceneUnloaded -= AfterGameInit;
         }
 
-        public static float GetDiscountRate(int discount_number) {
+        internal static float GetDiscountRate(int discount_number) {
             List<int> discountRates = new List<int>();
             foreach (var discount in ConfigManager.Discounts) {
                 discountRates.Add(100 - Mathf.Clamp(discount, 0, 100));

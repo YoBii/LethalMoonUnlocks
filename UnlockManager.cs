@@ -558,8 +558,13 @@ namespace LethalMoonUnlocks {
             }
             Plugin.Instance.Mls.LogInfo("Initializing LMUnlockables from Extended levels..");
             foreach (var level in AllLevels) {
-                if (level == null || level.SelectableLevel == null || level.NumberlessPlanetName == "Liquidation" || level.NumberlessPlanetName == "Gordion")
+                if (level == null || level.SelectableLevel == null || level.NumberlessPlanetName == "Liquidation" || level.NumberlessPlanetName == "Gordion") {
+                    string levelName = string.Empty;
+                    if (level != null && level.SelectableLevel != null)
+                        levelName = ": " + level.NumberlessPlanetName;
+                    Plugin.Instance.Mls.LogDebug($"Skipping level{levelName}..");
                     continue;
+                }
                 Unlocks.Add(new LMUnlockable(level.NumberlessPlanetName, level.RoutePrice, level.IsRouteHidden, level.IsRouteLocked));
             }
             LogUnlockables(true);
