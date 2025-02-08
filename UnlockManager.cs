@@ -661,7 +661,7 @@ namespace LethalMoonUnlocks {
                 var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[UnityEngine.Random.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
                 Plugin.Instance.Mls.LogInfo($"Current moon is not discovered! Rerouting ship to {randomDiscoveredFreeMoon.NumberlessPlanetName}..");
                 if (DayCount > 0) {
-                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing the ship to a safe moon..", Key = "LMU_RerouteFree" });
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing ship to a safe moon..", Key = "LMU_RerouteFree" });
                 }
                 DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(randomDiscoveredFreeMoon.SelectableLevel.levelID, Terminal.groupCredits); }, 3.5f);
             }
