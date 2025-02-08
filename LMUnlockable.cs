@@ -264,7 +264,11 @@ namespace LethalMoonUnlocks {
             } else if (infoType.Equals(PreviewInfoType.Price)) {
                 preview = string.Format(format, empty, empty, "$" + ExtendedLevel.RoutePrice, empty);
             } else if (infoType.Equals(PreviewInfoType.Difficulty)) {
+                if (ConfigManager.TerminalShowRiskWeather) {
+                    preview = string.Format(format, empty, risk, empty, weather);
+                } else {
                 preview = string.Format(format, empty, risk, empty, empty);
+                }
             } else if (infoType.Equals(PreviewInfoType.History)) {
                 preview = string.Format(format, empty, empty, empty, empty);
             } else if (infoType.Equals(PreviewInfoType.All)) {
