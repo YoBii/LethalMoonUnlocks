@@ -1,4 +1,5 @@
 ﻿using LethalLevelLoader;
+using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
 using static UnityEngine.UIElements.UIR.BestFitAllocator;
@@ -11,7 +12,7 @@ namespace LethalMoonUnlocks {
 
         private static Dictionary<string, object> Load() {
             Plugin.Instance.Mls.LogInfo($"Loading save data..");
-            var currentSave = GameNetworkManager.Instance.currentSaveFileName;
+            var currentSave = GameNetworkManager.Instance.currentSaveFileName;           
             Dictionary<string, object> dictionary = new Dictionary<string, object>();
             if (ES3.KeyExists("LMU_Unlockables", currentSave)) {
                 List<LMUnlockable> unlockedMoons = ES3.Load<List<LMUnlockable>>("LMU_Unlockables", currentSave);
@@ -37,6 +38,16 @@ namespace LethalMoonUnlocks {
                     dictionary.Add("LMU_QuotaFullDiscountsCount", quotaFullDiscountsCount);
                     Plugin.Instance.Mls.LogInfo($"Loading LMU_QuotaFullDiscountsCount: {quotaFullDiscountsCount}");
                 }
+
+                // BAND AID FIX for credits being wacky
+                if (ConfigManager.GroupCreditsSavingBandAid) {
+                    if (ES3.KeyExists("GroupCredits", currentSave)) {
+                        int groupCredits = ES3.Load<int>("GroupCredits", currentSave);
+                        Plugin.Instance.Mls.LogInfo($"BAND-AID: Restoring group credits ({groupCredits}) from save file..");
+                        UnlockManager.Instance.Terminal.groupCredits = groupCredits;
+                    }
+                }
+
                 return dictionary;
             } else {
                 // Old and deprecated keys
@@ -106,6 +117,13 @@ namespace LethalMoonUnlocks {
                 ES3.DeleteKey("LMU_QuotaFullDiscountsCount", currentSave);
             }
 
+            // BAND AID FIX for group credits being wacky
+            if (ConfigManager.GroupCreditsSavingBandAid) {
+                int groupCredits = UnlockManager.Instance.Terminal.groupCredits;
+                Plugin.Instance.Mls.LogInfo($"BAND-AID: Saving group credits ({groupCredits})..");
+                ES3.Save<int>("GroupCredits", groupCredits, currentSave);
+            }
+
             // Delete deprecated fields in existing savefiles
             if (ES3.KeyExists("LMU_UnlockedMoons", currentSave)) {
                 Plugin.Instance.Mls.LogInfo($"Deleting deprecated save field: LMU_UnlockedMoons");
@@ -115,15 +133,6 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Deleting deprecated save field: LMU_OriginalMoonPrices");
                 ES3.DeleteKey("LMU_OriginalMoonPrices", currentSave);
             }
-            //if (ES3.KeyExists("UnlockedMoons", currentSave)) {
-            //    ES3.DeleteKey("UnlockedMoons", currentSave);
-            //}
-            //if (ES3.KeyExists("OriginalMoonPrices", currentSave)) {
-            //    ES3.DeleteKey("OriginalMoonPrices", currentSave);
-            //}
-            //if (ES3.KeyExists("MoonQuotaNum", currentSave)) {
-            //    ES3.DeleteKey("MoonQuotaNum", currentSave);
-            //}
         }
     }
 }

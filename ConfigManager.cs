@@ -142,6 +142,7 @@ namespace LethalMoonUnlocks {
         }
         private static int _salesRateMin;
         private static int _salesRateMax;
+        public static bool GroupCreditsSavingBandAid { get; set; }
         private static bool AdvancedPrintMoonNames { get; set; }
         public static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
         public static bool CheapMoonBiasPaidRotation { get; private set; }
@@ -394,6 +395,8 @@ namespace LethalMoonUnlocks {
                 "This setting has no effect.");
             AdvancedPrintMoonNames = GetConfigValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
                 "You can also grab moons names from the LMU table that is periodically printed to logs even when this is not enabled.");
+            GroupCreditsSavingBandAid= GetConfigValue("6 - Advanced Settings", "Group credits saving fix", true, "When LMU saves data it will also save the credits balance.\n" +
+                "This prevents the 'free moon exploit'. This band aid should not cause any issues but I don't think I should need to do this in the first place..");
 
             CheapMoonBiasPaidRotation = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
             CheapMoonBiasPaidRotationValue = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
