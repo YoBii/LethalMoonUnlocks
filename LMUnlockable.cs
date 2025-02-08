@@ -90,7 +90,10 @@ namespace LethalMoonUnlocks {
                 newPrice = (int)(newPrice * (100 - SalesRate) / 100f);
                 Plugin.Instance.Mls.LogDebug($"{Name}: Sales rate applied ({newPrice})");
             }
+            // only apply price if we have to for compatibility with LQ
+            if (newPrice != OriginalPrice) {
             ExtendedLevel.RoutePrice = newPrice;
+        }
         }
 
         public void ApplyDiscoverability() {
