@@ -40,12 +40,9 @@ namespace LethalMoonUnlocks {
             if (!IsServer()) return;
             if (client_id > 0) {
                 Plugin.Instance.Mls.LogInfo($"Syncing unlockables to client with id {client_id}");
-            } else {
-                Plugin.Instance.Mls.LogInfo($"Syncing unlockables to all clients..");
-            }
-            if (client_id > 0) {
                 UnlockablesMessage.SendClient(unlockables, client_id);
             } else {
+                Plugin.Instance.Mls.LogInfo($"Syncing unlockables to all clients..");
                 UnlockablesMessage.SendClients(unlockables);
             }
         }

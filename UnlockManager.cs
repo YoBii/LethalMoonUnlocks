@@ -602,6 +602,8 @@ namespace LethalMoonUnlocks {
         }
 
         private void ShuffleDiscoverable() {
+            Plugin.Instance.Mls.LogInfo("Shuffling discovered moon rotations.. ");
+
             // Reset rotation
             foreach (var candidate in Unlocks.Where(unlock => unlock.OriginallyHidden == false && unlock.OriginallyLocked == false && !unlock.PermanentlyDiscovered)) {
                 if (candidate.NewDiscovery) candidate.NewDiscovery = false;
@@ -871,7 +873,7 @@ namespace LethalMoonUnlocks {
             Dictionary<string, object> savedata = SaveManager.Savedata;
             if (savedata != null && savedata.ContainsKey("LMU_Unlockables")) {
                 Plugin.Instance.Mls.LogInfo($"LMU save data detected!");
-                Plugin.Instance.Mls.LogInfo($"Importing LMU data..");
+                Plugin.Instance.Mls.LogInfo($"Loading LMU data from save..");
                 ImportUnlockableData((List<LMUnlockable>)savedata["LMU_Unlockables"]);
                 if (savedata.ContainsKey("LMU_QuotaCount")) {
                     QuotaCount = (int)savedata["LMU_QuotaCount"];
@@ -913,8 +915,8 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Finished migrating legacy LMU save data.");
                 Plugin.Instance.Mls.LogInfo($"Loading done. Applying migrated data before new game init..");
                 ApplyUnlocks();
-                InitializeNewGame();
-                return true;
+                // return false to run InitializeNewGame()
+                return false;
             } else if (savedata != null &&  savedata.ContainsKey("UnlockedMoons")) {
                 Plugin.Instance.Mls.LogInfo($"Permanent Moons save data detected! Migrating..");
                 List<string> pmMoons = (List<string>)savedata["UnlockedMoons"];
@@ -933,8 +935,8 @@ namespace LethalMoonUnlocks {
                 Plugin.Instance.Mls.LogInfo($"Finished migrating Permanent Moons save data.");
                 Plugin.Instance.Mls.LogInfo($"Loading done. Applying migrated data before new game init.");
                 ApplyUnlocks();
-                InitializeNewGame();
-                return true;
+                // return false to run InitializeNewGame()
+                return false;
             } else {
                 Plugin.Instance.Mls.LogInfo($"No save data found! New save..");
                 return false;

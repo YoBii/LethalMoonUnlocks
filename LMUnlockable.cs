@@ -76,20 +76,7 @@ namespace LethalMoonUnlocks {
         }
 
         public void ApplyPrice() {
-            int newPrice = OriginalPrice;
-            if (BuyCount > 0) {
-                if (ConfigManager.DiscountMode) {
-                    newPrice = (int)(newPrice * Plugin.GetDiscountRate(BuyCount));
-                    Plugin.Instance.Mls.LogDebug($"{Name}: Discount applied ({newPrice})");
-                } else if (ConfigManager.UnlockMode) {
-                    newPrice = 0;
-                    Plugin.Instance.Mls.LogDebug($"{Name}: Unlock applied ({newPrice})");
-                }
-            }
-            if (OnSale && newPrice > 0) {
-                newPrice = (int)(newPrice * (100 - SalesRate) / 100f);
-                Plugin.Instance.Mls.LogDebug($"{Name}: Sales rate applied ({newPrice})");
-            }
+            int newPrice = GetPrice();
             // only apply price if we have to for compatibility with LQ
             if (newPrice != OriginalPrice) {
                 ExtendedLevel.RoutePrice = newPrice;
@@ -399,6 +386,27 @@ namespace LethalMoonUnlocks {
                 previewText += "\n  * " + newTag; 
             }
             return previewText;
+        }
+
+        private int GetPrice() {
+            string log = $"{Name}: Calculating price: ";
+            int price = OriginalPrice;
+            log += $"Original price = {OriginalPrice}";
+            if (BuyCount > 0) {
+                if (ConfigManager.DiscountMode) {
+                    price = (int)(price * Plugin.GetDiscountRate(BuyCount));
+                    log += $", Discount -> {price}, ";
+                } else if (ConfigManager.UnlockMode) {
+                    price = 0;
+                    log += $", Unlock -> {price}, ";
+                }
+            }
+            if (OnSale && price > 0) {
+                price = (int)(price * (100 - SalesRate) / 100f);
+                log += $", Sales rate -> {price}";
+            }
+            Plugin.Instance.Mls.LogDebug(log);
+            return price;
         }
 
         public override string ToString() {
