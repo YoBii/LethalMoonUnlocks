@@ -61,8 +61,7 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        public void ApplyDiscoverability() {
-            // Reapply hard overrides from config (maybe this causes problems..? may have to remove)
+        public void ApplyHardOverrides() {
             if (ConfigManager.OverrideHidden) {
                 if (ConfigManager.OverrideHiddenListMoons.Contains(this.Name)) {
                     OriginallyHidden = true;
@@ -77,6 +76,11 @@ namespace LethalMoonUnlocks {
                     OriginallyLocked = false;
                 }
             }
+        }
+
+        public void ApplyDiscoverability() {
+            // Reapply hard overrides from config (maybe this causes problems..? may have to remove)
+            ApplyHardOverrides();
 
             // make sure all moons are showing when Discovery Mode is disabled
             if (!ConfigManager.DiscoveryMode) {

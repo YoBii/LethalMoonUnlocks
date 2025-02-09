@@ -581,6 +581,15 @@ namespace LethalMoonUnlocks {
             foreach (var unlock in Unlocks) {
                 unlock.StoreOriginalState();
             }
+
+            // apply hard overrrides
+            if (ConfigManager.OverrideHidden || ConfigManager.OverrideLocked) {
+                Logger.LogInfo("Applying hard overrides..");
+                foreach (var unlock in Unlocks) {
+                    unlock.ApplyHardOverrides();
+                }
+            }
+
             if (ConfigManager.DiscoveryMode) {
                 ShuffleDiscoverable();
                 // Hide [NEW] discovery tag permanently from all moons in initial rotation
