@@ -17,34 +17,32 @@ namespace LethalMoonUnlocks {
             if (ES3.KeyExists("LMU_Unlockables", currentSave)) {
                 List<LMUnlockable> unlockedMoons = ES3.Load<List<LMUnlockable>>("LMU_Unlockables", currentSave);
                 dictionary.Add("LMU_Unlockables", unlockedMoons);
-                Plugin.Instance.Mls.LogInfo($"Loading LMU_Unlockables: {string.Join(", ", unlockedMoons.Select(unlock => unlock.Name))}");
+                Plugin.Instance.Mls.LogInfo($"Found LMU_Unlockables: {string.Join(", ", unlockedMoons.Select(unlock => unlock.Name))}");
                 if (ES3.KeyExists("LMU_QuotaCount", currentSave)) {
                     int quotaCount = ES3.Load<int>("LMU_QuotaCount", currentSave);
                     dictionary.Add("LMU_QuotaCount", quotaCount);
-                    Plugin.Instance.Mls.LogInfo($"Loading LMU_QuotaCount: {quotaCount}");
+                    Plugin.Instance.Mls.LogInfo($"Found LMU_QuotaCount: {quotaCount}");
                 }
                 if (ES3.KeyExists("LMU_DayCount", currentSave)) {
                     int dayCount = ES3.Load<int>("LMU_DayCount", currentSave);
                     dictionary.Add("LMU_DayCount", dayCount);
-                    Plugin.Instance.Mls.LogInfo($"Loading LMU_DayCount: {dayCount}");
+                    Plugin.Instance.Mls.LogInfo($"Found LMU_DayCount: {dayCount}");
                 }
                 if (ES3.KeyExists("LMU_QuotaUnlocksCount", currentSave)) {
                     int quotaUnlocksCount = ES3.Load<int>("LMU_QuotaUnlocksCount", currentSave);
                     dictionary.Add("LMU_QuotaUnlocksCount", quotaUnlocksCount);
-                    Plugin.Instance.Mls.LogInfo($"Loading LMU_QuotaUnlocksCount: {quotaUnlocksCount}");
+                    Plugin.Instance.Mls.LogInfo($"Found LMU_QuotaUnlocksCount: {quotaUnlocksCount}");
                 }
                 if (ES3.KeyExists("LMU_QuotaFullDiscountsCount", currentSave)) {
                     int quotaFullDiscountsCount = ES3.Load<int>("LMU_QuotaFullDiscountsCount", currentSave);
                     dictionary.Add("LMU_QuotaFullDiscountsCount", quotaFullDiscountsCount);
-                    Plugin.Instance.Mls.LogInfo($"Loading LMU_QuotaFullDiscountsCount: {quotaFullDiscountsCount}");
+                    Plugin.Instance.Mls.LogInfo($"Found LMU_QuotaFullDiscountsCount: {quotaFullDiscountsCount}");
                 }
 
                 // BAND AID FIX for credits being wacky
                 if (ConfigManager.GroupCreditsSavingBandAid) {
                     if (ES3.KeyExists("GroupCredits", currentSave)) {
-                        int groupCredits = ES3.Load<int>("GroupCredits", currentSave);
-                        Plugin.Instance.Mls.LogInfo($"BAND-AID: Restoring group credits ({groupCredits}) from save file..");
-                        UnlockManager.Instance.Terminal.groupCredits = groupCredits;
+                        dictionary.Add("GroupCredits", ES3.Load<int>("GroupCredits", currentSave));
                     }
                 }
 
@@ -54,23 +52,23 @@ namespace LethalMoonUnlocks {
                 if (ES3.KeyExists("LMU_UnlockedMoons", currentSave)) {
                     Dictionary<string, int> unlockedMoons = ES3.Load<Dictionary<string, int>>("LMU_UnlockedMoons", currentSave);
                     dictionary.Add("LMU_UnlockedMoons", unlockedMoons);
-                    Plugin.Instance.Mls.LogInfo($"Loading deprecated LMU_UnlockedMoons: {string.Join(", ", unlockedMoons)}");
+                    Plugin.Instance.Mls.LogInfo($"Found deprecated LMU_UnlockedMoons: {string.Join(", ", unlockedMoons)}");
                 }
                 if (ES3.KeyExists("LMU_OriginalMoonPrices", currentSave)) {
                     Dictionary<string, int> originalPrices = ES3.Load<Dictionary<string, int>>("LMU_OriginalMoonPrices", currentSave);
                     dictionary.Add("LMU_OriginalMoonPrices", originalPrices);
-                    Plugin.Instance.Mls.LogInfo($"Loading deprecated LMU_OriginalMoonPrices: {string.Join(", ", originalPrices)}");
+                    Plugin.Instance.Mls.LogInfo($"Found deprecated LMU_OriginalMoonPrices: {string.Join(", ", originalPrices)}");
                 }
                 // Permanent moons data
                 if (ES3.KeyExists("UnlockedMoons", currentSave)) {
                     List<string> unlockedMoons = ES3.Load<List<string>>("UnlockedMoons", currentSave);
                     dictionary.Add("UnlockedMoons", unlockedMoons);
-                    Plugin.Instance.Mls.LogInfo($"Loading Permanent Moons data UnlockedMoons: {string.Join(", ", unlockedMoons)}");
+                    Plugin.Instance.Mls.LogInfo($"Found Permanent Moons data UnlockedMoons: {string.Join(", ", unlockedMoons)}");
                 }
                 if (ES3.KeyExists("MoonQuotaNum", currentSave)) {
                     int quotaCount = ES3.Load<int>("MoonQuotaNum", currentSave);
                     dictionary.Add("MoonQuotaNum", quotaCount);
-                    Plugin.Instance.Mls.LogInfo($"Loading Permanet Moons data MoonQuotaNum: {quotaCount}");
+                    Plugin.Instance.Mls.LogInfo($"Found Permanent Moons data MoonQuotaNum: {quotaCount}");
                 }
                 return dictionary;
             }            

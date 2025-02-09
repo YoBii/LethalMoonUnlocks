@@ -479,7 +479,7 @@ namespace LethalMoonUnlocks {
         }
 
         public void ImportUnlockableData(List<LMUnlockable> newData) {
-            Plugin.Instance.Mls.LogInfo("Importing LMU data..");
+            Plugin.Instance.Mls.LogInfo("Importing LMU_Unlockable data..");
             foreach (LMUnlockable importUnlock in newData) {
                 foreach (LMUnlockable unlock in Unlocks) {
                     if (unlock.Name == importUnlock.Name) {
@@ -886,6 +886,10 @@ namespace LethalMoonUnlocks {
                 if (savedata.ContainsKey("LMU_QuotaFullDiscountsCount")) {
                     QuotaFullDiscountsCount = (int)savedata["LMU_QuotaFullDiscountsCount"];
                     Plugin.Instance.Mls.LogInfo($"Loading QuotaFullDiscountsCount: {QuotaFullDiscountsCount}.");
+                }
+                if (savedata.ContainsKey("GroupCredits") && ConfigManager.GroupCreditsSavingBandAid) {
+                    Terminal.groupCredits = (int)savedata["GroupCredits"];
+                    Plugin.Instance.Mls.LogInfo($"BAND-AID: Restored group credits ({Terminal.groupCredits}) from save file..");
                 }
                 Plugin.Instance.Mls.LogInfo($"Finished loading LMU save data.");
                 return true;
