@@ -13,7 +13,7 @@ namespace LethalMoonUnlocks {
                 Instance = this;
             }
 
-            Plugin.Instance.Mls.LogInfo("Register Network messages..");
+            Logger.LogInfo("Register Network messages..");
 
             UnlockablesMessage = LNetworkMessage<List<LMUnlockable>>.Connect("LMU_Unlocks", onClientReceived: ClientReceiveUnlockables);
             BuyMoonMessage = LNetworkMessage<string>.Connect("LMU_BuyMoonMessage", onServerReceived: ServerReceiveBuyMoon);
@@ -22,7 +22,7 @@ namespace LethalMoonUnlocks {
             AlertMessage = LNetworkMessage<Notification>.Connect("LMU_AlertMessage", onClientReceived: ClientReceiveAlertMessage);
             SendAlertQueueEvent = LNetworkEvent.Connect("LMU_SendAlertQueueEvent", onClientReceived: ClientReceiveSendAlertQueueEvent);
 
-            Plugin.Instance.Mls.LogInfo($"NetworkManager created.");
+            Logger.LogInfo($"NetworkManager created.");
         }
         public static NetworkManager Instance { get; private set; }
 
@@ -39,10 +39,10 @@ namespace LethalMoonUnlocks {
         internal void ServerSendUnlockables(List<LMUnlockable> unlockables, ulong client_id = 0) {
             if (!IsServer()) return;
             if (client_id > 0) {
-                Plugin.Instance.Mls.LogInfo($"Syncing unlockables to client with id {client_id}");
+                Logger.LogInfo($"Syncing unlockables to client with id {client_id}");
                 UnlockablesMessage.SendClient(unlockables, client_id);
             } else {
-                Plugin.Instance.Mls.LogInfo($"Syncing unlockables to all clients..");
+                Logger.LogInfo($"Syncing unlockables to all clients..");
                 UnlockablesMessage.SendClients(unlockables);
             }
         }
@@ -56,25 +56,25 @@ namespace LethalMoonUnlocks {
         }
         internal void ClientBuyMoon(string moon) {
             if (IsServer()) return;
-            Plugin.Instance.Mls.LogInfo($"Sending buy message to host..");
+            Logger.LogInfo($"Sending buy message to host..");
             BuyMoonMessage.SendServer(moon);
         }
         internal void ClientRequestSync() {
             if (IsServer()) return;
-            Plugin.Instance.Mls.LogInfo($"Requesting sync from host..");
+            Logger.LogInfo($"Requesting sync from host..");
             RequestSyncEvent.InvokeServer();
         }
 
         private void ClientReceiveUnlockables(List<LMUnlockable> payload) {
             if (!IsServer()) {
-                Plugin.Instance.Mls.LogInfo($"Receiving LMU data..");
+                Logger.LogInfo($"Receiving LMU data..");
                 UnlockManager.Instance.ImportUnlockableData(payload);        
             }
             UnlockManager.Instance.ApplyUnlocks();
         }
         private void ClientReceiveAlertMessage(Notification alert) {
             if (!ConfigManager.ShowAlerts) return;
-            Plugin.Instance.Mls.LogDebug($"Receiving alert message..");
+            Logger.LogDebug($"Receiving alert message..");
             NotificationHelper.AddNotificationToQueue(alert);
         }
         private void ClientReceiveSendAlertQueueEvent() {
@@ -83,11 +83,11 @@ namespace LethalMoonUnlocks {
         }
         private void ServerReceiveBuyMoon(string moon, ulong id) {
             if (!IsServer()) return;
-            Plugin.Instance.Mls.LogInfo($"Received buy message for moon {moon} from client with id {id}.");
+            Logger.LogInfo($"Received buy message for moon {moon} from client with id {id}.");
             UnlockManager.Instance.BuyMoon(moon);
         }
         private void ServerReceiveRequestSyncEvent(ulong client_id) {
-            Plugin.Instance.Mls.LogInfo($"Received sync request from client with id {client_id}..");
+            Logger.LogInfo($"Received sync request from client with id {client_id}..");
             ServerSendUnlockables(UnlockManager.Instance.Unlocks, client_id);
         }
     }

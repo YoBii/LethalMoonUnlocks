@@ -20,7 +20,7 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPostfix]
         private static void ArriveAtLevelPatch() {
             if (NetworkManager.Instance.IsServer()) {
-                Plugin.Instance.Mls.LogInfo($"After travel arriving at: {LevelManager.CurrentExtendedLevel.NumberlessPlanetName}");
+                Logger.LogInfo($"After travel arriving at: {LevelManager.CurrentExtendedLevel.NumberlessPlanetName}");
                 UnlockManager.Instance.OnArrive();
             }
         }

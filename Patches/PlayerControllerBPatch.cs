@@ -31,7 +31,7 @@ namespace LethalMoonUnlocks.Patches {
                 int NumberOfLines = CurrentText.Count(c => c.Equals('\n')) + 1;
                 ScrollAmount = ConfigManager.TerminalScrollAmount / (float)NumberOfLines;
 
-                Plugin.Instance.Mls.LogDebug($"Setting terminal scroll amount to '{ScrollAmount}'!");
+                Logger.LogDebug($"Setting terminal scroll amount to '{ScrollAmount}'!");
             }
 
             // Increment terminal scrollbar value by the relative scroll amount, in the direction given by the mouse wheel input.

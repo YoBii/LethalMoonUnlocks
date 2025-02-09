@@ -9,7 +9,7 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPatch(nameof(GameNetworkManager.Disconnect))]
         [HarmonyPostfix]
         private static void DisconnectPatch() {
-            Plugin.Instance.Mls.LogInfo($"Disconnecting from lobby. Restoring original prices and clearing variables..");
+            Logger.LogInfo($"Disconnecting from lobby. Restoring original prices and clearing variables..");
             UnlockManager.Instance.OnDisconnect();
         }
 
@@ -18,17 +18,17 @@ namespace LethalMoonUnlocks.Patches {
         private static void SaveGameValuesPatch() {
             if (!NetworkManager.Instance.IsServer()) return;
             try {
-                Plugin.Instance.Mls.LogInfo($"Host is saving game..");
+                Logger.LogInfo($"Host is saving game..");
                 SaveManager.StoreSaveData();
             } catch (Exception e) {
-                Plugin.Instance.Mls.LogError($"Failed to save unlock data: {e}");
+                Logger.LogError($"Failed to save unlock data: {e}");
             }
         }
 
         [HarmonyPatch(nameof(GameNetworkManager.ResetSavedGameValues))]
         [HarmonyPostfix]
         private static void ResetSavedGameValuesPatch() {
-            Plugin.Instance.Mls.LogInfo($"You are fired!");
+            Logger.LogInfo($"You are fired!");
             if (NetworkManager.Instance.IsServer() && ConfigManager.ResetWhenFired) {
                 UnlockManager.Instance.OnResetGame();
             }

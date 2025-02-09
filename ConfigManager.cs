@@ -193,12 +193,12 @@ namespace LethalMoonUnlocks {
         public ConfigManager() {
             if (Instance == null)
                 Instance = this;
-            Plugin.Instance.Mls.LogInfo($"ConfigManager created");
+            Logger.LogInfo($"ConfigManager created");
             RefreshConfig();
         }
 
         public static void RefreshConfig() {
-            Plugin.Instance.Mls.LogInfo("Refreshing config..");
+            Logger.LogInfo("Refreshing config..");
             _configFile = null;
             EnsureConfigExists();
             RefreshValues();
@@ -206,12 +206,12 @@ namespace LethalMoonUnlocks {
         }
         public static Dictionary<string, List<string>> ParseCustomMoonGroups() {
             if (AdvancedPrintMoonNames) {
-                Plugin.Instance.Mls.LogWarning($"Printing available moon names for custom moon groups..");
-                Plugin.Instance.Mls.LogWarning($"{string.Join(", ", PatchedContent.ExtendedLevels.Where(level => level.NumberlessPlanetName != "Gordion" && level.NumberlessPlanetName != "Liquidation").Select(level => level.name))}");
+                Logger.LogWarning($"Printing available moon names for custom moon groups..");
+                Logger.LogWarning($"{string.Join(", ", PatchedContent.ExtendedLevels.Where(level => level.NumberlessPlanetName != "Gordion" && level.NumberlessPlanetName != "Liquidation").Select(level => level.name))}");
             }
             Dictionary<string, List<string>> customGroups = new Dictionary<string, List<string>>();
             if (MoonGroupMatchingCustom == string.Empty) {
-                Plugin.Instance.Mls.LogInfo($"No custom moon group defined. Skip parsing..");
+                Logger.LogInfo($"No custom moon group defined. Skip parsing..");
                 return customGroups;
             }
             string[] groupStrings = MoonGroupMatchingCustom.Split('|');
@@ -224,13 +224,13 @@ namespace LethalMoonUnlocks {
                     members.Add(member.Trim());
                 }
                 if (groupName == null || groupName == string.Empty) {
-                    Plugin.Instance.Mls.LogWarning("Couldn't parse custom moon group name. Make sure you're using the correct format!");
+                    Logger.LogWarning("Couldn't parse custom moon group name. Make sure you're using the correct format!");
                     continue;
                 } else if (groupMemberString == string.Empty || members.Count == 0) {
-                    Plugin.Instance.Mls.LogWarning("Couldn't parse custom moon group! Name null or empty or members not found!");
+                    Logger.LogWarning("Couldn't parse custom moon group! Name null or empty or members not found!");
                     continue;
                 } else {
-                    Plugin.Instance.Mls.LogInfo($"Parsed custom moon group: Name = {groupName}, Members = [ {string.Join(", ", members)} ]");
+                    Logger.LogInfo($"Parsed custom moon group: Name = {groupName}, Members = [ {string.Join(", ", members)} ]");
                     customGroups[groupName] = members;
                 }
             }
@@ -284,7 +284,7 @@ namespace LethalMoonUnlocks {
             DiscountsString = GetConfigValue("3 - Discount Mode", "Discount rates", "50,75,100", "The discount rates that are applied to moon prices as a % off of the original routing price.\n" +
                 "For example, '50,75,100', would make each moon 50% off after the first purchase, 75% off after the second purchase, and free after the third purchase.\n" +
                 "Discount rates are separated by commas and can contain any number of rates");
-            Plugin.Instance.Mls.LogInfo($"Discount rates (% off): {string.Join(", ", Discounts.Select(discount => discount + "%"))}");
+            Logger.LogInfo($"Discount rates (% off): {string.Join(", ", Discounts.Select(discount => discount + "%"))}");
             DiscountsResetAfterVisits = GetConfigValue("3 - Discount Mode", "Discounts expire", 0, "Discounts will expire after a set number of free routes, after which they will return to their original price.\n" +
                 "Set to 0 to disable this feature.\n" +
                 "NOTE: The final discount rate must be set to '100' for this to work!");

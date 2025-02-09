@@ -50,7 +50,7 @@ namespace LethalMoonUnlocks.Compatibility {
         internal LMGroup GetCheapestUndiscoveredConstellation() {
             LMGroup group = new LMGroup();
             foreach (var constellation in Collections.ConstellationStuff.OrderBy(c => c.constelPrice)) {
-                Plugin.Instance.Mls.LogInfo($"Got cheapest constellation: {constellation.consName}");
+                Logger.LogInfo($"Got cheapest constellation: {constellation.consName}");
                 if (constellation.isHidden) {
                     List<LMUnlockable> constellationUnlockables = new List<LMUnlockable>();
                     foreach (string moon in constellation.constelMoons) {
@@ -63,7 +63,7 @@ namespace LethalMoonUnlocks.Compatibility {
                     group = new LMGroup() { Members = constellationUnlockables, Name = constellation.consName };
                     break;
                 } else {
-                    Plugin.Instance.Mls.LogInfo($"Constellation already discovered. Try next..");
+                    Logger.LogInfo($"Constellation already discovered. Try next..");
                 }
             }
             return group;
@@ -84,10 +84,10 @@ namespace LethalMoonUnlocks.Compatibility {
 
             var unlock = UnlockManager.Instance.Unlocks.Where(unlock => unlock.ExtendedLevel.NumberlessPlanetName == constellationDefaultMoon).FirstOrDefault();
             if (unlock != null) {
-                Plugin.Instance.Mls.LogInfo($"Routing to constellation {currentConstellation.consName} -> default moon {unlock.Name} with ID {unlock.ExtendedLevel.SelectableLevel.levelID}!");
+                Logger.LogInfo($"Routing to constellation {currentConstellation.consName} -> default moon {unlock.Name} with ID {unlock.ExtendedLevel.SelectableLevel.levelID}!");
                 if (unlock.ExtendedLevel.RoutePrice > 0) {
                     if (ConfigManager.LethalConstellationsOverridePrice) {
-                        Plugin.Instance.Mls.LogInfo($"Route to {unlock.Name} was paid ({unlock.ExtendedLevel.RoutePrice} credits).");
+                        Logger.LogInfo($"Route to {unlock.Name} was paid ({unlock.ExtendedLevel.RoutePrice} credits).");
                     }
                     if (NetworkManager.Instance.IsServer()) {
                         UnlockManager.Instance.BuyMoon(unlock.Name);
@@ -95,7 +95,7 @@ namespace LethalMoonUnlocks.Compatibility {
                         NetworkManager.Instance.ClientBuyMoon(unlock.Name);
                     }
                 } else {
-                    Plugin.Instance.Mls.LogInfo($"Route to {unlock.Name} was free.");
+                    Logger.LogInfo($"Route to {unlock.Name} was free.");
                 }
             }
         }
@@ -115,11 +115,11 @@ namespace LethalMoonUnlocks.Compatibility {
                     }
                     constellation.isHidden = false;
                     constellation.isLocked = false;
-                    Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: There are discovered moons in this constellation. Constellation is also discovered.");
+                    Logger.LogDebug($"Constellation {constellation.consName}: There are discovered moons in this constellation. Constellation is also discovered.");
                 } else {
                     constellation.isHidden = true;
                     constellation.isLocked = true;
-                    Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: No moon in this constellation is discovered. Hiding constellation.");
+                    Logger.LogDebug($"Constellation {constellation.consName}: No moon in this constellation is discovered. Hiding constellation.");
                 }
             }
         }
@@ -132,7 +132,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 if (constellationUnlocks.Count > 0) {
                     constellation.defaultMoon = constellationUnlocks.First().Name;
                     constellation.defaultMoonLevel = constellationUnlocks.First().ExtendedLevel;
-                    Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: set default moon to {constellation.defaultMoon}");
+                    Logger.LogDebug($"Constellation {constellation.consName}: set default moon to {constellation.defaultMoon}");
                 }
             }
         }
@@ -156,7 +156,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 var constellationDefaultMoonUnlock = UnlockManager.Instance.Unlocks.Where(unlock => unlock.Name == constellationDefaultMoon).FirstOrDefault();
                 if (constellationDefaultMoonUnlock != null) {
                     constellation.constelPrice = constellationDefaultMoonUnlock.ExtendedLevel.RoutePrice;
-                    Plugin.Instance.Mls.LogDebug($"Constellation {constellation.consName}: set constellation price to {constellation.constelPrice}");
+                    Logger.LogDebug($"Constellation {constellation.consName}: set constellation price to {constellation.constelPrice}");
                 }
             }
         }
@@ -195,7 +195,7 @@ namespace LethalMoonUnlocks.Compatibility {
                         unlock.ExtendedLevel.IsRouteHidden = false;
                     }
                     unlock.ExtendedLevel.IsRouteLocked = false;
-                    Plugin.Instance.Mls.LogDebug($"Showing moon {unlock.Name} as part of the current constellation!");
+                    Logger.LogDebug($"Showing moon {unlock.Name} as part of the current constellation!");
                 }
             }
         }

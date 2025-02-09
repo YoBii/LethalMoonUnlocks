@@ -21,7 +21,7 @@ namespace LethalMoonUnlocks.Compatibility {
             if (!result || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel" || TimeOfDay.Instance.daysUntilDeadline < 2 || !ConfigManager.MalfunctionsNavigation) return;
             var unlock = UnlockManager.Instance.Unlocks.Where(unlock => unlock.ExtendedLevel.SelectableLevel.levelID == level).FirstOrDefault();
             if (unlock != null && NetworkManager.Instance.IsServer() && unlock.ExtendedLevel.RoutePrice > 0) {
-                Plugin.Instance.Mls.LogInfo($"Interpreting navigation malfunction as buying the moon..");
+                Logger.LogInfo($"Interpreting navigation malfunction as buying the moon..");
                 UnlockManager.Instance.BuyMoon(unlock.Name);
             }
         }

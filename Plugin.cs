@@ -34,7 +34,6 @@ namespace LethalMoonUnlocks
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
 
-        internal ManualLogSource Mls;
         private bool _loaded;
 
         private void Awake()
@@ -42,9 +41,11 @@ namespace LethalMoonUnlocks
             if (Instance == null) {
                 Instance = this;
             }
-            Mls = BepInEx.Logging.Logger.CreateLogSource("LethalMoonUnlocks");
+            ManualLogSource Mls = BepInEx.Logging.Logger.CreateLogSource("LethalMoonUnlocks");
+            LethalMoonUnlocks.Logger.Initialize(Mls);
 
-            Mls.LogInfo("Applying patches.."); 
+            Logger.LogInfo("Hello world (:"); 
+            Logger.LogInfo("Applying patches.."); 
 
             _harmony.PatchAll(typeof(Patches.GameNetworkManagerPatch));
             _harmony.PatchAll(typeof(Patches.RoundManagerPatch));
@@ -53,7 +54,7 @@ namespace LethalMoonUnlocks
             _harmony.PatchAll(typeof(Patches.TimeOfDayPatch));
             _harmony.PatchAll(typeof(Patches.HUDManagerPatch));
 
-            Mls.LogInfo("Patching complete."); 
+            Logger.LogInfo("Patching complete."); 
             if (!_loaded) Initialize();
         }
 
@@ -69,7 +70,7 @@ namespace LethalMoonUnlocks
 
         public void Initialize()
         {
-            Mls.LogInfo("Initializing.."); 
+            Logger.LogInfo("Initializing.."); 
 
             GameObject delayHelper = new GameObject("DelayHelper");
             DontDestroyOnLoad(delayHelper);
@@ -78,7 +79,7 @@ namespace LethalMoonUnlocks
 
             SceneManager.sceneUnloaded += AfterGameInit;
 
-            Mls.LogInfo($"LethalMoonUnlocks " + PluginInfo.PLUGIN_VERSION + " initialized!");
+            Logger.LogInfo($"LethalMoonUnlocks " + PluginInfo.PLUGIN_VERSION + " initialized!");
             _loaded = true;
         }
 
@@ -89,35 +90,35 @@ namespace LethalMoonUnlocks
             }
 
             // Check for compatible mods
-            Mls.LogInfo("Checking for compatible mods..");
+            Logger.LogInfo("Checking for compatible mods..");
 
             // print all plugin keys
             //Mls.LogFatal(string.Join(", ", BepInEx.Bootstrap.Chainloader.PluginInfos.Select(plugin => plugin.Key)));
 
             // LethalQuantities (risk level)
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalQuantities.PluginInfo.PLUGIN_GUID)) {
-                Mls.LogInfo("Lethal Quantities found! Enabling compatibility..");
+                Logger.LogInfo("Lethal Quantities found! Enabling compatibility..");
                 LQPresent = true;
             }
             // Malfunctions
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.zealsprince.malfunctions")) {
-                Mls.LogInfo("Malfunctions found! Enabling compatibility..");
+                Logger.LogInfo("Malfunctions found! Enabling compatibility..");
                 _harmony.PatchAll(typeof(MalfunctionsCompatibility));
             }
             // LethalConstellations
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID)) {
-                Mls.LogInfo("LethalConstellations found! Enabling compatibility..");
+                Logger.LogInfo("LethalConstellations found! Enabling compatibility..");
                 LethalConstellationsPresent = true;
                 LethalConstellationsExtension = new LethalConstellationsExtension();
             }
             // darmuhsTerminalStuff (MoonsPlus)
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID)) {
-                Mls.LogInfo("darmuhsTerminalStuff found! Enabling compatibility..");
+                Logger.LogInfo("darmuhsTerminalStuff found! Enabling compatibility..");
                 darmuhsTerminalStuffPresent = true;
             }
             // WeatherTweaks
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(WeatherTweaks.PluginInfo.PLUGIN_GUID)) {
-                Mls.LogInfo("WeatherTweaks found! Enabling compatibility..");
+                Logger.LogInfo("WeatherTweaks found! Enabling compatibility..");
                 WeatherTweaksPresent = true;
                 _harmony.PatchAll(typeof(WTCompatibility));
             }
@@ -127,7 +128,7 @@ namespace LethalMoonUnlocks
             
             // Patch Terminal scrolling
             if (ConfigManager.TerminalScrollAmount > 0) {
-                Mls.LogInfo("TerminalScrollAmount is set to a positive value! Patching scroll amount..");
+                Logger.LogInfo("TerminalScrollAmount is set to a positive value! Patching scroll amount..");
                 _harmony.PatchAll(typeof(PlayerControllerBPatch));
             }
             

@@ -36,7 +36,7 @@ namespace LethalMoonUnlocks {
         }
         public void OverrideData(LMUnlockable newData) {
             if (Name != newData.Name) {
-                Plugin.Instance.Mls.LogError("Name mismatch during override LMUnlockable data!");
+                Logger.LogError("Name mismatch during override LMUnlockable data!");
             } else {
                 OriginallyHidden = newData.OriginallyHidden;
                 OriginallyLocked = newData.OriginallyLocked;
@@ -95,7 +95,7 @@ namespace LethalMoonUnlocks {
             // set permanently discovered if moon was bought (if config enabled)
             if (BuyCount > 0 && PermanentlyDiscovered == false && ((ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepUnlocks) || (ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepDiscounts))) {
                 PermanentlyDiscovered = true;
-                Plugin.Instance.Mls.LogInfo($"{Name} set to permanently discovered because it's {(ConfigManager.DiscoveryKeepUnlocks ? "unlocked" : "discounted.")}");
+                Logger.LogInfo($"{Name} set to permanently discovered because it's {(ConfigManager.DiscoveryKeepUnlocks ? "unlocked" : "discounted.")}");
             }
             // set permanently discovered if free moon was landed on x times (if config enabled)
             if (Discovered && !OriginallyHidden && !OriginallyLocked && OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding > -1) {
@@ -137,7 +137,7 @@ namespace LethalMoonUnlocks {
                 }
                 ExtendedLevel.IsRouteHidden = false;
                 ExtendedLevel.IsRouteLocked = false;
-                Plugin.Instance.Mls.LogDebug($"{Name} is visible in terminal moon catalogue");
+                Logger.LogDebug($"{Name} is visible in terminal moon catalogue");
             } else if (!Discovered && !PermanentlyDiscovered && !OriginallyHidden && !OriginallyLocked) {
                 ExtendedLevel.IsRouteHidden = true;
                 ExtendedLevel.IsRouteLocked = true;
@@ -160,7 +160,7 @@ namespace LethalMoonUnlocks {
             if (rnd < ConfigManager.SalesChance && ExtendedLevel.RoutePrice > 0) {
                 OnSale = true;
                 SalesRate = ConfigManager.SalesRate;
-                Plugin.Instance.Mls.LogDebug($"{Name} is on SALE for {SalesRate}% OFF!");
+                Logger.LogDebug($"{Name} is on SALE for {SalesRate}% OFF!");
             } else {
                 OnSale = false;
                 SalesRate = 0;
@@ -169,19 +169,19 @@ namespace LethalMoonUnlocks {
 
         public void VisitMoon() {
             VisitCount++;
-            Plugin.Instance.Mls.LogDebug($"{Name}: Set visit count to {VisitCount}");
+            Logger.LogDebug($"{Name}: Set visit count to {VisitCount}");
             if ((ExtendedLevel.RoutePrice == 0 || (ConfigManager.DiscountMode && BuyCount == ConfigManager.DiscountsCount)) && OriginalPrice != ExtendedLevel.RoutePrice) {
                 FreeVisitCount++;
-                Plugin.Instance.Mls.LogDebug($"{Name}: Set free visit count to {FreeVisitCount}");
+                Logger.LogDebug($"{Name}: Set free visit count to {FreeVisitCount}");
                 if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.UnlocksResetAfterVisits > 0) {
                     if (FreeVisitCount > ConfigManager.UnlocksResetAfterVisits) {
-                        Plugin.Instance.Mls.LogInfo($"{Name}: Reset unlock due to free visit count ({FreeVisitCount - 1}) reached.");
+                        Logger.LogInfo($"{Name}: Reset unlock due to free visit count ({FreeVisitCount - 1}) reached.");
                         NotificationHelper.SendChatMessage($"Unlock expired:\n<color=red>{Name}</color>");
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Unlock expired!", Text = $"Your unlock for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_UnlockExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;
                         if (ConfigManager.UnlocksResetAfterVisitsPermDiscovery) {
-                            Plugin.Instance.Mls.LogInfo($"{Name}: Also resetting permanent discovery status.");
+                            Logger.LogInfo($"{Name}: Also resetting permanent discovery status.");
                             PermanentlyDiscovered = false;
                         }
                     } else if (FreeVisitCount > 1) {
@@ -190,13 +190,13 @@ namespace LethalMoonUnlocks {
                 }
                 if (ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0) {
                     if (FreeVisitCount > ConfigManager.DiscountsResetAfterVisits) {
-                        Plugin.Instance.Mls.LogInfo($"{Name}: Reset discount due to free visit count ({FreeVisitCount - 1}) reached.");
+                        Logger.LogInfo($"{Name}: Reset discount due to free visit count ({FreeVisitCount - 1}) reached.");
                         NotificationHelper.SendChatMessage($"Discount expired:\n<color=red>{Name}</color>");
                         NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Discount expired!", Text = $"Your discount for {Name} has been used {(FreeVisitCount - 1).NumberOfWords("time")} and expired.", IsWarning = true, Key = "LMU_DiscountExpired" });
                         BuyCount = 0;
                         FreeVisitCount = 0;
                         if (ConfigManager.DiscountsResetAfterVisitsPermDiscovery) {
-                            Plugin.Instance.Mls.LogInfo($"{Name}: Also resetting permanent discovery status.");
+                            Logger.LogInfo($"{Name}: Also resetting permanent discovery status.");
                             PermanentlyDiscovered = false;
                         }
                     } else if (FreeVisitCount > 1) {
@@ -378,7 +378,7 @@ namespace LethalMoonUnlocks {
             if (BuyCount > 0) {
                 if (ConfigManager.DiscountMode) {
                     price = (int)(price * Plugin.GetDiscountRate(BuyCount));
-                    log += $", Discount -> {price}, ";
+                    log += $", Discount -> {price}";
                 } else if (ConfigManager.UnlockMode) {
                     price = 0;
                     log += $", Unlock -> {price}, ";
@@ -388,7 +388,7 @@ namespace LethalMoonUnlocks {
                 price = (int)(price * (100 - SalesRate) / 100f);
                 log += $", Sales rate -> {price}";
             }
-            Plugin.Instance.Mls.LogDebug(log);
+            Logger.LogDebug(log);
             return price;
         }
 

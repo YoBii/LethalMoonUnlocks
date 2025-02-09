@@ -62,13 +62,13 @@ namespace LethalMoonUnlocks {
                 long result = Math.Clamp((long)Math.Pow(sumAllPrices / price * bias, bias), 1, int.MaxValue / (unlocks.Count + 1));
                 weights[unlock] = (int)result;
             }
-            Plugin.Instance.Mls.LogDebug($"Cheap moon bias: Assigned the following weights: [ {string.Join(", ", weights.Select(weight => weight.Key.Name + ":" + weight.Value ))} ]");
+            Logger.LogDebug($"Cheap moon bias: Assigned the following weights: [ {string.Join(", ", weights.Select(weight => weight.Key.Name + ":" + weight.Value ))} ]");
             return weights;
         }
 
         private static bool CheckResult<T>(List<T> result, int goal) {
             if (result.Count < goal) {
-                Plugin.Instance.Mls.LogWarning("Couldn't select the desired amount of elements!");
+                Logger.LogWarning("Couldn't select the desired amount of elements!");
                 return false;
             }
             return true;

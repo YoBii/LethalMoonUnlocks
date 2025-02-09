@@ -18,18 +18,18 @@ namespace LethalMoonUnlocks.Util {
                 }
             }
             Queue.Add(notification);
-            Plugin.Instance.Mls.LogDebug($"Queued new alert: key = {notification.Key}");
+            Logger.LogDebug($"Queued new alert: key = {notification.Key}");
         }
 
         internal static IEnumerator SendQueuedNotifications() {
             if (IsSending) {
-                Plugin.Instance.Mls.LogDebug("Trying to start queue but it's already sending..");
+                Logger.LogDebug("Trying to start queue but it's already sending..");
                 yield break;
             }
             while (Queue.Count > 0) {
                 IsSending = true;
                 var notification = Queue.First();                    
-                Plugin.Instance.Mls.LogDebug($"Sending out alert: key = {notification.Key}");
+                Logger.LogDebug($"Sending out alert: key = {notification.Key}");
                 HUDManager.Instance.DisplayTip(notification.Header, notification.Text, notification.IsWarning, notification.UseSave, notification.Key);
                 Queue.Remove(notification);
                 yield return new WaitForSeconds(8f);
