@@ -257,6 +257,7 @@ namespace LethalMoonUnlocks {
             string preview = string.Empty;
             string empty = string.Empty;
 
+            // Gather preview components
             string weather = string.Empty;
             if (Plugin.WeatherTweaksPresent) {
                 weather = WTCompatibility.GetWeatherTweaksWeather(this);
@@ -279,6 +280,8 @@ namespace LethalMoonUnlocks {
             if (risk.Count() > 7) {
                 risk = risk.Substring(0, 5) + "..";
             }
+
+            // Build preview according to PreviewInfoType
             if (infoType.Equals(PreviewInfoType.Weather)) {
                 preview = string.Format(format, empty, empty, "$" + ExtendedLevel.RoutePrice, weather);
             } else if (infoType.Equals(PreviewInfoType.Price)) {
