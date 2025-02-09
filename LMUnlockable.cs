@@ -10,58 +10,36 @@ namespace LethalMoonUnlocks {
     [Serializable]
     [ES3Serializable]
     internal class LMUnlockable {
-        [ES3NonSerializable]
-        [NonSerialized]
-        internal ExtendedLevel ExtendedLevel;
-        [SerializeField]
-        [ES3Serializable]
-        internal string Name { get; private set; }
+        [ES3NonSerializable] [NonSerialized] internal ExtendedLevel ExtendedLevel;
+        [SerializeField] [ES3Serializable] internal string Name { get; private set; }
         public int OriginalPrice { get; private set; }
-        public bool OriginallyHidden { get; private set; }
-        public bool OriginallyLocked { get; private set; }
+        [SerializeField] [ES3Serializable] public bool OriginallyHidden { get; private set; }
+        [SerializeField] [ES3Serializable] public bool OriginallyLocked { get; private set; }
+        [SerializeField] [ES3Serializable] internal int BuyCount { get; set; }
+        [SerializeField] [ES3Serializable] internal int VisitCount { get; set; }
+        [SerializeField] [ES3Serializable] internal int FreeVisitCount { get; set; }
+        [SerializeField] [ES3Serializable] internal int LandingCount { get; set; }
+        [SerializeField] [ES3Serializable] internal bool Discovered { get; set; }
+        [SerializeField] [ES3Serializable] internal bool NewDiscovery { get; set; }
+        [SerializeField] [ES3Serializable] internal bool DiscoveredOnce { get; set; }
+        [SerializeField] [ES3Serializable] internal bool PermanentlyDiscovered { get; set; }
+        [SerializeField] [ES3Serializable] internal bool OnSale { get; set; }
 
         [SerializeField]
         [ES3Serializable]
-        internal int BuyCount { get; set; } = 0;
-        [SerializeField]
-        [ES3Serializable]
-        internal int VisitCount { get; set; } = 0;
-        [SerializeField]
-        [ES3Serializable]
-        internal int FreeVisitCount { get; set; } = 0;
-        [SerializeField]
-        [ES3Serializable]
-        internal int LandingCount { get; set; } = 0;
-        [SerializeField]
-        [ES3Serializable]
-        internal bool Discovered { get; set; } = false;
-        [SerializeField]
-        [ES3Serializable]
-        internal bool NewDiscovery { get; set; } = false;
-        [SerializeField]
-        [ES3Serializable]
-        internal bool DiscoveredOnce { get; set; } = false;
-        [SerializeField]
-        [ES3Serializable]
-        internal bool PermanentlyDiscovered { get; set; } = false;
-        [SerializeField]
-        [ES3Serializable]
-        internal bool OnSale { get; set; } = false;
-        [SerializeField]
-        [ES3Serializable]
-        internal int SalesRate { get; set; } = 0;
+        internal int SalesRate { get; set; }
 
-        public LMUnlockable(string name, int originalPrice, bool originallyHidden, bool originallyLocked) {
+        public LMUnlockable(string name, int originalPrice) {
             Name = name;
-            ExtendedLevel = UnlockManager.Instance.AllLevels.Where(level => level.NumberlessPlanetName == Name).FirstOrDefault();
+            ExtendedLevel = UnlockManager.Instance.AllLevels.FirstOrDefault(level => level.NumberlessPlanetName == Name);
             OriginalPrice = originalPrice;
-            OriginallyHidden = originallyHidden;
-            OriginallyLocked = originallyLocked;
         }
         public void OverrideData(LMUnlockable newData) {
             if (Name != newData.Name) {
                 Plugin.Instance.Mls.LogError("Name mismatch during override LMUnlockable data!");
             } else {
+                OriginallyHidden = newData.OriginallyHidden;
+                OriginallyLocked = newData.OriginallyLocked;
                 BuyCount = newData.BuyCount;
                 VisitCount = newData.VisitCount;
                 FreeVisitCount = newData.FreeVisitCount;
@@ -164,6 +142,11 @@ namespace LethalMoonUnlocks {
                 ExtendedLevel.IsRouteHidden = true;
                 ExtendedLevel.IsRouteLocked = true;
             }
+        }
+
+        public void StoreOriginalState() {
+            OriginallyHidden = ExtendedLevel.IsRouteHidden;
+            OriginallyLocked = ExtendedLevel.IsRouteLocked;
         }
 
         public void RestoreOriginalState() {

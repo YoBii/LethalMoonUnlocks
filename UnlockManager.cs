@@ -570,30 +570,16 @@ namespace LethalMoonUnlocks {
                     Plugin.Instance.Mls.LogDebug($"Skipping level{levelName}..");
                     continue;
                 }
-
-                // apply hard overrides
-                if (ConfigManager.OverrideHidden) {
-                    if (ConfigManager.OverrideHiddenListMoons.Contains(level.NumberlessPlanetName)) {
-                        level.IsRouteHidden = true;
-                    } else {
-                        level.IsRouteHidden = false;
-                    }
-                }
-                if (ConfigManager.OverrideLocked) {
-                    if (ConfigManager.OverrideLockedListMoons.Contains(level.NumberlessPlanetName)) {
-                        level.IsRouteLocked = true;
-                    } else {
-                        level.IsRouteLocked = false;
-                    }
-                }
-
-                Unlocks.Add(new LMUnlockable(level.NumberlessPlanetName, level.RoutePrice, level.IsRouteHidden, level.IsRouteLocked));
+                Unlocks.Add(new LMUnlockable(level.NumberlessPlanetName, level.RoutePrice));
             }
             LogUnlockables(true);
         }
 
         private void InitializeNewGame() {
             Plugin.Instance.Mls.LogInfo($"New game initialization..");
+            foreach (var unlock in Unlocks) {
+                unlock.StoreOriginalState();
+            }
             if (ConfigManager.DiscoveryMode) {
                 ShuffleDiscoverable();
                 // Hide [NEW] discovery tag permanently from all moons in initial rotation
@@ -602,7 +588,7 @@ namespace LethalMoonUnlocks {
             // Shuffle Moon Sales
             if (ConfigManager.Sales) {
                 foreach (var unlock in Unlocks) {
-                        unlock.RefreshSale();
+                    unlock.RefreshSale();
                 } 
             }
         }
