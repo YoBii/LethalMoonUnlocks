@@ -106,9 +106,15 @@ namespace LethalMoonUnlocks {
 
             // Load save data
             // if save exists apply all unlockable data and continue
-            // init new game
+            // else init new game
             bool loadSuccess = LoadAndImportSavaData();
-            if (!loadSuccess) {
+            if (loadSuccess) {
+                // Force shuffle if discovery mode is enabled and no moons are discovered
+                // This can happen after loading a save that didn't have Discovery mode enabled
+                if (Unlocks.All(unlock => !unlock.Discovered) && ConfigManager.DiscoveryMode) {
+                    ShuffleDiscoverable();
+                }
+            } else {
                 InitializeNewGame();
             }
 
@@ -587,8 +593,8 @@ namespace LethalMoonUnlocks {
         }
 
         private void InitializeNewGame() {
+            Plugin.Instance.Mls.LogInfo($"New game initialization..");
             if (ConfigManager.DiscoveryMode) {
-                Plugin.Instance.Mls.LogInfo($"Shuffling moon rotation on new game init");
                 ShuffleDiscoverable();
                 // Hide [NEW] discovery tag permanently from all moons in initial rotation
                 Unlocks.Where(unlock => unlock.Discovered).Do(unlock => { unlock.DiscoveredOnce = true; });
