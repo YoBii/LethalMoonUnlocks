@@ -247,14 +247,14 @@ namespace LethalMoonUnlocks {
             ChatMessages = GetConfigValue("1 - General settings", "Show chat messages", true, "When enabled, LethalMoonUnlocks will send messages to the in-game chat whenever something relevant happens.");
             ShowAlerts = GetConfigValue("1 - General settings", "Show alert messages", false, "When enabled, LethalMoonUnlocks will display alert messages whenever something relevant happens.");
 
-            DisplayTerminalTags = GetConfigValue("1.1 - Terminal moon tags", "Display tags in terminal", false, "When enabled, LethalMoonUnlocks will display additional tags in the Terminal moon catalogue.\n" +
+            DisplayTerminalTags = GetConfigValue("1.1 - Terminal moon tags", "Display tags in terminal", false, "When enabled, LethalMoonUnlocks will display additional tags in the Terminal moon catalog.\n" +
                 "These tags will indicate various conditions, such as a moon being unlocked or discounted, being on sale, etc.\n" +
                 "If custom moon groups or matching by LLL tag are enabled, you'll also see the custom groups or LLL tags a moon is associated with.\n" +
-                "NOTE: At this time additional tags will only show in the standard LLL moon catalogue and TerminalFormatter. Any other mod replacing the 'moons' command will probably cause issues.");
+                "NOTE: At this time additional tags will only show in the standard LLL moon catalog and TerminalFormatter. Any other mod replacing the 'moons' command will probably cause issues.");
             ShowTagInOrbit = GetConfigValue("1.1 - Terminal moon tags", "In orbit tag", true, "Display a tag to indicate the moon you're currently orbiting.");
             ShowTagExplored = GetConfigValue("1.1 - Terminal moon tags", "Exploration tag", true, "Display a tag to indicate which moons have not been landed on yet. After landing once, it will keep track of how many times you've landed in total.");
             ShowTagUnlockDiscount = GetConfigValue("1.1 - Terminal moon tags", "Unlock discount tag", true, "Display a tag to indicate Unlocks and Discounts as well as how many routes are left before they expire.");
-            ShowTagNewDiscovery = GetConfigValue("1.1 - Terminal moon tags", "New discovery tag", true, "Discovery Mode only: display a tag to indicate which moons are new discoveries i.e. available in the moon catalogue for the first time. The tag will vanish when you route to the moon or the moon catalogue is shuffled.");
+            ShowTagNewDiscovery = GetConfigValue("1.1 - Terminal moon tags", "New discovery tag", true, "Discovery Mode only: display a tag to indicate which moons are new discoveries i.e. available in the moon catalog for the first time. The tag will vanish when you route to the moon or the moon catalog is shuffled.");
             ShowTagPermanentDiscovery = GetConfigValue("1.1 - Terminal moon tags", "Permanent discovery tag", true, "Discovery Mode only: display a tag to indicate permanently discovered moons.\n" +
                 "Displays as [PINNED].");
             ShowTagSale = GetConfigValue("1.1 - Terminal moon tags", "Sales tag", true, "Moon Sales only: display a tag to indicate which moons are on sale, as well as the percentage of the sale.");
@@ -265,7 +265,7 @@ namespace LethalMoonUnlocks {
                 "NOTE: This setting and all settings relating to Unlocks will have no effect if Discount Mode is enabled!");
             UnlocksResetAfterVisits = GetConfigValue("2 - Unlock Mode (Default)", "Unlocks expire", 0, "Unlocks will expire after a set number of free routes, after which they will become paid again.\n" +
                 "Set to 0 to disable this feature.");
-            DiscoveryKeepUnlocks = GetConfigValue("2 - Unlock Mode (Default)", "Unlocked moons are permanently discovered", false, "Discovery Mode only: Every unlocked moon is also permanently discovered i.e. added to the moon catalogue on top of your base selection.");
+            DiscoveryKeepUnlocks = GetConfigValue("2 - Unlock Mode (Default)", "Unlocked moons are permanently discovered", false, "Discovery Mode only: Every unlocked moon is also permanently discovered i.e. added to the moon catalog on top of your base selection.");
             UnlocksResetAfterVisitsPermDiscovery = GetConfigValue("2 - Unlock Mode (Default)", "Reset permanent discovery on unlock expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its unlock expires.\n" +
                 "This is the only way permanent discoveries can vanish during a run in Unlock Mode.\n");
 
@@ -289,7 +289,7 @@ namespace LethalMoonUnlocks {
             DiscountsResetAfterVisits = GetConfigValue("3 - Discount Mode", "Discounts expire", 0, "Discounts will expire after a set number of free routes, after which they will return to their original price.\n" +
                 "Set to 0 to disable this feature.\n" +
                 "NOTE: The final discount rate must be set to '100' for this to work!");
-            DiscoveryKeepDiscounts = GetConfigValue("3 - Discount Mode", "Discounted moons are permanently discovered", false, "Discovery Mode only: Every discounted moon is also permanently discovered i.e. added to the moon catalogue on top of your base selection.");
+            DiscoveryKeepDiscounts = GetConfigValue("3 - Discount Mode", "Discounted moons are permanently discovered", false, "Discovery Mode only: Every discounted moon is also permanently discovered i.e. added to the moon catalog on top of your base selection.");
             DiscountsResetAfterVisitsPermDiscovery = GetConfigValue("3 - Discount Mode", "Reset permanent discoveries on discount expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its discount expires.\n" +
                 "This is the only way permanent discoveries can vanish during a run in Discount Mode.\n");
 
@@ -313,25 +313,25 @@ namespace LethalMoonUnlocks {
             QuotaFullDiscountMaxCount = GetConfigValue("3.2 - Quota Full Discounts", "Limit number of full discounts", 0, "Limit how many Quota Full Discounts you can receive during a run. After reaching the limit, Quota Full Discounts will no longer be granted.\n" +
                 "Set to 0 to disable this feature");
 
-            DiscoveryMode = GetConfigValue("4 - Discovery Mode", "Enable Discovery Mode", false, "In Discovery Mode, you start with a limited selection of moons in the Terminal's moon catalogue.\n" +
+            DiscoveryMode = GetConfigValue("4 - Discovery Mode", "Enable Discovery Mode", false, "In Discovery Mode, you start with a limited selection of moons in the Terminal's moon catalog.\n" +
                 "By default, this base selection of moons will be shuffled after every quota, and can also be configured to expand over time.\n" +
                 "There are also various options to discover additional moons as you play.\n" +
-                "Permanently discovered moons are added to the moon catalogue on top of the base selection, and are not lost on shuffle.");
+                "Permanently discovered moons are added to the moon catalog on top of the base selection, and are not lost on shuffle.");
             
-            DiscoveryNeverShuffle = GetConfigValue("4 - Discovery Mode", "Never shuffle", false, "Never shuffle the rotation of moons available in the moon catalogue.\n" +
+            DiscoveryNeverShuffle = GetConfigValue("4 - Discovery Mode", "Never shuffle", false, "Never shuffle the rotation of moons available in the moon catalog.\n" +
                 "New moons must be discovered through other means, but once discovered, they won't vanish, since the selection is never shuffled.\n" +
                 "NOTE: Overrides the 'Shuffle every day' option.");
-            DiscoveryShuffleEveryDay = GetConfigValue("4 - Discovery Mode", "Shuffle every day", false, "Shuffle the rotation of moons available in the moon catalogue every day, instead of after every quota.");
+            DiscoveryShuffleEveryDay = GetConfigValue("4 - Discovery Mode", "Shuffle every day", false, "Shuffle the rotation of moons available in the moon catalog every day, instead of after every quota.");
             
             DiscoveryWhitelist = GetConfigValue("4 - Discovery Mode", "Whitelist", "", "List of moons to keep discovered at all times.\n" +
                 "For example, 'Experimentation, Assurance, Vow' would make these three moons start out as permanently discovered on every run.\n" +
                 "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
 
-            DiscoveryFreeCountBase = GetConfigValue("4 - Discovery Mode", "Free moons base count", 1, "The base amount of randomly selected free moons available in the moon catalogue.\n" +
+            DiscoveryFreeCountBase = GetConfigValue("4 - Discovery Mode", "Free moons base count", 1, "The base amount of randomly selected free moons available in the moon catalog.\n" +
                 "NOTE: 'Free' only considers moons that are free by default, or configured to be free. Moons that are free due to unlocks or discounts are excluded!");
-            DiscoveryDynamicFreeCountBase = GetConfigValue("4 - Discovery Mode", "Dynamic free moons base count", 2, "The base amount of randomly selected dynamic free moons available in the moon catalogue.\n" +
+            DiscoveryDynamicFreeCountBase = GetConfigValue("4 - Discovery Mode", "Dynamic free moons base count", 2, "The base amount of randomly selected dynamic free moons available in the moon catalog.\n" +
                 "NOTE: 'Dynamic free' considers moons that are free due to unlocks or discounts in addition to those that are free by default, or configured to be free.");
-            DiscoveryPaidCountBase = GetConfigValue("4 - Discovery Mode", "Paid moons base count", 3, "The base amount of randomly selected paid moons available in the moon catalogue.\n" +
+            DiscoveryPaidCountBase = GetConfigValue("4 - Discovery Mode", "Paid moons base count", 3, "The base amount of randomly selected paid moons available in the moon catalog.\n" +
                 "This is your paid moon rotation and typically the main way to discover new moons to buy - earning unlocks and discounts as you progress.");
             
             DiscoveryFreeCountIncreaseBy = GetConfigValue("4 - Discovery Mode", "Increase free moon count on shuffle", 0, "The amount of randomly selected free moons added to the rotation each time it's shuffled.\n" +
@@ -452,17 +452,17 @@ namespace LethalMoonUnlocks {
                 "Decrease this value if you want to have a more organized look at the cost of more scrolling depending on the amount of tags you see.\n" +
                 "NOTE: Don't worry about setting it too low. It will always put at least one tag per line. Only if any additional tag would exceed this value it puts a line break.\n" +
                 "Do not set it larger than default unless you are also decreasing font size below.", new AcceptableValueRange<int>(10, 100));
-            TerminalFontSizeOverride = GetConfigValue("6.3 - Terminal", "Override Terminal font size", true, "Override the font size in the Terminal's moon catalogue.\n" +
+            TerminalFontSizeOverride = GetConfigValue("6.3 - Terminal", "Override Terminal font size", true, "Override the font size in the Terminal's moon catalog.\n" +
                 "Prevents inconsistencies with formatting. Disable to let LLL dynamically size the font depending on the number of moons visible\n" +
                 "NOTE: With very few moons you might see some ugly line breaks with custom weathers with long names (Meteor Shower).");
-            TerminalFontSize = GetConfigValue("6.3 - Terminal", "Terminal font size", 15f, "Customize the Terminal's moon catalogue font size.\n" +
+            TerminalFontSize = GetConfigValue("6.3 - Terminal", "Terminal font size", 15f, "Customize the Terminal's moon catalog font size.\n" +
                 "NOTE: When using smaller fonts you can increase the maximum tag line width above.", new AcceptableValueRange<float>(8f, 15f));
-            TerminalScrollAmount = GetConfigValue("6.3 - Terminal", "Terminal scroll amount", 0, "Override the Terminal's moon catalogue scroll amount. Lines per scroll action. 0 to disable\n" +
+            TerminalScrollAmount = GetConfigValue("6.3 - Terminal", "Terminal scroll amount", 0, "Override the Terminal's moon catalog scroll amount. Lines per scroll action. 0 to disable\n" +
                 "NOTE: This can help when you have so many moons that some are skipped when scrolling.", new AcceptableValueRange<int>(0, 20));
             TerminalShowRiskWeather = GetConfigValue("6.3 - Terminal", "Terminal show weather in risk preview", false, "Also show the weather when using `preview difficulty`");
 
             AlertMessageQueueing = GetConfigValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
-            PreferLQRisk = GetConfigValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalogue instead of the default risk levels.");
+            PreferLQRisk = GetConfigValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalog instead of the default risk levels.");
             MalfunctionsNavigation = GetConfigValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
             LethalConstellationsOverridePrice = GetConfigValue("6.4 - Compatibility", "LethalConstellations override price", false, "When enabled and LethalConstellations is present override the constellation routing price with the default moon's routing price.\n" + "Routing to the constellation will be considered buying the default moon. Consequently unlocks, discounts and sales of the default moon will be granted and will also apply to the constellation routing price.\n" +
                 "NOTE: In Discovery Mode the default moon will always be set to the cheapest currently discovered moon of that constellation regardless of this setting.");

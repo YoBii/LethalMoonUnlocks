@@ -11,7 +11,7 @@ LethalMoonUnlocks gives players the power to customize their moon unlocking expe
 - **Discount Mode**: Gradually unlock discounts until moons are free. Alternative to Unlock Mode.
 - **Discovery Mode**: Start with limited moons and discover new ones as you play.
 - **Random Moon Sales**: Enjoy spontaneous sales on moon prices.
-- **Terminal Tags**: Display extra information in the moon catalogue (you can toggle this on or off).
+- **Terminal Tags**: Display extra information in the moon catalog (you can toggle this on or off).
 - **Custom Moon Groups**: Organize moons into groups.
 - **Compatibility**: Integrates with [**LethalConstellations**](https://thunderstore.io/c/lethal-company/p/darmuh/Lethal_Constellations/) and other mods.
 - **Extensive Configuration**: Offers a wide variety of setups - your suggestions are welcome!
@@ -41,7 +41,7 @@ You can uninstall Permanent Moons directly after installing this mod. There's no
 	<summary><strong>Dependencies</strong></summary>
 
 - **LethalNetwork API**: Used for sending data between host and clients.
-- **LLL**: Used for changing moon prices and visibility (discoverability), as well as adding tags to the moon catalogue.
+- **LLL**: Used for changing moon prices and visibility (discoverability), as well as adding tags to the moon catalog.
 
 If you don't use LLL, you likely don't have custom moons, so you can continue using Permanent Moons (link above) without issue.
 </details>
@@ -79,13 +79,13 @@ For more information, read the section about [**Discovery Mode**](#discovery-mod
 #### Unlocked Moons are Permanently Discovered
 > **Optional:** Keep access to moons once unlocked!*
 
-When a moon is unlocked, it will be permanently discovered, meaning it's added to the moons available in the Terminal's moon catalogue - on top of your base selection.  
+When a moon is unlocked, it will be permanently discovered, meaning it's added to the moons available in the Terminal's moon catalog - on top of your base selection.  
 This ensures that any moon you've unlocked will always be available for travel in Discovery Mode.
 
 #### Reset Permanent Discoveries on Expiry
 > **Optional:** Keeps things fresh by resetting discovery status on expiry!
 
-When the unlock for a permanently discovered moon expires, it will also reset that moon's permanent discovery status, making it disappear from the moon catalogue.  
+When the unlock for a permanently discovered moon expires, it will also reset that moon's permanent discovery status, making it disappear from the moon catalog.  
 > This is the only way permanent discoveries can vanish during a run, increasing variety in the late game.
 </details>
 
@@ -144,13 +144,13 @@ For more information, read the section about [**Discovery Mode**](#discovery-mod
 #### Discounted Moons are Permanently Discovered
 > **Optional:** Keep access to discounted moons!
 
-When a moon is discounted, it will be permanently discovered, meaning it's added to the moons available in the Terminal's moon catalogue - on top of your base selection.  
+When a moon is discounted, it will be permanently discovered, meaning it's added to the moons available in the Terminal's moon catalog - on top of your base selection.  
 This ensures that any moon you've unlocked a discount for will always be available for travel in Discovery Mode.
 
 #### Reset Permanent Discoveries on Expiry
 > **Optional:** Keeps things fresh by resetting discovery status on expiry!
 
-When the discount for a permanently discovered moon expires, it will also reset that moon's permanent discovery status, making it disappear from the moon catalogue.  
+When the discount for a permanently discovered moon expires, it will also reset that moon's permanent discovery status, making it disappear from the moon catalog.  
 > This is the only way permanent discoveries can vanish during a run, increasing variety in the late game.
 </details>
 
@@ -207,7 +207,7 @@ You can also use your existing **LethalConstellations** for this.
 But first, let's start with the basics - your base selections.
 
 ### Base Selections (Moon Rotation)
-When you start a new game in Discovery Mode, your selection of moons available for travel in the Terminal's moon catalogue is limited.  
+When you start a new game in Discovery Mode, your selection of moons available for travel in the Terminal's moon catalog is limited.  
 The number of available moons is determined by your moon base counts. There are three categories:
 - **Free Moons**: Moons that have an original route price of 0 credits.
 - **Dynamic Free Moons**: Moons that currently have a route price of 0 credits. Baseline but also through unlocks or discounts.
@@ -290,7 +290,7 @@ New Day Discoveries randomly grant moons when a new day begins.
 
 ## Terminal Tags
 
-**Optional:** LethalMoonUnlocks will display information about each moon directly in the Terminal's moon catalogue.
+**Optional:** LethalMoonUnlocks will display information about each moon directly in the Terminal's moon catalog.
 
 <details>
   <summary><strong>Learn more</strong></summary>
@@ -299,7 +299,7 @@ New Day Discoveries randomly grant moons when a new day begins.
 Terminal Tags are disabled by default.  
 If you're using anything but unlocks, it's recommended to turn them on.
 
-Terminal Tags present all information relevant to LethalMoonUnlocks directly in the moon catalogue.  
+Terminal Tags present all information relevant to LethalMoonUnlocks directly in the moon catalog.  
 The tags displayed depend on the current state of each moon and your configuration.
 
 You can enable or disable each tag individually.
@@ -312,7 +312,7 @@ Here's an example where I tried to fit all tags on a single screenshot. Explanat
   <summary><strong>Looks too crowded? Check this out</strong></summary>
 
   There's a config option in the advanced section allowing you to control the maximum tag line length.  
-  This can give the moon catalogue a more organized look at the cost of more scrolling.
+  This can give the moon catalog a more organized look at the cost of more scrolling.
 
 ![More organized example of Terminal Tags](https://i.ibb.co/88ZGLXj/image.png)
 
@@ -328,11 +328,11 @@ Here's an example where I tried to fit all tags on a single screenshot. Explanat
 | **[DISCOUNT-XX%]** | Discount Mode: indicates the moon is on discount and shows the currently unlocked rate. |
 | **[DISCOUNT EXPIRES:X]** | Indicates how many times you can route to the moon for free until the discount expires. |
 | **[NEW]** | Indicates the moon has been discovered for the first time this run. Resets every day. |
-| **[PINNED]** | Indicates the moon has been permanently discovered - effectively pinning it in the moon catalogue. |
+| **[PINNED]** | Indicates the moon has been permanently discovered - effectively pinning it in the moon catalog. |
 | **[SALE-XX%]** | Indicates the moon is on sale and shows the sales rate. |
 | **[MoonGroups]** | For example, [ZEEKERS GALAXY] or [VANILLA/FOREST]. Indicates the name(s) of the custom group(s) or LLL Tag(s) a moon belongs to. Only if moon group custom or tag matching is enabled. |
 
-Tags are added to the moon catalogue using an event provided by LLL and will also show with TerminalFormatter!
+Tags are added to the moon catalog using an event provided by LLL and will also show with TerminalFormatter!
 </details>
 
 ## Moon Sales
@@ -421,7 +421,7 @@ Independent of Discovery Mode, you have the option to override the constellation
 Tags are shown in TerminalFormatter moons node. Thanks @mrov!
 
 #### LethalQuantities
-Advanced config option to prefer LQ risk levels in the moon catalogue.
+Advanced config option to prefer LQ risk levels in the moon catalog.
 
 #### Malfunctions
 Advanced config option to enable interpreting Malfunctions' Navigation malfunction as routing to a moon.  
@@ -478,7 +478,7 @@ A simple setup with slightly modified discounts, rewards on quota completion, an
 All free and unlocked moons are always available for travel.  
 Three paid moons available, which are shuffled every quota. Additionally, discover new moons on completing the quota, new day, and traveling.  
 Buy them before the quota ends, and you keep them; otherwise, they will be lost with shuffle.  
-Repeat every quota and grow your catalogue.
+Repeat every quota and grow your catalog.
 
 </details>
 

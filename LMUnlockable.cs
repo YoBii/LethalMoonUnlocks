@@ -141,7 +141,7 @@ namespace LethalMoonUnlocks {
                 }
                 ExtendedLevel.IsRouteHidden = false;
                 ExtendedLevel.IsRouteLocked = false;
-                Logger.LogDebug($"{Name} is visible in terminal moon catalogue");
+                Logger.LogDebug($"{Name} is visible in terminal moon catalog");
             } else if (!Discovered && !PermanentlyDiscovered && !OriginallyHidden && !OriginallyLocked) {
                 ExtendedLevel.IsRouteHidden = true;
                 ExtendedLevel.IsRouteLocked = true;

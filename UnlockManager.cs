@@ -447,7 +447,7 @@ namespace LethalMoonUnlocks {
                 Logger.LogInfo($"New Day Discovery: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
             }
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New Day {newDayDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {newDayDiscoveries.Count.SinglePluralWord("moon")} {ndDiscoveryGroupName}.\n" +
-                $"Moon catalogue updated!", Key = "LMU_NewDayDiscovery" });
+                $"Moon catalog updated!", Key = "LMU_NewDayDiscovery" });
             Logger.LogInfo($"New Day Discoveries: {string.Join(", ", newDayDiscoveries.Select(unlock => unlock.Name))}");
 
         }
@@ -553,7 +553,7 @@ namespace LethalMoonUnlocks {
             }
             Logger.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
-                $"Moon catalogue updated!", Key = "LMU_TravelDiscovery" });
+                $"Moon catalog updated!", Key = "LMU_TravelDiscovery" });
             Logger.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
         }
 
@@ -651,7 +651,7 @@ namespace LethalMoonUnlocks {
                 Logger.LogWarning("All moons would have been hidden from the terminal! Force discovering a free moon..");
                 var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.RoutePrice == 0).FirstOrDefault();
                 if (unlock == null) {
-                    Logger.LogWarning("Can't find any free moon to display in moon catalogue! You probably want at least one free moon available at all times.. Falling back to a paid moon!");
+                    Logger.LogWarning("Can't find any free moon to display in moon catalog! You probably want at least one free moon available at all times.. Falling back to a paid moon!");
                     unlock = Unlocks.FirstOrDefault();
                 } 
                 if (unlock == null) {
@@ -663,8 +663,8 @@ namespace LethalMoonUnlocks {
                 }
             }
             if (DayCount > 0) {
-                NotificationHelper.SendChatMessage("Moon catalogue updated!");
-                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Moon catalogue updated!", Text = $"New moons available. Use the computer terminal to route the ship.", Key = "LMU_Shuffle" });
+                NotificationHelper.SendChatMessage("Moon catalog updated!");
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Moon catalog updated!", Text = $"New moons available. Use the computer terminal to route the ship.", Key = "LMU_Shuffle" });
             }
         }
 
