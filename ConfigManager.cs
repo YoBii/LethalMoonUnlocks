@@ -110,6 +110,7 @@ namespace LethalMoonUnlocks {
         public static bool QuotaDiscoveryCheapestGroup { get; private set; }
         public static bool QuotaDiscoveryCheapestGroupFallback { get; private set; }
         public static bool QuotaDiscoveryCheapestConstellation { get; private set; }
+        //public static bool QuotaDiscoveryForceConstellationProgression { get; private set; }
         public static bool TravelDiscoveries { get; private set; }
         public static int TravelDiscoveryChance { get; private set; }
         public static int TravelDiscoveryCount {
@@ -361,6 +362,7 @@ namespace LethalMoonUnlocks {
                 "NOTE: Only relevant when you have moons that are not assigned to any group/constellation.");
             QuotaDiscoveryCheapestConstellation = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest constellation", false, "Only consider moons of the cheapest constellation. Overrides behaviour of 'match cheapest group'. \n" +
                 "NOTE: Match cheapest group needs to be enabled.");
+            //QuotaDiscoveryForceConstellationProgression = GetConfigValue("4.1 - Quota Discoveries", "Quota discovery force constellation progression", false, "When enabled forces players to buy every available constellation at least once. If there are constellations available that have not been bought no moons can be discovered by Quota discovery.\nNote that this includes discovering moons within the ")
 
             TravelDiscoveries = GetConfigValue("4.2 - Travel Discoveries", "Enable Travel Discoveries", false, "Travel Discoveries grant additional moon discoveries when routing to a paid moon\n" +
                 "The moons that are discovered are randomly selected.");

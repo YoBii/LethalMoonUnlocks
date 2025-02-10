@@ -100,6 +100,13 @@ namespace LethalMoonUnlocks.Compatibility {
             }
         }
 
+        private bool AllAvailableConstellationsBought() {
+            if (Collections.ConstellationStuff.Any(c => !c.isHidden && !c.isLocked && c.buyOnce &&!c.oneTimePurchase))
+                return false;
+            else 
+                return true;
+        }
+
         private void ApplyVisibility() {
             foreach (ClassMapper constellation in Collections.ConstellationStuff) {
                 bool constellationIsDiscovered = false;
