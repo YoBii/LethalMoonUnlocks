@@ -212,7 +212,7 @@ namespace LethalMoonUnlocks {
             var quotaDiscoveries = DiscoveryCandidates;
             List<LMUnlockable> discoveryGroup = new List<LMUnlockable>();
             LMGroup group = new LMGroup();
-            if (ConfigManager.QuotaDiscoveryCheapestConstellation && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations") {
+            if (Plugin.LethalConstellationsPresent && ConfigManager.QuotaDiscoveryCheapestConstellation && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations") {
                 group = Plugin.LethalConstellationsExtension.GetCheapestUndiscoveredConstellation();
                 foreach (var member in group.Members) {
                     if (!member.Discovered && !member.PermanentlyDiscovered) {
