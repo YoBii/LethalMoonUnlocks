@@ -478,11 +478,33 @@ namespace LethalMoonUnlocks {
         }
 
         public override string ToString() {
-            string misc = "";
-            if (OriginallyHidden && !OriginallyLocked) misc = "Hidden";
-            else if (OriginallyLocked && !OriginallyHidden) misc = "Locked";
-            else if (OriginallyHidden && OriginallyLocked) misc = "H&L";
-            return string.Format(UnlockManager.LogFormatString, Name, BuyCount, VisitCount, FreeVisitCount, Discovered, NewDiscovery, DiscoveredOnce, PermanentlyDiscovered, OnSale, SalesRate, OriginalPrice, misc);
+            int visits = VisitCount;
+            if (FreeVisitCount > VisitCount) visits = FreeVisitCount;
+
+            string state = "\u2713";
+            if (ExtendedLevel.IsRouteHidden && ExtendedLevel.IsRouteLocked) state = string.Empty;
+            else if (ExtendedLevel.IsRouteHidden) state = "Hidden";
+            else if (ExtendedLevel.IsRouteLocked) state = "Locked";
+
+            string discovered = string.Empty;
+            if (Discovered) discovered = "\u2713";
+            if (NewDiscovery) discovered = "New";
+            if (!DiscoveredOnce) discovered = "Never";
+            if (PermanentlyDiscovered) discovered = "Permanent";
+
+            string sale = "-";
+            if (SalesRate > 0) sale = SalesRate.ToString() + "%";
+
+            string originalState = "\u2713";
+            if (OriginallyHidden && !OriginallyLocked) originalState = "Hidden";
+            else if (!OriginallyHidden && OriginallyLocked) originalState = "Locked";
+            else if (OriginallyHidden && OriginallyLocked) originalState = string.Empty;
+
+            string storyLock = "-";
+            if (StoryUnlock && !StoryIsUnlocked) storyLock = "Active";
+            else if (StoryUnlock && StoryIsUnlocked) storyLock = "Released";
+
+            return string.Format(UnlockManager.LogFormatString, [ Name, RoutePrice, BuyCount, visits, state, discovered, sale, OriginalPrice, originalState, storyLock ]);
         }
     }
 }

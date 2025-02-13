@@ -11,8 +11,8 @@ namespace LethalMoonUnlocks {
     public class UnlockManager {
 
         internal static UnlockManager Instance { get; private set; }
-        internal static string LogFormatString { get; } = "| {0, -20} | {1, 7} | {2, 7} | {3, 6} | {4, 11} | {5, 6} | {6, 6} | {7, 10} | {8, 7} | {9, 5} | {10, 8} | {11, 8} |";
-        internal static List<string> LogHeader { get; } = ["LMUnlockable", "Bought", "Visits", "Free", "Discovered", "New", "Once",  "Permanent", "OnSale", "Rate", "OGPrice", "Misc"];
+        internal static string LogFormatString { get; } = "| {0, -20} | {1, 6} | {2, 7} | {3, 7} | {4, 8} | {5, 11} | {6, 5} | {7, 12} | {8, 12} | {9, 11} |";
+        internal static List<string> LogHeader { get; } = ["Name", "Price", "Bought", "Visits", "Catalog", "Discovered", "Sale", "Orig. Price", "Orig. State", "Story Lock"];
         internal Terminal Terminal { get; set; }
         internal List<ExtendedLevel> AllLevels { get; private set; } = PatchedContent.ExtendedLevels;
         internal List<LMUnlockable> Unlocks { get; set; } = new List<LMUnlockable>();
@@ -79,15 +79,22 @@ namespace LethalMoonUnlocks {
         }
 
         public void LogUnlockables(bool debug = true) {
+        internal void LogUnlockables(bool debug = true) {
             if (debug) {
+                Logger.LogDebug("| LMUnlockable state table");
                 Logger.LogDebug(string.Format(LogFormatString, LogHeader.ToArray()));
-                foreach (var unlock in Unlocks) {
-                    Logger.LogDebug(unlock);
+                foreach (var unlock in Unlocks.Select((value, i) => new { i, value })) {
+                    if (unlock.i % 4 == 0)
+                        Logger.LogDebug(string.Format(LogFormatString, new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11) ));
+                    Logger.LogDebug(unlock.value);
                 }
             } else {
+                Logger.LogInfo("| LMUnlockable state table");
                 Logger.LogInfo(string.Format(LogFormatString, LogHeader.ToArray()));
-                foreach (var unlock in Unlocks) {
-                    Logger.LogInfo(unlock);
+                foreach (var unlock in Unlocks.Select((value, i) => new { i, value })) {
+                    if (unlock.i % 4 == 0)
+                        Logger.LogInfo(string.Format(LogFormatString, new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11)));
+                    Logger.LogInfo(unlock.value);
                 }
             }
         }
