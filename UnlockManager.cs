@@ -186,11 +186,11 @@ namespace LethalMoonUnlocks {
                 InitializeNewGame();
             }
             
-                // Force shuffle if discovery mode is enabled and no moons are discovered
-                // This can happen after loading a save that didn't have Discovery mode enabled
+            // Force shuffle if discovery mode is enabled and no moons are discovered
+            // This can happen after loading a save that didn't have Discovery mode enabled
             if (loadSuccess && ConfigManager.DiscoveryMode && Unlocks.All(unlock => !unlock.Discovered)) {
-                    ShuffleDiscoverable();
-                }
+                ShuffleDiscoverable();
+            }
 
             IterateUnlocks();
 
@@ -552,7 +552,6 @@ namespace LethalMoonUnlocks {
             } else {
                 NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             }
-            NetworkManager.Instance.ServerSendUnlockables(Unlocks);
         }
         internal void OnDisconnect() {
             Reset();
@@ -1010,7 +1009,6 @@ namespace LethalMoonUnlocks {
                 }
                 Logger.LogInfo($"Finished migrating legacy LMU save data.");
                 Logger.LogInfo($"Loading done. Applying migrated data before new game init..");
-                ApplyUnlocks();
                 // return false to run InitializeNewGame()
                 return false;
             } else if (savedata != null &&  savedata.ContainsKey("UnlockedMoons")) {
@@ -1030,7 +1028,6 @@ namespace LethalMoonUnlocks {
                 }
                 Logger.LogInfo($"Finished migrating Permanent Moons save data.");
                 Logger.LogInfo($"Loading done. Applying migrated data before new game init.");
-                ApplyUnlocks();
                 // return false to run InitializeNewGame()
                 return false;
             } else {

@@ -207,7 +207,7 @@ namespace LethalMoonUnlocks {
             if (MoonGroupMatchingCustomDict == null) {
                 MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
             }
-            
+
         }
         public static Dictionary<string, List<string>> ParseCustomMoonGroups() {
             if (AdvancedPrintMoonNames) {

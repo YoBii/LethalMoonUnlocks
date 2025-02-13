@@ -43,7 +43,7 @@ namespace LethalMoonUnlocks {
         [SerializeField] [ES3Serializable] internal bool PermanentlyDiscovered { get; set; }
         [SerializeField] [ES3Serializable] internal bool OnSale { get; set; }
         [SerializeField] [ES3Serializable] internal int SalesRate { get; set; }
-
+        
         [SerializeField] [ES3NonSerializable] private int RoutePrice{ get; set; }
 
         internal LMUnlockable(ExtendedLevel extendedLevel) {
@@ -90,7 +90,7 @@ namespace LethalMoonUnlocks {
         internal void LockAndHide() {
             ExtendedLevel.IsRouteHidden = true;
             ExtendedLevel.IsRouteLocked = true;
-                }
+        }
 
         internal void ApplyPrice() {
             // only apply price if we have to for compatibility with LQ
@@ -105,11 +105,11 @@ namespace LethalMoonUnlocks {
                 OnSale = true;
                 SalesRate = ConfigManager.SalesRate;
                 Logger.LogDebug($"{Name} is on SALE for {SalesRate}% OFF!");
-                } else {
+            } else {
                 OnSale = false;
                 SalesRate = 0;
-                }
             }
+        }
 
         internal void IterateState() {
             RoutePrice = CalculatePrice();
@@ -117,29 +117,29 @@ namespace LethalMoonUnlocks {
             // set permanently discovered if moon was bought (if config enabled)
             if (BuyCount > 0 && ((ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepUnlocks) || (ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepDiscounts))) {
                 if (!PermanentlyDiscovered) {   
-                PermanentlyDiscovered = true;
+                    PermanentlyDiscovered = true;
                     Logger.LogInfo($"{Name} set to permanently discovered because it's {(ConfigManager.UnlockMode ? "unlocked" : "discounted.")}");
-            }
+                }
             }
 
             // set permanently discovered if free moon was landed on x times (if config enabled)
             if (Discovered && !OriginallyHidden && !OriginallyLocked && OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding >= 0) {
                 if (LandingCount >= ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding) {
                     if (!PermanentlyDiscovered) {
-                    PermanentlyDiscovered = true;
+                        PermanentlyDiscovered = true;
                         Logger.LogInfo($"{Name} set to permanently discovered because it's been landed on {LandingCount} times.");
+                    }
                 }
-            }
             }
 
             // set permanently discovered if paid moon was landed on x times (if config enabled)
             if (Discovered && !OriginallyHidden && !OriginallyLocked && OriginalPrice > 0 && ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding >= 0) {
                 if (LandingCount >= ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding) {
                     if (!PermanentlyDiscovered) {
-                    PermanentlyDiscovered = true;
+                        PermanentlyDiscovered = true;
                         Logger.LogInfo($"{Name} set to permanently discovered because it's been landed on {LandingCount} times.");
+                    }
                 }
-            }
             }
             
             // un-hide after # visits (if config enabled)
@@ -149,16 +149,16 @@ namespace LethalMoonUnlocks {
                     PermanentlyDiscovered = true;
                 }
                 RemainingHidden = true;
-                    PermanentlyDiscovered = false;
+                PermanentlyDiscovered = false;
             } else {
                 RemainingHidden = false;
-                }
+            }
 
-                // tag new discoveries as new
+            // tag new discoveries as new
             if (!DiscoveredOnce && Discovered) {
-                    NewDiscovery = true;
-                    DiscoveredOnce = true;
-                }
+                NewDiscovery = true;
+                DiscoveredOnce = true;
+            }
 
             // LMU Story
             // Artifice condition
@@ -183,7 +183,7 @@ namespace LethalMoonUnlocks {
                     if (!ConfigManager.DiscoveryMode) {
                         Unlock();
                         return;
-        }
+                    }
                     if (ConfigManager.DiscoveryMode && (Discovered || PermanentlyDiscovered)) {
                         Unlock();
                         return;
@@ -209,12 +209,12 @@ namespace LethalMoonUnlocks {
             if (!ConfigManager.DiscoveryMode) {
                 Unlock();
                 return;
-        }
+            }
 
             if (ConfigManager.DiscoveryMode) {
                 if (Discovered || PermanentlyDiscovered) {
                     Unlock();
-            } else {
+                } else {
                     LockAndHide();
                 }
             }
@@ -224,7 +224,7 @@ namespace LethalMoonUnlocks {
             ExtendedLevel.RoutePrice = OriginalPrice;
             ExtendedLevel.IsRouteHidden = _originallyHidden;
             ExtendedLevel.IsRouteLocked = _originallyLocked;
-            }
+        }
 
         internal void DesignateAsStoryLocked() {
             StoryUnlock = true;
