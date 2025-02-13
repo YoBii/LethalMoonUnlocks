@@ -204,6 +204,9 @@ namespace LethalMoonUnlocks {
             _configFile = null;
             EnsureConfigExists();
             RefreshValues();
+            if (MoonGroupMatchingCustomDict == null) {
+                MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
+            }
             
         }
         public static Dictionary<string, List<string>> ParseCustomMoonGroups() {
@@ -232,9 +235,14 @@ namespace LethalMoonUnlocks {
                     Logger.LogWarning("Couldn't parse custom moon group! Name null or empty or members not found!");
                     continue;
                 } else {
-                    Logger.LogInfo($"Parsed custom moon group: Name = {groupName}, Members = [ {string.Join(", ", members)} ]");
                     customGroups[groupName] = members;
                 }
+            }
+            Logger.LogInfo($"Parsing custom moon groups:");
+            // fancy table
+            Logger.LogInfo($"{"Name", -32} {"Members", -60}");
+            foreach (var group in customGroups) {
+                Logger.LogInfo($"{group.Key,-32} [{string.Join(", ", group.Value) + ']',-60}");
             }
             return customGroups;
         }
@@ -447,7 +455,6 @@ namespace LethalMoonUnlocks {
                 "Expected Format: Separate moon groups by \"|\" and moons by \",\".\n" +
                 "Example: 'Group name 1: Experimentation, Assurance, Vow | Group name 2: Offense, March, Adamance'\n" +
                 "Names must be exact matches. The option below can be used to get the names.");
-            MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
 
             TerminalTagLineWidth = GetConfigValue("6.3 - Terminal", "Maximum tag line length", 49, "By default LMU tries to fit as many tags as possible into a single line.\n" +
                 "Decrease this value if you want to have a more organized look at the cost of more scrolling depending on the amount of tags you see.\n" +
