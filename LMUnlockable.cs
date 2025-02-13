@@ -361,6 +361,41 @@ namespace LethalMoonUnlocks {
             }
             return tags;
         }
+        internal string BuildShortTagString() {
+            // LMU Tags
+            string tags = string.Empty;
+            if (NewDiscovery && ConfigManager.DiscoveryMode && ConfigManager.ShowTagNewDiscovery) {
+                tags = AddTagToPreviewText($"[!]", tags);
+            }
+            if (LandingCount > 0 && ConfigManager.ShowTagExplored) {
+                tags = AddTagToPreviewText($"[EXPLORED:{LandingCount}]", tags);
+            } else if (LandingCount == 0 && ConfigManager.ShowTagExplored) {
+                tags = AddTagToPreviewText($"[UNEXPLORED]", tags);
+            }
+            if (FreeVisitCount > 0 && ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.UnlocksResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                tags = AddTagToPreviewText($"[{ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1}]", tags);
+            } else if (FreeVisitCount > 0 && ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                tags = AddTagToPreviewText($"[{ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1}]", tags);
+            } else if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                tags = AddTagToPreviewText("[U]", tags);
+            } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
+                if (discountRate != 100) {
+                    tags = AddTagToPreviewText($"[{discountRate}%]", tags);
+                } else {
+                    tags = AddTagToPreviewText($"[U]", tags);
+                }
+            }
+            if (PermanentlyDiscovered && !ConfigManager.DiscoveryNeverShuffle && ConfigManager.DiscoveryMode && ConfigManager.ShowTagPermanentDiscovery) {
+                if (OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding != 0 || OriginalPrice > 0 && ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding != 0) {
+                    tags = AddTagToPreviewText("[P]", tags);
+                }
+            }
+            if (OnSale && SalesRate > 0 && ExtendedLevel.RoutePrice > 0 && ConfigManager.Sales && ConfigManager.ShowTagSale) {
+                tags = AddTagToPreviewText($"[{SalesRate}%]", tags);
+            }
+            return tags;
+        }
 
         private string AddTagToPreviewText(string newTag, string previewText) {
             if (previewText == string.Empty) {
