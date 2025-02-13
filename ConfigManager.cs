@@ -143,8 +143,9 @@ namespace LethalMoonUnlocks {
         }
         private static int _salesRateMin;
         private static int _salesRateMax;
-        public static bool GroupCreditsSavingBandAid { get; set; }
         private static bool AdvancedPrintMoonNames { get; set; }
+        public static bool GroupCreditsSavingBandAid { get; private set; }
+        public static bool LMUStoryProgression { get; private set; }
         public static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
         public static bool CheapMoonBiasPaidRotation { get; private set; }
         public static float CheapMoonBiasPaidRotationValue { get; private set; }
@@ -162,14 +163,14 @@ namespace LethalMoonUnlocks {
         public static float CheapMoonBiasQuotaFullDiscountValue { get; private set; }
         public static string MoonGroupMatchingMethod { get; private set; }
         public static int MoonGroupMatchingPriceRange { get; private set; }
-        private static string MoonGroupMatchingCustom {  get; set; }
-        public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict {  get; private set; }
+        private static string MoonGroupMatchingCustom { get; set; }
+        public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict { get; private set; }
         public static int TerminalTagLineWidth { get; set; }
         public static bool TerminalFontSizeOverride { get; set; }
         public static float TerminalFontSize { get; set; }
         public static int TerminalScrollAmount { get; set; }
         public static bool TerminalShowRiskWeather { get; set; }
-        public static bool PreferLQRisk {  get; private set; }
+        public static bool PreferLQRisk { get; private set; }
         public static bool MalfunctionsNavigation {  get; private set; }
         public static bool AlertMessageQueueing {  get; private set; }
         public static bool LethalConstellationsOverridePrice {  get; private set; }
