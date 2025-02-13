@@ -79,7 +79,7 @@ namespace LethalMoonUnlocks {
         public delegate List<string> DesignateStoryUnlocks();
 
         /// <summary>
-        /// Occurs during initialization of LMU (<c>Terminal.Start</c>, Postfix, default priority).
+        /// Occurs the earliest after <c>Terminal.Start</c>.
         /// <br>Allows subscriber to designate moons that should be exclusively locked behind story progression.</br>
         /// <br></br>
         /// Subscribe with a method that returns a list of strings containing 'NumberlessPlanetName's of your moons.
