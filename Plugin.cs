@@ -53,6 +53,7 @@ namespace LethalMoonUnlocks
             _harmony.PatchAll(typeof(Patches.TerminalPatch));
             _harmony.PatchAll(typeof(Patches.TimeOfDayPatch));
             _harmony.PatchAll(typeof(Patches.HUDManagerPatch));
+            _harmony.PatchAll(typeof(Patches.LLLSaveManagerInitPatch));
 
             Logger.LogInfo("Patching complete."); 
             if (!_loaded) Initialize();
