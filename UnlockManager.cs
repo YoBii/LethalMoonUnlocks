@@ -53,7 +53,11 @@ namespace LethalMoonUnlocks {
         }
         internal List<LMUnlockable> DiscoveryCandidates {
             get {
-                return Unlocks.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && !unlock.Discovered && !unlock.PermanentlyDiscovered).ToList();
+                return Unlocks.Where( unlock => (
+                    (!unlock.OriginallyLocked && !unlock.OriginallyHidden && !unlock.StoryUnlock
+                    || (unlock.StoryUnlock && unlock.StoryIsUnlocked))
+                    && !unlock.Discovered && !unlock.PermanentlyDiscovered)
+                    ).ToList();
             }
         }
         internal List<LMUnlockable> DiscoveryFreeCandidates {
@@ -72,13 +76,81 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        public UnlockManager() {
+        public delegate List<string> DesignateStoryUnlocks();
+
+        /// <summary>
+        /// Occurs during initialization of LMU (<c>Terminal.Start</c>, Postfix, default priority).
+        /// <br>Allows subscriber to designate moons that should be exclusively locked behind story progression.</br>
+        /// <br></br>
+        /// Subscribe with a method that returns a list of strings containing 'NumberlessPlanetName's of your moons.
+        /// <br></br>
+        /// <br></br>
+        /// <example>For example:
+        /// <code>
+        /// UnlockManager.OnCollectStoryLockedMoons += MySubscriber;
+        /// private List&lt;string&gt; MySubscriber() { return new List&lt;string&gt; { "Infernis", "Penumbra" } }
+        /// </code>
+        /// </example>
+        /// <remarks>
+        /// <br></br>
+        /// When you want to release the story lock for your moon use 
+        /// </remarks>
+        /// <seealso cref="TryReleaseStoryLock(string)"/>
+        /// </summary>
+        public static event DesignateStoryUnlocks OnCollectStoryLockedMoons;
+
+        internal UnlockManager() {
             if (Instance == null)
                 Instance = this;
             TerminalManager.onBeforePreviewInfoTextAdded += ReplaceTerminalPreview;
+
+            // LMU Story
+            if (ConfigManager.LMUStoryProgression) {
+                OnCollectStoryLockedMoons += LMUStoryLocks;
+            }
         }
 
-        public void LogUnlockables(bool debug = true) {
+        private List<string> LMUStoryLocks() {
+            return new List<string> { "Artifice", "Embrion" };
+        }
+
+        /// <summary>
+        /// Relase story lock of your moon allowing LMU to handlet it like any other i.e. add it to moon catalog, etc..
+        /// <br>When you would otherwise unhide and unlock your moon via LLL call this method instead.</br>
+        /// </summary>
+        /// <param name="numberlessPlanetName">The name of the moon to release from story locked state.</param>
+        /// <returns>
+        /// <c>true</c> if the moon was found.
+        /// <br></br>
+        /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
+        /// </returns>
+        public static bool TryReleaseStoryLock (string numberlessPlanetName) {
+            var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == numberlessPlanetName);
+            if (unlock == null || !unlock.StoryUnlock) return false;
+            unlock.StoryIsUnlocked = true;
+            Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
+            return true;
+        }
+
+        internal static List<string> CollectStoryLockedMoons() {
+            var storyMoons = new List<string>();
+
+            if (OnCollectStoryLockedMoons != null) {
+                var subscribers = OnCollectStoryLockedMoons.GetInvocationList();
+
+                foreach (DesignateStoryUnlocks subscriber in subscribers) {
+                    try {
+                        List<string> response = subscriber();
+                        storyMoons.AddRange(response);
+                        Logger.LogInfo($"Collected the following story locked moons: {string.Join(", ", storyMoons)}");
+                    } catch (Exception ex) {
+                        Logger.LogError($"Couldn't handle subscriber response while collecting story locked moons! Error: {ex.Message}");
+                    }
+                }
+            }
+            return storyMoons;
+        }
+
         internal void LogUnlockables(bool debug = true) {
             if (debug) {
                 Logger.LogDebug("| LMUnlockable state table");

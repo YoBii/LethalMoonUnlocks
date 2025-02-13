@@ -159,12 +159,20 @@ namespace LethalMoonUnlocks {
                     NewDiscovery = true;
                     DiscoveredOnce = true;
                 }
-                ExtendedLevel.IsRouteHidden = false;
-                ExtendedLevel.IsRouteLocked = false;
-                Logger.LogDebug($"{Name} is visible in terminal moon catalog");
-            } else if (!Discovered && !PermanentlyDiscovered && !OriginallyHidden && !OriginallyLocked) {
-                ExtendedLevel.IsRouteHidden = true;
-                ExtendedLevel.IsRouteLocked = true;
+
+            // LMU Story
+            // Artifice condition
+            if (Name == "Adamance" && LandingCount > 2) {
+                var art = UnlockManager.Instance.Unlocks.FirstOrDefault(u => u.Name == "Artifice");
+                if (art != null && art.StoryUnlock && art.StoryIsUnlocked == false) {
+                    UnlockManager.TryReleaseStoryLock(art.Name);
+                }
+            }
+            // Embrion condition (old bird id = 18)
+            if (Name == "Embrion" && UnlockManager.Instance.Terminal.scannedEnemyIDs.Contains(18)) {
+                    if (StoryUnlock && StoryIsUnlocked == false) {
+                    UnlockManager.TryReleaseStoryLock(this.Name);
+                }
             }
         }
 
@@ -217,6 +225,11 @@ namespace LethalMoonUnlocks {
             ExtendedLevel.IsRouteHidden = _originallyHidden;
             ExtendedLevel.IsRouteLocked = _originallyLocked;
             }
+
+        internal void DesignateAsStoryLocked() {
+            StoryUnlock = true;
+            OriginallyHidden = true;
+            OriginallyLocked = true;
         }
 
         internal void VisitMoon() {
