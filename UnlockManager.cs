@@ -5,13 +5,10 @@ using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.ProBuilder;
-using UnityEngine.UIElements;
 
 namespace LethalMoonUnlocks {
-    internal class UnlockManager {
+    public class UnlockManager {
 
         internal static UnlockManager Instance { get; private set; }
         internal static string LogFormatString { get; } = "| {0, -20} | {1, 7} | {2, 7} | {3, 6} | {4, 11} | {5, 6} | {6, 6} | {7, 10} | {8, 7} | {9, 5} | {10, 8} | {11, 8} |";
@@ -94,31 +91,29 @@ namespace LethalMoonUnlocks {
                 }
             }
         }
-        public void OnLobbyStart() {
+
+        internal void OnLobbyStart() {
             // Refresh config and create LMUnlockable for all moons
             ConfigManager.RefreshConfig();
             DiscoveredFreeCount = ConfigManager.DiscoveryFreeCountBase;
             DiscoveredDynamicFreeCount = ConfigManager.DiscoveryDynamicFreeCountBase;
             DiscoveredPaidCount = ConfigManager.DiscoveryPaidCountBase;
 
-            // Create LMUnlockables from LLL Extended Levels
-            InitializeUnlocks();
-
             // Load save data
             // if save exists apply all unlockable data and continue
             // else init new game
             bool loadSuccess = LoadAndImportSavaData();
-            if (loadSuccess) {
-                // Force shuffle if discovery mode is enabled and no moons are discovered
-                // This can happen after loading a save that didn't have Discovery mode enabled
-                if (Unlocks.All(unlock => !unlock.Discovered) && ConfigManager.DiscoveryMode) {
-                    ShuffleDiscoverable();
-                }
-            } else {
+            if (!loadSuccess) {
                 InitializeNewGame();
             }
+            
+                // Force shuffle if discovery mode is enabled and no moons are discovered
+                // This can happen after loading a save that didn't have Discovery mode enabled
+            if (loadSuccess && ConfigManager.DiscoveryMode && Unlocks.All(unlock => !unlock.Discovered)) {
+                    ShuffleDiscoverable();
+                }
 
-            LogUnlockables();
+            IterateUnlocks();
 
             // Apply everything
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
@@ -126,7 +121,7 @@ namespace LethalMoonUnlocks {
         }
 
 
-        public void OnNewQuota() {
+        internal void OnNewQuota() {
             QuotaCount++;
             Logger.LogInfo($"New quota! Completed quota count: {QuotaCount}");
             ConfigManager.RefreshConfig();
@@ -154,8 +149,8 @@ namespace LethalMoonUnlocks {
             //if (ConfigManager.Sales && !ConfigManager.SalesShuffleDaily) {
                 Unlocks.Do(unlock => unlock.RefreshSale());
             }
-            // Apply Unlocks to make sure in discovery mode unlocks/discounts are not granted to undiscovered moons
-            ApplyUnlocks();
+            // Iterate Unlocks to make sure in discovery mode unlocks/discounts are not granted to undiscovered moons
+            IterateUnlocks();
 
             // QUOTA UNLOCK
             if (!ConfigManager.DiscountMode && ConfigManager.QuotaUnlocks && PaidMoons.Count > 0) {
@@ -179,7 +174,6 @@ namespace LethalMoonUnlocks {
             }
 
             // APPLY ALL
-            LogUnlockables(false);
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 5);
         }
@@ -359,7 +353,7 @@ namespace LethalMoonUnlocks {
             Logger.LogInfo($"New Quota Full Discounts: {string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}");
         }
 
-        public void OnNewDay() {
+        internal void OnNewDay() {
             Logger.LogDebug($"DaysUntilDeadlineHUD: {(int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime)}, DaysUntilDeadline: {TimeOfDay.Instance.daysUntilDeadline}, deadlineDaysAmount: {TimeOfDay.Instance.quotaVariables.deadlineDaysAmount}");
             // NEW QUOTA DAY
             if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == TimeOfDay.Instance.quotaVariables.deadlineDaysAmount || (int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) < 0) {
@@ -389,7 +383,7 @@ namespace LethalMoonUnlocks {
                     // Remove [NEW] discovery tags
                     Unlocks.Where(unlock => unlock.NewDiscovery).Do(unlock => { unlock.NewDiscovery = false; });
                     // Apply unlocks to make sure discovery selections are correct
-                    ApplyUnlocks();
+                    IterateUnlocks();
                     // Shuffle NEW DAY - EVERY DAY
                     if (ConfigManager.DiscoveryShuffleEveryDay) {
                         Logger.LogInfo($"Shuffling moon rotation on new day!");
@@ -405,7 +399,7 @@ namespace LethalMoonUnlocks {
                     Unlocks.Do(unlock => unlock.RefreshSale());
                 }
             }
-            LogUnlockables(false);
+            IterateUnlocks();
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 3);
         }
@@ -451,34 +445,41 @@ namespace LethalMoonUnlocks {
             Logger.LogInfo($"New Day Discoveries: {string.Join(", ", newDayDiscoveries.Select(unlock => unlock.Name))}");
 
         }
-        public void OnArrive() {
+        internal void OnArrive() {
             var unlock = Unlocks.Where(unlock => unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName).FirstOrDefault();
             if (unlock != null) {
                 Logger.LogInfo($"Visiting moon {unlock.Name}!");
                 unlock.VisitMoon();
             }
+            IterateUnlocks();
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
         }
-        public void OnLanding(SelectableLevel level) {
+        internal void OnLanding(SelectableLevel level) {
             var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.SelectableLevel.levelID == level.levelID).FirstOrDefault();
             if (unlock != null) {
                 unlock.Land();
             }
         }
-        public void OnResetGame() {
+        internal void OnResetGame() {
             if (ConfigManager.ResetWhenFired) {
                 Logger.LogInfo($"Resetting all progress on getting fired!");
                 Reset();
                 InitializeUnlocks();
-                DelayHelper.Instance.ExecuteAfterDelay(() => { InitializeNewGame(); }, 8.0f);
+                DelayHelper.Instance.ExecuteAfterDelay(() => { 
+                    InitializeNewGame();
+                    IterateUnlocks();
+                    NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+                }, 8.0f);
+            } else {
+                NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             }
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
         }
-        public void OnDisconnect() {
+        internal void OnDisconnect() {
             Reset();
         }
 
-        public void ImportUnlockableData(List<LMUnlockable> newData) {
+        internal void ImportUnlockableData(List<LMUnlockable> newData) {
             Logger.LogInfo("Importing LMU_Unlockable data..");
             foreach (LMUnlockable importUnlock in newData) {
                 foreach (LMUnlockable unlock in Unlocks) {
@@ -490,7 +491,7 @@ namespace LethalMoonUnlocks {
         }
 
 
-        public void BuyMoon(string moon) {
+        internal void BuyMoon(string moon) {
             Logger.LogInfo($"{moon}: Moon was bought!");
             var unlock = Unlocks.Where(unlock => unlock.Name == moon).FirstOrDefault();
             if (ConfigManager.DiscountMode) {
@@ -513,6 +514,7 @@ namespace LethalMoonUnlocks {
                     }
                 }
             }
+            IterateUnlocks();
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 2);
         }
@@ -563,38 +565,30 @@ namespace LethalMoonUnlocks {
             }
             Logger.LogInfo("Initializing LMUnlockables from Extended levels..");
             foreach (var level in AllLevels) {
-                if (level == null || level.SelectableLevel == null || level.NumberlessPlanetName == "Liquidation" || level.NumberlessPlanetName == "Gordion") {
+                if (level == null || level.SelectableLevel == null
+                    //|| level.IsRouteRemoved == true //not respected currently. still shows in terminal
+                    || level.NumberlessPlanetName == "Liquidation" || level.NumberlessPlanetName == "Gordion" 
+                    || Unlocks.Any(unlock => unlock.Name == level.NumberlessPlanetName)) {
                     string levelName = string.Empty;
                     if (level != null && level.SelectableLevel != null)
                         levelName = ": " + level.NumberlessPlanetName;
                     Logger.LogDebug($"Skipping level{levelName}..");
                     continue;
                 }
-                Unlocks.Add(new LMUnlockable(level.NumberlessPlanetName, level.RoutePrice));
+                Unlocks.Add(new LMUnlockable(level));
             }
+            Unlocks = Unlocks.OrderBy(unlock => unlock.OriginalPrice).ToList();
             LogUnlockables(true);
         }
 
         private void InitializeNewGame() {
             Logger.LogInfo($"New game initialization..");
-            Logger.LogInfo($"Fetching hidden/locked status from LLL..");
-            foreach (var unlock in Unlocks) {
-                unlock.StoreOriginalState();
-            }
-
-            // apply hard overrrides
-            if (ConfigManager.OverrideHidden || ConfigManager.OverrideLocked) {
-                Logger.LogInfo("Applying hard overrides..");
-                foreach (var unlock in Unlocks) {
-                    unlock.ApplyHardOverrides();
-                }
-            }
-
             if (ConfigManager.DiscoveryMode) {
                 ShuffleDiscoverable();
                 // Hide [NEW] discovery tag permanently from all moons in initial rotation
                 Unlocks.Where(unlock => unlock.Discovered).Do(unlock => { unlock.DiscoveredOnce = true; });
             }
+
             // Shuffle Moon Sales
             if (ConfigManager.Sales) {
                 foreach (var unlock in Unlocks) {
@@ -845,18 +839,35 @@ namespace LethalMoonUnlocks {
             }
             return unlock.GetMoonPreviewText(infoType);
         }
-        public void ApplyUnlocks() {
-            foreach (var unlock in Unlocks) {
-                unlock.ApplyPrice();
-                unlock.ApplyDiscoverability();
 
+        internal void IterateUnlocks() {
+            // Collect moons unlocked via story progression from other mods
+            List<string> storyUnlocks = CollectStoryLockedMoons();
+            foreach (var moon in storyUnlocks) {
+                var unlock = Unlocks.FirstOrDefault(u => u.Name == moon && !u.StoryUnlock);
+                if (unlock != null) {
+                    unlock.DesignateAsStoryLocked();
+                }
+            }
+
+            Logger.LogDebug("Iterating states..");
+            foreach (var unlock in Unlocks) {
+                unlock.IterateState();
                 if (Plugin.darmuhsTerminalStuffPresent) {
                     TerminalStuffCompatibility.ApplyAdditionalInfo(unlock);
                 }
             }
+        }
+
+        internal void ApplyUnlocks() {
+            foreach (var unlock in Unlocks) {
+                unlock.ApplyPrice();
+                unlock.ApplyVisibility();                
+            }
             if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
                 Plugin.LethalConstellationsExtension.ApplyUnlocks();
             }
+            LogUnlockables(false);
         }
 
         private void Reset() {

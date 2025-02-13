@@ -12,9 +12,27 @@ namespace LethalMoonUnlocks {
     internal class LMUnlockable {
         [ES3NonSerializable] [NonSerialized] internal ExtendedLevel ExtendedLevel;
         [SerializeField] [ES3Serializable] internal string Name { get; private set; }
-        public int OriginalPrice { get; private set; }
-        [SerializeField] [ES3Serializable] public bool OriginallyHidden { get; private set; }
-        [SerializeField] [ES3Serializable] public bool OriginallyLocked { get; private set; }
+        [ES3NonSerializable] public int OriginalPrice { get; private set; }
+        internal bool OriginallyLocked { get {
+                if (ConfigManager.OverrideLocked) return ConfigManager.OverrideLockedListMoons.Contains(Name);
+                else return _originallyLocked; 
+            } private set {
+                _originallyLocked = value;
+            }
+        }
+        internal bool OriginallyHidden { get {
+                if (ConfigManager.OverrideHidden) return ConfigManager.OverrideHiddenListMoons.Contains(Name);
+                else return _originallyHidden;
+            } private set {
+                _originallyHidden = value;
+            }
+        }
+        [SerializeField] [ES3Serializable] private bool _originallyLocked; 
+        [SerializeField] [ES3Serializable] private bool _originallyHidden; 
+
+        [SerializeField] [ES3Serializable] internal bool RemainingHidden { get; set; }
+        [SerializeField] [ES3Serializable] internal bool StoryUnlock { get; private set; }
+        [SerializeField] [ES3Serializable] internal bool StoryIsUnlocked { get; set; }
         [SerializeField] [ES3Serializable] internal int BuyCount { get; set; }
         [SerializeField] [ES3Serializable] internal int VisitCount { get; set; }
         [SerializeField] [ES3Serializable] internal int FreeVisitCount { get; set; }
@@ -24,22 +42,28 @@ namespace LethalMoonUnlocks {
         [SerializeField] [ES3Serializable] internal bool DiscoveredOnce { get; set; }
         [SerializeField] [ES3Serializable] internal bool PermanentlyDiscovered { get; set; }
         [SerializeField] [ES3Serializable] internal bool OnSale { get; set; }
+        [SerializeField] [ES3Serializable] internal int SalesRate { get; set; }
 
-        [SerializeField]
-        [ES3Serializable]
-        internal int SalesRate { get; set; }
+        [SerializeField] [ES3NonSerializable] private int RoutePrice{ get; set; }
 
-        public LMUnlockable(string name, int originalPrice) {
-            Name = name;
-            ExtendedLevel = UnlockManager.Instance.AllLevels.FirstOrDefault(level => level.NumberlessPlanetName == Name);
-            OriginalPrice = originalPrice;
+        internal LMUnlockable(ExtendedLevel extendedLevel) {
+            Name = extendedLevel.NumberlessPlanetName;
+            ExtendedLevel = extendedLevel;
+            OriginalPrice = extendedLevel.RoutePrice;
+            OriginallyHidden = extendedLevel.IsRouteHidden;
+            OriginallyLocked = extendedLevel.IsRouteLocked;
+            if (OriginallyHidden && !OriginallyLocked) RemainingHidden = true;
         }
-        public void OverrideData(LMUnlockable newData) {
+
+        internal void OverrideData(LMUnlockable newData) {
             if (Name != newData.Name) {
                 Logger.LogError("Name mismatch during override LMUnlockable data!");
             } else {
                 OriginallyHidden = newData.OriginallyHidden;
                 OriginallyLocked = newData.OriginallyLocked;
+                RemainingHidden = newData.RemainingHidden;
+                StoryUnlock = newData.StoryUnlock;
+                StoryIsUnlocked = newData.StoryIsUnlocked;
                 BuyCount = newData.BuyCount;
                 VisitCount = newData.VisitCount;
                 FreeVisitCount = newData.FreeVisitCount;
@@ -50,92 +74,88 @@ namespace LethalMoonUnlocks {
                 PermanentlyDiscovered = newData.PermanentlyDiscovered;
                 OnSale = newData.OnSale;
                 SalesRate = newData.SalesRate;
+                RoutePrice = newData.RoutePrice;
             }
         }
 
-        public void ApplyPrice() {
-            int newPrice = GetPrice();
+        internal void Unlock() {
+            ExtendedLevel.IsRouteLocked = false;
+            if (RemainingHidden) {
+                ExtendedLevel.IsRouteHidden = true;
+            } else {
+                ExtendedLevel.IsRouteHidden = false;
+            }
+        }
+
+        internal void LockAndHide() {
+            ExtendedLevel.IsRouteHidden = true;
+            ExtendedLevel.IsRouteLocked = true;
+                }
+
+        internal void ApplyPrice() {
             // only apply price if we have to for compatibility with LQ
-            if (newPrice != OriginalPrice) {
-                ExtendedLevel.RoutePrice = newPrice;
+            if (RoutePrice != OriginalPrice) {
+                ExtendedLevel.RoutePrice = RoutePrice;
             }
         }
 
-        public void ApplyHardOverrides() {
-            if (ConfigManager.OverrideHidden) {
-                if (ConfigManager.OverrideHiddenListMoons.Contains(this.Name)) {
-                    OriginallyHidden = true;
+        internal void RefreshSale() {
+            int rnd = UnityEngine.Random.Range(0, 100);
+            if (rnd < ConfigManager.SalesChance && ExtendedLevel.RoutePrice > 0) {
+                OnSale = true;
+                SalesRate = ConfigManager.SalesRate;
+                Logger.LogDebug($"{Name} is on SALE for {SalesRate}% OFF!");
                 } else {
-                    OriginallyHidden = false;
+                OnSale = false;
+                SalesRate = 0;
                 }
             }
-            if (ConfigManager.OverrideLocked) {
-                if (ConfigManager.OverrideLockedListMoons.Contains(this.Name)) {
-                    OriginallyLocked = true;
-                } else {
-                    OriginallyLocked = false;
-                }
-            }
-        }
 
-        public void ApplyDiscoverability() {
-            // Reapply hard overrides from config (maybe this causes problems..? may have to remove)
-            ApplyHardOverrides();
+        internal void IterateState() {
+            RoutePrice = CalculatePrice();
 
-            // make sure all moons are showing when Discovery Mode is disabled
-            if (!ConfigManager.DiscoveryMode) {
-                if (OriginallyHidden) {
-                    ExtendedLevel.IsRouteHidden = true;
-                } else {
-                    ExtendedLevel.IsRouteHidden = false;
-                }
-                if (OriginallyLocked) {
-                    ExtendedLevel.IsRouteLocked = true;
-                } else {
-                    ExtendedLevel.IsRouteLocked = false;
-                }
-                return;
-            }
             // set permanently discovered if moon was bought (if config enabled)
-            if (BuyCount > 0 && PermanentlyDiscovered == false && ((ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepUnlocks) || (ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepDiscounts))) {
+            if (BuyCount > 0 && ((ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepUnlocks) || (ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepDiscounts))) {
+                if (!PermanentlyDiscovered) {   
                 PermanentlyDiscovered = true;
-                Logger.LogInfo($"{Name} set to permanently discovered because it's {(ConfigManager.DiscoveryKeepUnlocks ? "unlocked" : "discounted.")}");
+                    Logger.LogInfo($"{Name} set to permanently discovered because it's {(ConfigManager.UnlockMode ? "unlocked" : "discounted.")}");
             }
+            }
+
             // set permanently discovered if free moon was landed on x times (if config enabled)
-            if (Discovered && !OriginallyHidden && !OriginallyLocked && OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding > -1) {
+            if (Discovered && !OriginallyHidden && !OriginallyLocked && OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding >= 0) {
                 if (LandingCount >= ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding) {
+                    if (!PermanentlyDiscovered) {
                     PermanentlyDiscovered = true;
+                        Logger.LogInfo($"{Name} set to permanently discovered because it's been landed on {LandingCount} times.");
                 }
             }
+            }
+
             // set permanently discovered if paid moon was landed on x times (if config enabled)
-            if (Discovered && !OriginallyHidden && !OriginallyLocked && OriginalPrice > 0 && ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding > -1) {
+            if (Discovered && !OriginallyHidden && !OriginallyLocked && OriginalPrice > 0 && ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding >= 0) {
                 if (LandingCount >= ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding) {
+                    if (!PermanentlyDiscovered) {
                     PermanentlyDiscovered = true;
+                        Logger.LogInfo($"{Name} set to permanently discovered because it's been landed on {LandingCount} times.");
                 }
+            }
             }
             
-            // make sure all by default or LLL config hidden moons are hidden
-            if (OriginallyHidden) {
-                Discovered = false;
+            // un-hide after # visits (if config enabled)
+            if (OriginallyHidden && !OriginallyLocked) {
                 if (ConfigManager.PermanentlyDiscoverHiddenMoonsOnVisit && VisitCount > 0) {
+                    RemainingHidden = false;
                     PermanentlyDiscovered = true;
-                    ExtendedLevel.IsRouteHidden = false;
                 }
-                else {
+                RemainingHidden = true;
                     PermanentlyDiscovered = false;
-                    ExtendedLevel.IsRouteHidden = true;
+            } else {
+                RemainingHidden = false;
                 }
-            }
-            // make sure all by default or LLL config locked moons are locked
-            if (OriginallyLocked) {
-                Discovered = false;
-                PermanentlyDiscovered = false;
-                ExtendedLevel.IsRouteHidden = true;
-                ExtendedLevel.IsRouteLocked = true;
-            }
-            if (Discovered || PermanentlyDiscovered) {
+
                 // tag new discoveries as new
-                if (!DiscoveredOnce) {
+            if (!DiscoveredOnce && Discovered) {
                     NewDiscovery = true;
                     DiscoveredOnce = true;
                 }
@@ -148,30 +168,58 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        public void StoreOriginalState() {
-            OriginallyHidden = ExtendedLevel.IsRouteHidden;
-            OriginallyLocked = ExtendedLevel.IsRouteLocked;
+        internal void ApplyVisibility() {
+            // special case: story locked moons
+            if (StoryUnlock) {
+                if (StoryIsUnlocked) {
+                    if (!ConfigManager.DiscoveryMode) {
+                        Unlock();
+                        return;
+        }
+                    if (ConfigManager.DiscoveryMode && (Discovered || PermanentlyDiscovered)) {
+                        Unlock();
+                        return;
+                    }
+                }
+                LockAndHide();
+                return;
+            }
+
+            // special case originally locked
+            if (OriginallyLocked) {
+                LockAndHide();
+                return;
+            }
+
+            // special clase originally hidden
+            if (OriginallyHidden) {
+                Unlock();
+                return;
+            }
+
+            // special case discovery mode disabled
+            if (!ConfigManager.DiscoveryMode) {
+                Unlock();
+                return;
         }
 
-        public void RestoreOriginalState() {
-            ExtendedLevel.RoutePrice = OriginalPrice;
-            ExtendedLevel.IsRouteHidden = OriginallyHidden;
-            ExtendedLevel.IsRouteLocked = OriginallyLocked;
-        }
-
-        public void RefreshSale() {
-            int rnd = UnityEngine.Random.Range(0, 100);
-            if (rnd < ConfigManager.SalesChance && ExtendedLevel.RoutePrice > 0) {
-                OnSale = true;
-                SalesRate = ConfigManager.SalesRate;
-                Logger.LogDebug($"{Name} is on SALE for {SalesRate}% OFF!");
+            if (ConfigManager.DiscoveryMode) {
+                if (Discovered || PermanentlyDiscovered) {
+                    Unlock();
             } else {
-                OnSale = false;
-                SalesRate = 0;
+                    LockAndHide();
+                }
             }
         }
 
-        public void VisitMoon() {
+        internal void RestoreOriginalState() {
+            ExtendedLevel.RoutePrice = OriginalPrice;
+            ExtendedLevel.IsRouteHidden = _originallyHidden;
+            ExtendedLevel.IsRouteLocked = _originallyLocked;
+            }
+        }
+
+        internal void VisitMoon() {
             VisitCount++;
             Logger.LogDebug($"{Name}: Set visit count to {VisitCount}");
             if ((ExtendedLevel.RoutePrice == 0 || (ConfigManager.DiscountMode && BuyCount == ConfigManager.DiscountsCount)) && OriginalPrice != ExtendedLevel.RoutePrice) {
@@ -211,11 +259,11 @@ namespace LethalMoonUnlocks {
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 1);
         }
 
-        public void Land() {
+        internal void Land() {
             LandingCount++;
         }
 
-        public Dictionary<string, List<string>> GetMatchingCustomGroups() {
+        internal Dictionary<string, List<string>> GetMatchingCustomGroups() {
             var customGroups = ConfigManager.MoonGroupMatchingCustomDict;
             var matchingGroups = new Dictionary<string, List<string>>();
             foreach (var group in customGroups) {
@@ -224,7 +272,7 @@ namespace LethalMoonUnlocks {
             }
             return matchingGroups;
         }
-        public string GetMoonPreviewText(PreviewInfoType infoType) {
+        internal string GetMoonPreviewText(PreviewInfoType infoType) {
             // FIRST TERMINAL LINE (NEXT TO NAME)
             int moonNameLength = Name.Count();
             string format = "{0, -" + Math.Clamp(18 - moonNameLength, 0, 18) + "} {1, -7} {2, -9} {3, -13}";
@@ -241,9 +289,8 @@ namespace LethalMoonUnlocks {
             if (weather.Trim().Equals("None")) {
                 weather = string.Empty;
             }
-            //if (ExtendedLevel.SelectableLevel.currentWeather == LevelWeatherType.None)
-                //weather = string.Empty;
-            //if (weather.Count() > 13) weather = weather.Substring(0, 11) + "..";
+            if (weather.Count() > 13) weather = weather.Substring(0, 11) + "..";
+
             string risk = string.Empty;
             if (Plugin.LQPresent && ConfigManager.PreferLQRisk) {
                 risk = LQCompatibility.GetLQRiskLevel(this);
@@ -291,10 +338,6 @@ namespace LethalMoonUnlocks {
             return preview;
         }
 
-        public string GetMoonTagsText() {
-            return BuildTagString();
-        }
-
         private string BuildTagString() {
             // LMU Tags
             string tags = string.Empty;
@@ -321,7 +364,7 @@ namespace LethalMoonUnlocks {
             } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
                 int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
                 if (discountRate != 100) {
-                    tags = AddTagToPreviewText($"[DISCOUNT-{discountRate}%]", tags);
+                    tags = AddTagToPreviewText($"[DISCOUNT {discountRate}%]", tags);
                 } else {
                     tags = AddTagToPreviewText($"[FULL DISCOUNT]", tags);
                 }
@@ -332,7 +375,7 @@ namespace LethalMoonUnlocks {
                 }
             }
             if (OnSale && SalesRate > 0 && ExtendedLevel.RoutePrice > 0 && ConfigManager.Sales && ConfigManager.ShowTagSale) {
-                tags = AddTagToPreviewText($"[SALE-{SalesRate}%]", tags);
+                tags = AddTagToPreviewText($"[SALE {SalesRate}%]", tags);
             }
 
             // OPTIONAL GROUP TAG
@@ -410,13 +453,15 @@ namespace LethalMoonUnlocks {
             return previewText;
         }
 
-        private int GetPrice() {
-            string log = $"{Name}: Calculating price: ";
+        private int CalculatePrice() {
+            string log = $"{Name}: Calculating price.. ";
             int price = OriginalPrice;
-            log += $"Original price = {OriginalPrice}";
+            log += $"Original price -> {OriginalPrice}";
             if (BuyCount > 0) {
                 if (ConfigManager.DiscountMode) {
-                    price = (int)(price * Plugin.GetDiscountRate(BuyCount));
+                    float discountRate = Plugin.GetDiscountRate(BuyCount);
+                    price = (int)(price * discountRate);
+                    if (price <= 0 && discountRate > 0) price = 1; 
                     log += $", Discount -> {price}";
                 } else if (ConfigManager.UnlockMode) {
                     price = 0;
@@ -425,7 +470,8 @@ namespace LethalMoonUnlocks {
             }
             if (OnSale && price > 0) {
                 price = (int)(price * (100 - SalesRate) / 100f);
-                log += $", Sales rate -> {price}";
+                if (price <= 0) price = 1;
+                log += $", Sales rate ({SalesRate}%) -> {price}";
             }
             Logger.LogDebug(log);
             return price;
