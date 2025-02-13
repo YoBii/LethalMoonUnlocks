@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LethalMoonUnlocks.Compatibility {
     internal static class LQCompatibility {
-        public static string GetLQRiskLevel(LMUnlockable unlock) {
+        internal static string GetLQRiskLevel(LMUnlockable unlock) {
             Type type = LethalQuantities.Plugin.INSTANCE.GetType();
             FieldInfo field = type.GetField("presets", BindingFlags.NonPublic | BindingFlags.Instance);
             Dictionary<Guid, LevelPreset> presets = (Dictionary<Guid, LevelPreset>)field.GetValue(LethalQuantities.Plugin.INSTANCE);

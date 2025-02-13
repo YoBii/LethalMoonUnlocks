@@ -5,8 +5,8 @@ using System.Linq;
 using static UnityEngine.UIElements.UIR.BestFitAllocator;
 
 namespace LethalMoonUnlocks {
-    public static class SaveManager {
-        public static Dictionary<string, object> Savedata {
+    internal static class SaveManager {
+        internal static Dictionary<string, object> Savedata {
             get { return Load(); }
         }
 
@@ -74,7 +74,7 @@ namespace LethalMoonUnlocks {
             }            
         }
 
-        public static void StoreSaveData() {
+        internal static void StoreSaveData() {
             Logger.LogInfo($"Saving data..");
             var currentSave = GameNetworkManager.Instance.currentSaveFileName;
             if (UnlockManager.Instance.Unlocks.Count != 0) {

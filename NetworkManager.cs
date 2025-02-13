@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace LethalMoonUnlocks {
     internal class NetworkManager {
-        public NetworkManager() {
+        internal NetworkManager() {
             if (Instance == null) {
                 Instance = this;
             }
@@ -24,7 +24,7 @@ namespace LethalMoonUnlocks {
 
             Logger.LogInfo($"NetworkManager created.");
         }
-        public static NetworkManager Instance { get; private set; }
+        internal static NetworkManager Instance { get; private set; }
 
         private static LNetworkMessage<List<LMUnlockable>> UnlockablesMessage;
         private static LNetworkMessage<string> BuyMoonMessage;

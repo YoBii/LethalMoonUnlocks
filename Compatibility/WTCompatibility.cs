@@ -24,7 +24,7 @@ namespace LethalMoonUnlocks.Compatibility {
             WTWeathers[level] = __result;
         }
 
-        public static string GetWeatherTweaksWeather(LMUnlockable unlock) {
+        internal static string GetWeatherTweaksWeather(LMUnlockable unlock) {
             string weather = WTWeathers.TryGetValue(unlock.ExtendedLevel.SelectableLevel, out string value) ? value : null;
             if (weather != null) {
                 return weather;

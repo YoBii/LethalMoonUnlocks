@@ -8,39 +8,37 @@ using LethalLevelLoader;
 
 namespace LethalMoonUnlocks {
     public class ConfigManager {
-        public static ConfigManager Instance { get; private set; }
-
         private static string _configPath = Path.Combine(Paths.ConfigPath, "LethalMoonUnlocks.cfg");
         private static ConfigFile _configFile;
 
-        public static bool ResetWhenFired { get; private set; }
-        public static bool DisplayTerminalTags { get; private set; }
-        public static bool ShowTagInOrbit { get; private set; }
-        public static bool ShowTagNewDiscovery { get; private set; }
-        public static bool ShowTagExplored { get; private set; }
-        public static bool ShowTagUnlockDiscount { get; private set; }
-        public static bool ShowTagPermanentDiscovery { get; private set; }
-        public static bool ShowTagSale { get; private set; }
-        public static bool ShowTagGroups { get; private set; }
-        public static bool ShowAlerts { get; private set; }
-        public static bool ChatMessages { get; private set; }
-        public static bool UnlockMode { get; private set; }
-        public static int UnlocksResetAfterVisits { get; private set; }
-        public static bool UnlocksResetAfterVisitsPermDiscovery { get; private set; }
-        public static bool QuotaUnlocks { get; private set; }
-        public static int QuotaUnlockChance { get; private set; }
-        public static int QuotaUnlockCount { 
+        internal static bool ResetWhenFired { get; private set; }
+        internal static bool DisplayTerminalTags { get; private set; }
+        internal static bool ShowTagInOrbit { get; private set; }
+        internal static bool ShowTagNewDiscovery { get; private set; }
+        internal static bool ShowTagExplored { get; private set; }
+        internal static bool ShowTagUnlockDiscount { get; private set; }
+        internal static bool ShowTagPermanentDiscovery { get; private set; }
+        internal static bool ShowTagSale { get; private set; }
+        internal static bool ShowTagGroups { get; private set; }
+        internal static bool ShowAlerts { get; private set; }
+        internal static bool ChatMessages { get; private set; }
+        internal static bool UnlockMode { get; private set; }
+        internal static int UnlocksResetAfterVisits { get; private set; }
+        internal static bool UnlocksResetAfterVisitsPermDiscovery { get; private set; }
+        internal static bool QuotaUnlocks { get; private set; }
+        internal static int QuotaUnlockChance { get; private set; }
+        internal static int QuotaUnlockCount { 
             get {
                 return UnityEngine.Random.Range(_quotaUnlockCountMin, _quotaUnlockCountMax + 1);
             } 
         }
         private static int _quotaUnlockCountMin;
         private static int _quotaUnlockCountMax;
-        public static int QuotaUnlockMaxCount { get; private set; }
-        public static int QuotaUnlockMaxPrice { get; private set; }
-        public static bool DiscountMode { get; private set; }
+        internal static int QuotaUnlockMaxCount { get; private set; }
+        internal static int QuotaUnlockMaxPrice { get; private set; }
+        internal static bool DiscountMode { get; private set; }
         private static string DiscountsString { get; set; }
-        public static List<int> Discounts {
+        internal static List<int> Discounts {
             get {
                 string[] discounts = DiscountsString.Split(',', StringSplitOptions.RemoveEmptyEntries);
                 List<int> list = [];
@@ -48,158 +46,149 @@ namespace LethalMoonUnlocks {
                 return list;
             }
         }
-        public static int DiscountsCount {
+        internal static int DiscountsCount {
             get {
                 return Discounts.Count();
             }
         }
-        public static int DiscountsResetAfterVisits { get; private set; }
-        public static bool DiscountsResetAfterVisitsPermDiscovery { get; private set; }
-        public static bool QuotaDiscounts {  get; private set; }
-        public static int QuotaDiscountChance { get; private set; }
-        public static int QuotaDiscountCount {
+        internal static int DiscountsResetAfterVisits { get; private set; }
+        internal static bool DiscountsResetAfterVisitsPermDiscovery { get; private set; }
+        internal static bool QuotaDiscounts {  get; private set; }
+        internal static int QuotaDiscountChance { get; private set; }
+        internal static int QuotaDiscountCount {
             get {
                 return UnityEngine.Random.Range(_quotaDiscountCountMin, _quotaDiscountCountMax + 1);
             }
         }
         private static int _quotaDiscountCountMin;
         private static int _quotaDiscountCountMax;
-        public static int QuotaDiscountMaxCount { get; private set; }
-        public static int QuotaDiscountMaxPrice { get; private set; }
-        public static bool QuotaFullDiscounts { get; private set; }
-        public static int QuotaFullDiscountChance { get; private set; }
-        public static int QuotaFullDiscountCount {
+        internal static int QuotaDiscountMaxCount { get; private set; }
+        internal static int QuotaDiscountMaxPrice { get; private set; }
+        internal static bool QuotaFullDiscounts { get; private set; }
+        internal static int QuotaFullDiscountChance { get; private set; }
+        internal static int QuotaFullDiscountCount {
             get {
                 return UnityEngine.Random.Range(_quotaFullDiscountCountMin, _quotaFullDiscountCountMax + 1);
             }
         }
         private static int _quotaFullDiscountCountMin;
         private static int _quotaFullDiscountCountMax;
-        public static int QuotaFullDiscountMaxCount { get; private set; }
-        public static int QuotaFullDiscountMaxPrice { get; private set; }
-        public static bool DiscoveryMode { get; private set; }
+        internal static int QuotaFullDiscountMaxCount { get; private set; }
+        internal static int QuotaFullDiscountMaxPrice { get; private set; }
+        internal static bool DiscoveryMode { get; private set; }
         private static string DiscoveryWhitelist { get; set; }
-        public static List<string> DiscoveryWhitelistMoons {
+        internal static List<string> DiscoveryWhitelistMoons {
             get {
                 return DiscoveryWhitelist.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToList();
             }
         }
-        public static bool DiscoveryKeepUnlocks { get; private set; }
-        public static bool DiscoveryKeepDiscounts { get; private set; }
-        public static int DiscoveryFreeCountBase { get; private set; }
-        public static int DiscoveryFreeCountIncreaseBy { get; private set; }
-        public static int DiscoveryDynamicFreeCountBase { get; private set; }
-        public static int DiscoveryDynamicFreeCountIncreaseBy { get; private set; }
-        public static int DiscoveryPaidCountBase { get; private set; }
-        public static int DiscoveryPaidCountIncreaseBy { get; private set; }
-        public static int PermanentlyDiscoverFreeMoonsOnLanding { get; private set; }
-        public static int PermanentlyDiscoverPaidMoonsOnLanding { get; private set; }
-        public static bool PermanentlyDiscoverHiddenMoonsOnVisit { get; private set; }
-        public static bool DiscoveryShuffleEveryDay { get; private set; }
-        public static bool DiscoveryNeverShuffle { get; private set; }
-        public static bool QuotaDiscoveries { get; private set; }
-        public static int QuotaDiscoveryChance { get; private set; }
-        public static int QuotaDiscoveryCount {
+        internal static bool DiscoveryKeepUnlocks { get; private set; }
+        internal static bool DiscoveryKeepDiscounts { get; private set; }
+        internal static int DiscoveryFreeCountBase { get; private set; }
+        internal static int DiscoveryFreeCountIncreaseBy { get; private set; }
+        internal static int DiscoveryDynamicFreeCountBase { get; private set; }
+        internal static int DiscoveryDynamicFreeCountIncreaseBy { get; private set; }
+        internal static int DiscoveryPaidCountBase { get; private set; }
+        internal static int DiscoveryPaidCountIncreaseBy { get; private set; }
+        internal static int PermanentlyDiscoverFreeMoonsOnLanding { get; private set; }
+        internal static int PermanentlyDiscoverPaidMoonsOnLanding { get; private set; }
+        internal static bool PermanentlyDiscoverHiddenMoonsOnVisit { get; private set; }
+        internal static bool DiscoveryShuffleEveryDay { get; private set; }
+        internal static bool DiscoveryNeverShuffle { get; private set; }
+        internal static bool QuotaDiscoveries { get; private set; }
+        internal static int QuotaDiscoveryChance { get; private set; }
+        internal static int QuotaDiscoveryCount {
             get {
                 return UnityEngine.Random.Range(_quotaDiscoveryCountMin, _quotaDiscoveryCountMax + 1);
             }
         }
         private static int _quotaDiscoveryCountMin;
         private static int _quotaDiscoveryCountMax;
-        public static bool QuotaDiscoveryPermanent { get; private set; }
-        public static bool QuotaDiscoveryCheapestGroup { get; private set; }
-        public static bool QuotaDiscoveryCheapestGroupFallback { get; private set; }
-        public static bool QuotaDiscoveryCheapestConstellation { get; private set; }
-        //public static bool QuotaDiscoveryForceConstellationProgression { get; private set; }
-        public static bool TravelDiscoveries { get; private set; }
-        public static int TravelDiscoveryChance { get; private set; }
-        public static int TravelDiscoveryCount {
+        internal static bool QuotaDiscoveryPermanent { get; private set; }
+        internal static bool QuotaDiscoveryCheapestGroup { get; private set; }
+        internal static bool QuotaDiscoveryCheapestGroupFallback { get; private set; }
+        internal static bool QuotaDiscoveryCheapestConstellation { get; private set; }
+        //internal static bool QuotaDiscoveryForceConstellationProgression { get; private set; }
+        internal static bool TravelDiscoveries { get; private set; }
+        internal static int TravelDiscoveryChance { get; private set; }
+        internal static int TravelDiscoveryCount {
             get {
                 return UnityEngine.Random.Range(_travelDiscoveryCountMin, _travelDiscoveryCountMax + 1);
             }
         }
         private static int _travelDiscoveryCountMin;
         private static int _travelDiscoveryCountMax;
-        public static bool TravelDiscoveryPermanent { get; private set; }
-        public static bool TravelDiscoveryMatchGroup { get; private set; }
-        public static bool TravelDiscoveryMatchGroupFallback { get; private set; }
-        public static bool NewDayDiscoveries { get; private set; }
-        public static int NewDayDiscoveryChance { get; private set; }
-        public static int NewDayDiscoveryCount {
+        internal static bool TravelDiscoveryPermanent { get; private set; }
+        internal static bool TravelDiscoveryMatchGroup { get; private set; }
+        internal static bool TravelDiscoveryMatchGroupFallback { get; private set; }
+        internal static bool NewDayDiscoveries { get; private set; }
+        internal static int NewDayDiscoveryChance { get; private set; }
+        internal static int NewDayDiscoveryCount {
             get {
                 return UnityEngine.Random.Range(_newDayDiscoveryCountMin, _newDayDiscoveryCountMax + 1);
             }
         }
         private static int _newDayDiscoveryCountMin;
         private static int _newDayDiscoveryCountMax;
-        public static bool NewDayDiscoveryPermanent { get; private set; }
-        public static bool NewDayDiscoveryMatchGroup { get; private set; }
-        public static bool NewDayDiscoveryMatchGroupFallback { get; private set; }
-        public static bool Sales { get; private set; }
-        public static int SalesChance { get; private set; }
-        public static bool SalesShuffleDaily { get; private set; }
-        public static int SalesRate {
+        internal static bool NewDayDiscoveryPermanent { get; private set; }
+        internal static bool NewDayDiscoveryMatchGroup { get; private set; }
+        internal static bool NewDayDiscoveryMatchGroupFallback { get; private set; }
+        internal static bool Sales { get; private set; }
+        internal static int SalesChance { get; private set; }
+        internal static bool SalesShuffleDaily { get; private set; }
+        internal static int SalesRate {
             get { return UnityEngine.Random.Range(_salesRateMin, _salesRateMax); }
         }
         private static int _salesRateMin;
         private static int _salesRateMax;
         private static bool AdvancedPrintMoonNames { get; set; }
-        public static bool GroupCreditsSavingBandAid { get; private set; }
-        public static bool LMUStoryProgression { get; private set; }
-        public static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
-        public static bool CheapMoonBiasPaidRotation { get; private set; }
-        public static float CheapMoonBiasPaidRotationValue { get; private set; }
-        public static bool CheapMoonBiasQuotaDiscovery { get; private set; }
-        public static float CheapMoonBiasQuotaDiscoveryValue { get; private set; }
-        public static bool CheapMoonBiasNewDayDiscovery { get; private set; }
-        public static float CheapMoonBiasNewDayDiscoveryValue { get; private set; }
-        public static bool CheapMoonBiasTravelDiscovery { get; private set; }
-        public static float CheapMoonBiasTravelDiscoveryValue { get; private set; }
-        public static bool CheapMoonBiasQuotaUnlock { get; private set; }
-        public static float CheapMoonBiasQuotaUnlockValue { get; private set; }
-        public static bool CheapMoonBiasQuotaDiscount { get; private set; }
-        public static float CheapMoonBiasQuotaDiscountValue { get; private set; }
-        public static bool CheapMoonBiasQuotaFullDiscount { get; private set; }
-        public static float CheapMoonBiasQuotaFullDiscountValue { get; private set; }
-        public static string MoonGroupMatchingMethod { get; private set; }
-        public static int MoonGroupMatchingPriceRange { get; private set; }
+        internal static bool GroupCreditsSavingBandAid { get; private set; }
+        internal static bool LMUStoryProgression { get; private set; }
+        internal static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
+        internal static bool CheapMoonBiasPaidRotation { get; private set; }
+        internal static float CheapMoonBiasPaidRotationValue { get; private set; }
+        internal static bool CheapMoonBiasQuotaDiscovery { get; private set; }
+        internal static float CheapMoonBiasQuotaDiscoveryValue { get; private set; }
+        internal static bool CheapMoonBiasNewDayDiscovery { get; private set; }
+        internal static float CheapMoonBiasNewDayDiscoveryValue { get; private set; }
+        internal static bool CheapMoonBiasTravelDiscovery { get; private set; }
+        internal static float CheapMoonBiasTravelDiscoveryValue { get; private set; }
+        internal static bool CheapMoonBiasQuotaUnlock { get; private set; }
+        internal static float CheapMoonBiasQuotaUnlockValue { get; private set; }
+        internal static bool CheapMoonBiasQuotaDiscount { get; private set; }
+        internal static float CheapMoonBiasQuotaDiscountValue { get; private set; }
+        internal static bool CheapMoonBiasQuotaFullDiscount { get; private set; }
+        internal static float CheapMoonBiasQuotaFullDiscountValue { get; private set; }
+        internal static string MoonGroupMatchingMethod { get; private set; }
+        internal static int MoonGroupMatchingPriceRange { get; private set; }
         private static string MoonGroupMatchingCustom { get; set; }
-        public static Dictionary<string, List<string>> MoonGroupMatchingCustomDict { get; private set; }
-        public static int TerminalTagLineWidth { get; set; }
-        public static bool TerminalFontSizeOverride { get; set; }
-        public static float TerminalFontSize { get; set; }
-        public static int TerminalScrollAmount { get; set; }
-        public static bool TerminalShowRiskWeather { get; set; }
-        public static bool PreferLQRisk { get; private set; }
-        public static bool MalfunctionsNavigation {  get; private set; }
-        public static bool AlertMessageQueueing {  get; private set; }
-        public static bool LethalConstellationsOverridePrice {  get; private set; }
+        internal static Dictionary<string, List<string>> MoonGroupMatchingCustomDict { get; private set; }
+        internal static int TerminalTagLineWidth { get; set; }
+        internal static bool TerminalFontSizeOverride { get; set; }
+        internal static float TerminalFontSize { get; set; }
+        internal static int TerminalScrollAmount { get; set; }
+        internal static bool TerminalShowRiskWeather { get; set; }
+        internal static bool PreferLQRisk { get; private set; }
+        internal static bool MalfunctionsNavigation {  get; private set; }
+        internal static bool AlertMessageQueueing {  get; private set; }
+        internal static bool LethalConstellationsOverridePrice {  get; private set; }
 
-        public static bool OverrideHidden { get; private set; }
+        internal static bool OverrideHidden { get; private set; }
         private static string OverrideHiddenList { get; set; }
-        public static List<string> OverrideHiddenListMoons {
+        internal static List<string> OverrideHiddenListMoons {
             get {
                 return OverrideHiddenList.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToList();
             }
         }
-        public static bool OverrideLocked { get; private set; }
+        internal static bool OverrideLocked { get; private set; }
         private static string OverrideLockedList { get; set; }
-        public static List<string> OverrideLockedListMoons {
+        internal static List<string> OverrideLockedListMoons {
             get {
                 return OverrideLockedList.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToList();
             }
         }
 
-
-
-        public ConfigManager() {
-            if (Instance == null)
-                Instance = this;
-            Logger.LogInfo($"ConfigManager created");
-            RefreshConfig();
-        }
-
-        public static void RefreshConfig() {
+        internal static void RefreshConfig() {
             Logger.LogInfo("Refreshing config..");
             _configFile = null;
             EnsureConfigExists();
@@ -209,7 +198,7 @@ namespace LethalMoonUnlocks {
             }
 
         }
-        public static Dictionary<string, List<string>> ParseCustomMoonGroups() {
+        internal static Dictionary<string, List<string>> ParseCustomMoonGroups() {
             if (AdvancedPrintMoonNames) {
                 Logger.LogWarning($"Printing available moon names for custom moon groups..");
                 Logger.LogWarning($"{string.Join(", ", PatchedContent.ExtendedLevels.Where(level => level.NumberlessPlanetName != "Gordion" && level.NumberlessPlanetName != "Liquidation").Select(level => level.name))}");

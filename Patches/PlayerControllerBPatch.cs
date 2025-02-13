@@ -12,7 +12,7 @@ namespace LethalMoonUnlocks.Patches {
 
     [HarmonyPatch(typeof(PlayerControllerB), "ScrollMouse_performed", typeof(InputAction.CallbackContext))]
     internal class PlayerControllerBPatch {
-        public static string CurrentText { get; internal set; } = "";
+        private static string CurrentText { get; set; } = "";
         private static float ScrollAmount = 1 / 4f;
         private static void ScrollMouse_performed(Scrollbar scrollbar, float scrollDirection) {
             // Perform vanilla scroll if the 'relativeScroll' setting is disabled.

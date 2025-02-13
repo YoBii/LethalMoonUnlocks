@@ -12,7 +12,7 @@ namespace LethalMoonUnlocks {
     internal class LMUnlockable {
         [ES3NonSerializable] [NonSerialized] internal ExtendedLevel ExtendedLevel;
         [SerializeField] [ES3Serializable] internal string Name { get; private set; }
-        [ES3NonSerializable] public int OriginalPrice { get; private set; }
+        [ES3NonSerializable] internal int OriginalPrice { get; private set; }
         internal bool OriginallyLocked { get {
                 if (ConfigManager.OverrideLocked) return ConfigManager.OverrideLockedListMoons.Contains(Name);
                 else return _originallyLocked; 

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace LethalMoonUnlocks.Util {
     internal class DelayHelper : MonoBehaviour {
 
-        public static DelayHelper Instance {  get; private set; }
+        internal static DelayHelper Instance {  get; private set; }
 
         private void Awake() {
             if (Instance == null) {
@@ -17,7 +17,7 @@ namespace LethalMoonUnlocks.Util {
                 Destroy(gameObject);
             }
         }
-        public void ExecuteAfterDelay(Action action, float delay) {
+        internal void ExecuteAfterDelay(Action action, float delay) {
             StartCoroutine(DelayedExecution(action, delay));
         }
 

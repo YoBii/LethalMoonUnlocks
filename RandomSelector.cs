@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LethalMoonUnlocks {
     internal static class RandomSelector {
-        public static List<T> Get<T>(List<T> objects, int amount) {
+        internal static List<T> Get<T>(List<T> objects, int amount) {
             if (objects.Count < amount || objects.Count == 0 || objects == null)
                 return objects;
             List<T> input = new List<T>(objects);
@@ -20,7 +20,7 @@ namespace LethalMoonUnlocks {
             return selection;
         }
 
-        public static List<T> GetWeighted<T>(Dictionary<T, int> objects, int amount) {
+        internal static List<T> GetWeighted<T>(Dictionary<T, int> objects, int amount) {
             if (objects.Count < amount || objects.Count == 0 || objects == null)
                 return new List<T>(objects.Keys);
             Dictionary<T, int> input = new Dictionary<T, int>(objects);
@@ -48,7 +48,7 @@ namespace LethalMoonUnlocks {
             return selection;
         }
 
-        public static Dictionary<LMUnlockable, int> CalculateBiasedWeights(List<LMUnlockable> unlocks, float bias) {
+        internal static Dictionary<LMUnlockable, int> CalculateBiasedWeights(List<LMUnlockable> unlocks, float bias) {
             var weights = new Dictionary<LMUnlockable, int>();
             if (unlocks.Count < 1) {  return weights; }
             var sumAllPrices = unlocks.Sum(unlock => unlock.OriginalPrice);
