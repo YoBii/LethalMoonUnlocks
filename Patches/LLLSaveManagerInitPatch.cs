@@ -17,4 +17,21 @@ namespace LethalMoonUnlocks.Patches {
             UnlockManager.Instance.InitializeUnlocks();
         }
     }
+    [HarmonyPatch]
+    internal class LLLSaveManagerSavePatch {
+        private static MethodBase TargetMethod() {
+            var type = AccessTools.TypeByName("LethalLevelLoader.SaveManager");
+            return AccessTools.Method(type, "SaveGameValues");
+        }
+
+        private static void Prefix() {
+            UnlockManager.Instance.Unlocks.Do(unlock => unlock.RestoreOriginalState());
+        }
+
+        private static void Postfix() {
+            foreach (var unlock in UnlockManager.Instance.Unlocks) {
+                unlock.ApplyState();
+            }
+        }
+    }
 }
