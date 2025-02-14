@@ -80,7 +80,7 @@ namespace LethalMoonUnlocks {
 
         /// <summary>
         /// Occurs the earliest after <c>Terminal.Start</c>.
-        /// <br>Allows subscriber to designate moons that should be exclusively locked behind story progression.</br>
+        /// <br>Allows subscribers to designate moons that should be exclusively locked behind story progression.</br>
         /// <br></br>
         /// Subscribe with a method that returns a list of strings containing 'NumberlessPlanetName's of your moons.
         /// <br></br>
@@ -115,7 +115,7 @@ namespace LethalMoonUnlocks {
         }
 
         /// <summary>
-        /// Relase story lock of your moon allowing LMU to handle it like any other i.e. add it to moon catalog, etc..
+        /// Release story lock of your moon allowing LMU to handle it like any other i.e. add it to moon catalog, etc..
         /// <br>When you would otherwise unhide and unlock your moon via LLL call this method instead.</br>
         /// </summary>
         /// <param name="numberlessPlanetName">The name of the moon to release from story locked state.</param>
@@ -130,6 +130,39 @@ namespace LethalMoonUnlocks {
             unlock.StoryIsUnlocked = true;
             Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
             return true;
+        }
+
+        internal void InitializeUnlocks() {
+            if (AllLevels == null || AllLevels.Count == 0) {
+                Logger.LogFatal($"Unable to find levels!");
+            }
+            Logger.LogInfo("Initializing LMUnlockables from Extended levels..");
+            foreach (var level in AllLevels) {
+                if (level == null || level.SelectableLevel == null
+                    //|| level.IsRouteRemoved == true //not respected currently. still shows in terminal
+                    || level.NumberlessPlanetName == "Liquidation" || level.NumberlessPlanetName == "Gordion"
+                    || Unlocks.Any(unlock => unlock.Name == level.NumberlessPlanetName)) {
+                    string levelName = string.Empty;
+                    if (level != null && level.SelectableLevel != null)
+                        levelName = ": " + level.NumberlessPlanetName;
+                    Logger.LogDebug($"Skipping level{levelName}..");
+                    continue;
+                }
+                Unlocks.Add(new LMUnlockable(level));
+            }
+            Unlocks = Unlocks.OrderBy(unlock => unlock.OriginalPrice).ToList();
+            LogUnlockables(true);
+        }
+
+        internal void ImportUnlockableData(List<LMUnlockable> newData) {
+            Logger.LogInfo("Importing LMU_Unlockable data..");
+            foreach (LMUnlockable importUnlock in newData) {
+                foreach (LMUnlockable unlock in Unlocks) {
+                    if (unlock.Name == importUnlock.Name) {
+                        unlock.OverrideData(importUnlock);
+                    }
+                }
+            }
         }
 
         internal static List<string> CollectStoryLockedMoons() {
@@ -149,6 +182,64 @@ namespace LethalMoonUnlocks {
                 }
             }
             return storyMoons;
+        }
+
+        internal void IterateUnlocks() {
+            // Collect moons unlocked via story progression from other mods
+            List<string> storyUnlocks = CollectStoryLockedMoons();
+            foreach (var moon in storyUnlocks) {
+                var unlock = Unlocks.FirstOrDefault(u => u.Name == moon && !u.StoryUnlock);
+                if (unlock != null) {
+                    unlock.DesignateAsStoryLocked();
+                }
+            }
+
+            Logger.LogDebug("Iterating states..");
+            foreach (var unlock in Unlocks) {
+                unlock.IterateState();
+                if (Plugin.darmuhsTerminalStuffPresent) {
+                    TerminalStuffCompatibility.ApplyAdditionalInfo(unlock);
+                }
+            }
+        }
+
+        internal void ApplyUnlocks() {
+            foreach (var unlock in Unlocks) {
+                unlock.ApplyPrice();
+                unlock.ApplyVisibility();
+            }
+            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
+                Plugin.LethalConstellationsExtension.ApplyUnlocks();
+            }
+            LogUnlockables(false);
+        }
+
+        internal void BuyMoon(string moon) {
+            Logger.LogInfo($"{moon}: Moon was bought!");
+            var unlock = Unlocks.Where(unlock => unlock.Name == moon).FirstOrDefault();
+            if (ConfigManager.DiscountMode) {
+                if (unlock.BuyCount < ConfigManager.DiscountsCount) {
+                    unlock.BuyCount++;
+                    unlock.ApplyPrice();
+                }
+            } else {
+                unlock.BuyCount++;
+                unlock.ApplyPrice();
+            }
+            Logger.LogInfo($"{unlock.Name}: Set buy count to {unlock.BuyCount}");
+
+            if (ConfigManager.DiscoveryMode) {
+                // TRAVEL DISCOVERY
+                if (ConfigManager.TravelDiscoveries && DiscoveryCandidates.Count > 0) {
+                    if (UnityEngine.Random.Range(0, 100) < ConfigManager.TravelDiscoveryChance) {
+                        Logger.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
+                        TravelDiscovery(unlock);
+                    }
+                }
+            }
+            IterateUnlocks();
+            NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 2);
         }
 
         internal void LogUnlockables(bool debug = true) {
@@ -255,6 +346,90 @@ namespace LethalMoonUnlocks {
             // APPLY ALL
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 5);
+        }
+
+        internal void OnNewDay() {
+            Logger.LogDebug($"DaysUntilDeadlineHUD: {(int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime)}, DaysUntilDeadline: {TimeOfDay.Instance.daysUntilDeadline}, deadlineDaysAmount: {TimeOfDay.Instance.quotaVariables.deadlineDaysAmount}");
+            // NEW QUOTA DAY
+            if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == TimeOfDay.Instance.quotaVariables.deadlineDaysAmount || (int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) < 0) {
+                DayCount++;
+                Logger.LogInfo($"New day! Completed days: {DayCount}");
+                Logger.LogInfo($"New day is also new quota! Skip new day routine..");
+                // LAST DAY OF QUOTA - REROUTE SHIP TO COMPANY AND SKIP REST
+            } else if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == 0 && ConfigManager.DiscoveryMode) {
+                Logger.LogInfo($"New day is last day of the quota! Not shuffling.");
+                var company = AllLevels.Where(level => level.NumberlessPlanetName == "Gordion").FirstOrDefault();
+                if (company == null) {
+                    Logger.LogError($"Couldn't find company level!");
+                } else if (LevelManager.CurrentExtendedLevel != company) {
+                    Logger.LogInfo($"Rerouting ship to company!");
+                    // wait a bit or the level change fails
+                    DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(company.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
+                } else {
+                    Logger.LogInfo($"Already at company. No need to reroute.");
+                }
+            } else {
+                // NEW DAY - NOT NEW QUOTA
+                DayCount++;
+                Logger.LogInfo($"New day! Completed days: {DayCount}");
+                ConfigManager.RefreshConfig();
+                if (ConfigManager.DiscoveryMode) {
+                    // Remove [NEW] discovery tags
+                    Unlocks.Where(unlock => unlock.NewDiscovery).Do(unlock => { unlock.NewDiscovery = false; });
+                    // Apply unlocks to make sure discovery selections are correct
+                    IterateUnlocks();
+                    // Shuffle NEW DAY - EVERY DAY
+                    if (ConfigManager.DiscoveryShuffleEveryDay) {
+                        Logger.LogInfo($"Shuffling moon rotation on new day!");
+                        ShuffleDiscoverable();
+                    }
+                    // NEW DAY DISCOVERY
+                    if (ConfigManager.NewDayDiscoveries && DiscoveryCandidates.Count > 0 && UnityEngine.Random.Range(0, 100) < ConfigManager.NewDayDiscoveryChance) {
+                        Logger.LogInfo($"New Day Discovery triggered! (Chance: {ConfigManager.NewDayDiscoveryChance}%)");
+                        NewDayDiscovery();
+                    }
+                }
+                if (ConfigManager.Sales && ConfigManager.SalesShuffleDaily) {
+                    Unlocks.Do(unlock => unlock.RefreshSale());
+                }
+            }
+            IterateUnlocks();
+            NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 3);
+        }
+
+        internal void OnArrive() {
+            var unlock = Unlocks.Where(unlock => unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName).FirstOrDefault();
+            if (unlock != null) {
+                Logger.LogInfo($"Visiting moon {unlock.Name}!");
+                unlock.VisitMoon();
+            }
+            IterateUnlocks();
+            NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+        }
+        internal void OnLanding(SelectableLevel level) {
+            var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.SelectableLevel.levelID == level.levelID).FirstOrDefault();
+            if (unlock != null) {
+                unlock.Land();
+            }
+        }
+        internal void OnResetGame() {
+            if (ConfigManager.ResetWhenFired) {
+                Logger.LogInfo($"Resetting all progress on getting fired!");
+                Reset();
+                InitializeUnlocks();
+                DelayHelper.Instance.ExecuteAfterDelay(() => {
+                    InitializeNewGame();
+                    IterateUnlocks();
+                    NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+                }, 8.0f);
+            } else {
+                NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+            }
+        }
+        internal void OnDisconnect() {
+            Reset();
         }
 
         private void QuotaDiscovery() {
@@ -432,57 +607,6 @@ namespace LethalMoonUnlocks {
             Logger.LogInfo($"New Quota Full Discounts: {string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}");
         }
 
-        internal void OnNewDay() {
-            Logger.LogDebug($"DaysUntilDeadlineHUD: {(int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime)}, DaysUntilDeadline: {TimeOfDay.Instance.daysUntilDeadline}, deadlineDaysAmount: {TimeOfDay.Instance.quotaVariables.deadlineDaysAmount}");
-            // NEW QUOTA DAY
-            if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == TimeOfDay.Instance.quotaVariables.deadlineDaysAmount || (int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) < 0) {
-                DayCount++;
-                Logger.LogInfo($"New day! Completed days: {DayCount}");
-                Logger.LogInfo($"New day is also new quota! Skip new day routine..");
-            // LAST DAY OF QUOTA - REROUTE SHIP TO COMPANY AND SKIP REST
-            } else if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == 0 && ConfigManager.DiscoveryMode) {
-                Logger.LogInfo($"New day is last day of the quota! Not shuffling.");
-                var company = AllLevels.Where(level => level.NumberlessPlanetName == "Gordion").FirstOrDefault();
-                if (company == null) {
-                    Logger.LogError($"Couldn't find company level!");
-                } else if (LevelManager.CurrentExtendedLevel != company) {
-                    Logger.LogInfo($"Rerouting ship to company!");
-                    // wait a bit or the level change fails
-                    DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(company.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
-                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
-                } else {
-                    Logger.LogInfo($"Already at company. No need to reroute.");
-                }
-            } else {
-                // NEW DAY - NOT NEW QUOTA
-                DayCount++;
-                Logger.LogInfo($"New day! Completed days: {DayCount}");
-                ConfigManager.RefreshConfig();
-                if (ConfigManager.DiscoveryMode) {
-                    // Remove [NEW] discovery tags
-                    Unlocks.Where(unlock => unlock.NewDiscovery).Do(unlock => { unlock.NewDiscovery = false; });
-                    // Apply unlocks to make sure discovery selections are correct
-                    IterateUnlocks();
-                    // Shuffle NEW DAY - EVERY DAY
-                    if (ConfigManager.DiscoveryShuffleEveryDay) {
-                        Logger.LogInfo($"Shuffling moon rotation on new day!");
-                        ShuffleDiscoverable();
-                    }
-                    // NEW DAY DISCOVERY
-                    if (ConfigManager.NewDayDiscoveries && DiscoveryCandidates.Count > 0 && UnityEngine.Random.Range(0, 100) < ConfigManager.NewDayDiscoveryChance) {
-                        Logger.LogInfo($"New Day Discovery triggered! (Chance: {ConfigManager.NewDayDiscoveryChance}%)");
-                        NewDayDiscovery();
-                    }
-                }
-                if (ConfigManager.Sales && ConfigManager.SalesShuffleDaily) {
-                    Unlocks.Do(unlock => unlock.RefreshSale());
-                }
-            }
-            IterateUnlocks();
-            NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 3);
-        }
-
         private void NewDayDiscovery() {
             Logger.LogInfo($"New Day Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
 
@@ -523,78 +647,6 @@ namespace LethalMoonUnlocks {
                 $"Moon catalog updated!", Key = "LMU_NewDayDiscovery" });
             Logger.LogInfo($"New Day Discoveries: {string.Join(", ", newDayDiscoveries.Select(unlock => unlock.Name))}");
 
-        }
-        internal void OnArrive() {
-            var unlock = Unlocks.Where(unlock => unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName).FirstOrDefault();
-            if (unlock != null) {
-                Logger.LogInfo($"Visiting moon {unlock.Name}!");
-                unlock.VisitMoon();
-            }
-            IterateUnlocks();
-            NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-        }
-        internal void OnLanding(SelectableLevel level) {
-            var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.SelectableLevel.levelID == level.levelID).FirstOrDefault();
-            if (unlock != null) {
-                unlock.Land();
-            }
-        }
-        internal void OnResetGame() {
-            if (ConfigManager.ResetWhenFired) {
-                Logger.LogInfo($"Resetting all progress on getting fired!");
-                Reset();
-                InitializeUnlocks();
-                DelayHelper.Instance.ExecuteAfterDelay(() => { 
-                    InitializeNewGame();
-                    IterateUnlocks();
-                    NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-                }, 8.0f);
-            } else {
-                NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-            }
-        }
-        internal void OnDisconnect() {
-            Reset();
-        }
-
-        internal void ImportUnlockableData(List<LMUnlockable> newData) {
-            Logger.LogInfo("Importing LMU_Unlockable data..");
-            foreach (LMUnlockable importUnlock in newData) {
-                foreach (LMUnlockable unlock in Unlocks) {
-                    if (unlock.Name == importUnlock.Name) {
-                        unlock.OverrideData(importUnlock);
-                    }
-                }
-            }
-        }
-
-
-        internal void BuyMoon(string moon) {
-            Logger.LogInfo($"{moon}: Moon was bought!");
-            var unlock = Unlocks.Where(unlock => unlock.Name == moon).FirstOrDefault();
-            if (ConfigManager.DiscountMode) {
-                if (unlock.BuyCount < ConfigManager.DiscountsCount) {
-                    unlock.BuyCount++;
-                    unlock.ApplyPrice();
-                }
-            } else {
-                unlock.BuyCount++;
-                unlock.ApplyPrice();
-            }
-            Logger.LogInfo($"{unlock.Name}: Set buy count to {unlock.BuyCount}");
-
-            if (ConfigManager.DiscoveryMode) {
-                // TRAVEL DISCOVERY
-                if (ConfigManager.TravelDiscoveries && DiscoveryCandidates.Count > 0) {
-                    if (UnityEngine.Random.Range(0, 100) < ConfigManager.TravelDiscoveryChance) {
-                        Logger.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
-                        TravelDiscovery(unlock);
-                    }
-                }
-            }
-            IterateUnlocks();
-            NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-            DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 2);
         }
 
         private void TravelDiscovery(LMUnlockable unlock) {
@@ -637,26 +689,105 @@ namespace LethalMoonUnlocks {
             Logger.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
         }
 
-        internal void InitializeUnlocks() {
-            if (AllLevels == null || AllLevels.Count == 0) {
-                Logger.LogFatal($"Unable to find levels!");
+        private LMGroup MatchMoonGroup(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch, bool fallback) {
+            Logger.LogDebug($"Matching moon {matchingUnlock.Name}: Matching against = [ {string.Join(", ", unlocksToMatch.Select(unlock => unlock.Name))} ]");
+            if (matchingUnlock == null) return new LMGroup() { Members = unlocksToMatch };
+            switch (ConfigManager.MoonGroupMatchingMethod) {
+                case "Price":
+                    List<LMUnlockable> priceMatches = new List<LMUnlockable>();
+                    foreach (var unlock in unlocksToMatch) {
+                        if (unlock.OriginalPrice == matchingUnlock.OriginalPrice) {
+                            priceMatches.Add(unlock);
+                        }
+                    }
+                    if (priceMatches.Count > 0) {
+                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price = [ {string.Join(", ", priceMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Members = priceMatches };
+                    } else {
+                        break;
+                    }
+                case "PriceRange":
+                    List<LMUnlockable> pricerangeMatches = new List<LMUnlockable>();
+                    foreach (var unlock in unlocksToMatch) {
+                        if (unlock.OriginalPrice >= matchingUnlock.OriginalPrice - ConfigManager.MoonGroupMatchingPriceRange && unlock.OriginalPrice <= matchingUnlock.OriginalPrice + ConfigManager.MoonGroupMatchingPriceRange) {
+                            pricerangeMatches.Add(unlock);
+                        }
+                    }
+                    if (pricerangeMatches.Count > 0) {
+                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price range = [ {string.Join(", ", pricerangeMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Members = pricerangeMatches };
+                    } else {
+                        break;
+                    }
+                case "PriceRangeUpper":
+                    List<LMUnlockable> pricerangeUpperMatches = new List<LMUnlockable>();
+                    foreach (var unlock in unlocksToMatch) {
+                        if (unlock.OriginalPrice >= matchingUnlock.OriginalPrice && unlock.OriginalPrice <= matchingUnlock.OriginalPrice + ConfigManager.MoonGroupMatchingPriceRange) {
+                            pricerangeUpperMatches.Add(unlock);
+                        }
+                    }
+                    if (pricerangeUpperMatches.Count > 0) {
+                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price range = [ {string.Join(", ", pricerangeUpperMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Members = pricerangeUpperMatches };
+                    } else {
+                        break;
+                    }
+                case "Tag":
+                    List<LMUnlockable> tagMatches = new List<LMUnlockable>();
+                    List<ContentTag> matchingTags = matchingUnlock.ExtendedLevel.ContentTags;
+                    ContentTag randomTag = matchingTags[UnityEngine.Random.Range(0, matchingTags.Count)];
+                    foreach (var unlock in unlocksToMatch) {
+                        if (unlock.ExtendedLevel.ContentTags.Select(tag => tag.contentTagName.ToLower()).Contains(randomTag.contentTagName.ToLower()) && !tagMatches.Contains(unlock))
+                            tagMatches.Add(unlock);
+                    }
+                    if (tagMatches.Count > 0) {
+                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by LLL tags = [ {string.Join(", ", tagMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Members = tagMatches };
+                    } else {
+                        break;
+                    }
+                case "LethalConstellations":
+                    if (!Plugin.LethalConstellationsPresent || Plugin.LethalConstellationsExtension == null) break;
+                    string constellationName = Plugin.LethalConstellationsExtension.GetConstellationName(matchingUnlock);
+                    List<LMUnlockable> constellationMatches = Plugin.LethalConstellationsExtension.GetConstellationMatchesForMoon(matchingUnlock, unlocksToMatch);
+                    if (constellationMatches.Count > 0) {
+                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by constellation [{constellationName}]; Matches = [ {string.Join(", ", constellationMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Name = constellationName, Members = constellationMatches };
+                    } else {
+                        break;
+                    }
+                case "Custom":
+                    Dictionary<string, List<string>> matchingCustomGroups = matchingUnlock.GetMatchingCustomGroups();
+                    if (matchingCustomGroups == null || matchingCustomGroups.Count == 0)
+                        break;
+                    string randomCustomGroupName = matchingCustomGroups.Keys.ToList()[UnityEngine.Random.Range(0, matchingCustomGroups.Count)];
+                    if (matchingCustomGroups.Count > 1) {
+                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Moon is member of multiple groups. Selected {randomCustomGroupName} for matching.");
+                    }
+                    List<string> randomCustomGroup = matchingCustomGroups[randomCustomGroupName];
+                    Logger.LogInfo($"Matching moon {matchingUnlock.Name}: {randomCustomGroupName} members = [ {string.Join(", ", randomCustomGroup)} ]");
+                    List<LMUnlockable> groupMatches = new List<LMUnlockable>();
+                    foreach (var unlock in unlocksToMatch) {
+                        if (randomCustomGroup.Contains(unlock.Name)) {
+                            groupMatches.Add(unlock);
+                        }
+                    }
+                    if (groupMatches.Count > 0) {
+                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by custom group [{randomCustomGroupName}]; Matches = [ {string.Join(", ", groupMatches.Select(unlock => unlock.Name))} ]");
+                        return new LMGroup() { Name = randomCustomGroupName, Members = groupMatches };
+                    } else {
+                        break;
+                    }
+                default:
+                    Logger.LogError($"Missing moon group matching method!");
+                    break;
             }
-            Logger.LogInfo("Initializing LMUnlockables from Extended levels..");
-            foreach (var level in AllLevels) {
-                if (level == null || level.SelectableLevel == null
-                    //|| level.IsRouteRemoved == true //not respected currently. still shows in terminal
-                    || level.NumberlessPlanetName == "Liquidation" || level.NumberlessPlanetName == "Gordion" 
-                    || Unlocks.Any(unlock => unlock.Name == level.NumberlessPlanetName)) {
-                    string levelName = string.Empty;
-                    if (level != null && level.SelectableLevel != null)
-                        levelName = ": " + level.NumberlessPlanetName;
-                    Logger.LogDebug($"Skipping level{levelName}..");
-                    continue;
-                }
-                Unlocks.Add(new LMUnlockable(level));
+            Logger.LogInfo($"No matching moons found!");
+            if (fallback) {
+                return new LMGroup() { Members = unlocksToMatch };
+            } else {
+                return new LMGroup();
             }
-            Unlocks = Unlocks.OrderBy(unlock => unlock.OriginalPrice).ToList();
-            LogUnlockables(true);
         }
 
         private void InitializeNewGame() {
@@ -740,25 +871,6 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        private void RerouteShipToFreeMoon() {
-            Logger.LogInfo($"After shuffling check if we have to reroute to a discovered free moon..");
-            if (Unlocks.Any(unlock => (unlock.Discovered || unlock.PermanentlyDiscovered ) && unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName) || LevelManager.CurrentExtendedLevel.NumberlessPlanetName == "Gordion") {
-                Logger.LogInfo($"Current moon is discovered. Not rerouting ship.");
-            } else {
-                var currentDiscoveredFreeMoons = DynamicFreeMoons.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered)).ToList();
-                if (currentDiscoveredFreeMoons.Count < 1) {
-                    Logger.LogWarning("Can't find any free and discovered moon! You probably want at least one free moon available at all times.. Abort auto routing ship!");
-                    return;
-                }
-                var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[UnityEngine.Random.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
-                Logger.LogInfo($"Current moon is not discovered! Rerouting ship to {randomDiscoveredFreeMoon.NumberlessPlanetName}..");
-                if (DayCount > 0) {
-                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing ship to a safe moon..", Key = "LMU_RerouteFree" });
-                }
-                DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(randomDiscoveredFreeMoon.SelectableLevel.levelID, Terminal.groupCredits); }, 3.5f);
-            }
-        }
-
         private void AddFreeToRotation(int amount) {
             var freeMoons = RandomSelector.Get(DiscoveryFreeCandidates, amount);
             Logger.LogInfo($"New free rotation: [ {string.Join(", ", freeMoons.Select(moon => moon.Name))} ]");
@@ -788,6 +900,26 @@ namespace LethalMoonUnlocks {
                 candidate.Discovered = true;
             }
         }
+
+        private void RerouteShipToFreeMoon() {
+            Logger.LogInfo($"After shuffling check if we have to reroute to a discovered free moon..");
+            if (Unlocks.Any(unlock => (unlock.Discovered || unlock.PermanentlyDiscovered ) && unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName) || LevelManager.CurrentExtendedLevel.NumberlessPlanetName == "Gordion") {
+                Logger.LogInfo($"Current moon is discovered. Not rerouting ship.");
+            } else {
+                var currentDiscoveredFreeMoons = DynamicFreeMoons.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered)).ToList();
+                if (currentDiscoveredFreeMoons.Count < 1) {
+                    Logger.LogWarning("Can't find any free and discovered moon! You probably want at least one free moon available at all times.. Abort auto routing ship!");
+                    return;
+                }
+                var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[UnityEngine.Random.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
+                Logger.LogInfo($"Current moon is not discovered! Rerouting ship to {randomDiscoveredFreeMoon.NumberlessPlanetName}..");
+                if (DayCount > 0) {
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing ship to a safe moon..", Key = "LMU_RerouteFree" });
+                }
+                DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(randomDiscoveredFreeMoon.SelectableLevel.levelID, Terminal.groupCredits); }, 3.5f);
+            }
+        }
+
         private void ApplyDiscoveryWhitelist() {
             if (ConfigManager.DiscoveryMode && ConfigManager.DiscoveryWhitelistMoons.Count > 0) {
                 Logger.LogInfo($"Whitelist: {string.Join(", ", ConfigManager.DiscoveryWhitelistMoons)}");
@@ -804,160 +936,6 @@ namespace LethalMoonUnlocks {
                     if (!matched) Logger.LogWarning($"Couldn't match whitelist entry! Is this a valid moon name: {entry} ?");
                 }
             }
-        }
-        private LMGroup MatchMoonGroup(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch, bool fallback) {
-            Logger.LogDebug($"Matching moon {matchingUnlock.Name}: Matching against = [ {string.Join(", ", unlocksToMatch.Select(unlock => unlock.Name))} ]");
-            if (matchingUnlock == null) return new LMGroup() { Members = unlocksToMatch };
-            switch (ConfigManager.MoonGroupMatchingMethod) {
-                case "Price":
-                    List<LMUnlockable> priceMatches = new List<LMUnlockable>();
-                    foreach (var unlock in unlocksToMatch) {
-                        if (unlock.OriginalPrice == matchingUnlock.OriginalPrice) {
-                            priceMatches.Add(unlock);
-                        }
-                    }
-                    if (priceMatches.Count > 0) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price = [ {string.Join(", ", priceMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Members = priceMatches };
-                    } else {
-                        break;
-                    }
-                case "PriceRange":
-                    List<LMUnlockable> pricerangeMatches = new List<LMUnlockable>();
-                    foreach (var unlock in unlocksToMatch) {
-                        if (unlock.OriginalPrice >= matchingUnlock.OriginalPrice - ConfigManager.MoonGroupMatchingPriceRange && unlock.OriginalPrice <= matchingUnlock.OriginalPrice + ConfigManager.MoonGroupMatchingPriceRange) {
-                            pricerangeMatches.Add(unlock);
-                        }
-                    }
-                    if (pricerangeMatches.Count > 0) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price range = [ {string.Join(", ", pricerangeMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Members = pricerangeMatches };
-                    } else {
-                        break;
-                    }
-                case "PriceRangeUpper":
-                    List<LMUnlockable> pricerangeUpperMatches = new List<LMUnlockable>();
-                    foreach (var unlock in unlocksToMatch) {
-                        if (unlock.OriginalPrice >= matchingUnlock.OriginalPrice && unlock.OriginalPrice <= matchingUnlock.OriginalPrice + ConfigManager.MoonGroupMatchingPriceRange) {
-                            pricerangeUpperMatches.Add(unlock);
-                        }
-                    }
-                    if (pricerangeUpperMatches.Count > 0) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by price range = [ {string.Join(", ", pricerangeUpperMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Members = pricerangeUpperMatches };
-                    } else {
-                        break;
-                    }
-                case "Tag":
-                    List<LMUnlockable> tagMatches = new List<LMUnlockable>();
-                    List<ContentTag> matchingTags = matchingUnlock.ExtendedLevel.ContentTags;
-                    ContentTag randomTag = matchingTags[UnityEngine.Random.Range(0, matchingTags.Count)];
-                    foreach (var unlock in unlocksToMatch) {
-                        if (unlock.ExtendedLevel.ContentTags.Select(tag => tag.contentTagName.ToLower()).Contains(randomTag.contentTagName.ToLower()) && !tagMatches.Contains(unlock))
-                            tagMatches.Add(unlock);        
-                    }
-                    if (tagMatches.Count > 0) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matches by LLL tags = [ {string.Join(", ", tagMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Members = tagMatches };
-                    } else {
-                        break;
-                    }
-                case "LethalConstellations":
-                    if (!Plugin.LethalConstellationsPresent || Plugin.LethalConstellationsExtension == null) break;
-                    string constellationName = Plugin.LethalConstellationsExtension.GetConstellationName(matchingUnlock);
-                    List<LMUnlockable> constellationMatches = Plugin.LethalConstellationsExtension.GetConstellationMatchesForMoon(matchingUnlock, unlocksToMatch);
-                    if (constellationMatches.Count > 0) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by constellation [{constellationName}]; Matches = [ {string.Join(", ", constellationMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Name = constellationName, Members = constellationMatches };
-                    } else {
-                        break;
-                    }
-                case "Custom":
-                    Dictionary<string, List<string>> matchingCustomGroups = matchingUnlock.GetMatchingCustomGroups();
-                    if (matchingCustomGroups == null || matchingCustomGroups.Count == 0)
-                        break;
-                    string randomCustomGroupName = matchingCustomGroups.Keys.ToList()[UnityEngine.Random.Range(0, matchingCustomGroups.Count)];
-                    if (matchingCustomGroups.Count > 1) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Moon is member of multiple groups. Selected {randomCustomGroupName} for matching.");
-                    }
-                    List<string> randomCustomGroup = matchingCustomGroups[randomCustomGroupName];
-                    Logger.LogInfo($"Matching moon {matchingUnlock.Name}: {randomCustomGroupName} members = [ {string.Join(", ", randomCustomGroup)} ]");
-                    List<LMUnlockable> groupMatches = new List<LMUnlockable>();
-                    foreach (var unlock in unlocksToMatch) {
-                        if (randomCustomGroup.Contains(unlock.Name)) {
-                            groupMatches.Add(unlock);
-                        }
-                    }
-                    if (groupMatches.Count > 0) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by custom group [{randomCustomGroupName}]; Matches = [ {string.Join(", ", groupMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Name = randomCustomGroupName, Members = groupMatches };
-                    } else {
-                        break;
-                    }
-                default:
-                    Logger.LogError($"Missing moon group matching method!");
-                    break;
-            }    
-            Logger.LogInfo($"No matching moons found!");
-            if (fallback) {
-                return new LMGroup() { Members = unlocksToMatch};
-            } else {
-                return new LMGroup();
-            }
-        }
-        private string ReplaceTerminalPreview(ExtendedLevel extendedLevel, PreviewInfoType infoType) {
-            // override font size
-            if (ConfigManager.TerminalFontSizeOverride) {
-                Terminal.screenText.textComponent.fontSize = ConfigManager.TerminalFontSize;
-            }
-            var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel == extendedLevel).FirstOrDefault();
-            if (unlock == null) {
-                Logger.LogError($"Couldn't get unlock for Terminal preview text replacement!");
-                return string.Empty;
-            }
-            return unlock.GetMoonPreviewText(infoType);
-        }
-
-        internal void IterateUnlocks() {
-            // Collect moons unlocked via story progression from other mods
-            List<string> storyUnlocks = CollectStoryLockedMoons();
-            foreach (var moon in storyUnlocks) {
-                var unlock = Unlocks.FirstOrDefault(u => u.Name == moon && !u.StoryUnlock);
-                if (unlock != null) {
-                    unlock.DesignateAsStoryLocked();
-                }
-            }
-
-            Logger.LogDebug("Iterating states..");
-            foreach (var unlock in Unlocks) {
-                unlock.IterateState();
-                if (Plugin.darmuhsTerminalStuffPresent) {
-                    TerminalStuffCompatibility.ApplyAdditionalInfo(unlock);
-                }
-            }
-        }
-
-        internal void ApplyUnlocks() {
-            foreach (var unlock in Unlocks) {
-                unlock.ApplyPrice();
-                unlock.ApplyVisibility();                
-            }
-            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
-                Plugin.LethalConstellationsExtension.ApplyUnlocks();
-            }
-            LogUnlockables(false);
-        }
-
-        private void Reset() {
-            foreach (var unlock in Unlocks) {
-                unlock.RestoreOriginalState();
-            }
-            Unlocks.Clear();
-            QuotaCount = 0;
-            DayCount = 0;
-            QuotaUnlocksCount = 0;
-            QuotaDiscountsCount = 0;
-            QuotaFullDiscountsCount = 0;
         }
 
         private bool LoadAndImportSavaData() {
@@ -1035,5 +1013,31 @@ namespace LethalMoonUnlocks {
                 return false;
             }
         }
+
+        private void Reset() {
+            foreach (var unlock in Unlocks) {
+                unlock.RestoreOriginalState();
+            }
+            Unlocks.Clear();
+            QuotaCount = 0;
+            DayCount = 0;
+            QuotaUnlocksCount = 0;
+            QuotaDiscountsCount = 0;
+            QuotaFullDiscountsCount = 0;
+        }
+
+        private string ReplaceTerminalPreview(ExtendedLevel extendedLevel, PreviewInfoType infoType) {
+            // override font size
+            if (ConfigManager.TerminalFontSizeOverride) {
+                Terminal.screenText.textComponent.fontSize = ConfigManager.TerminalFontSize;
+            }
+            var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel == extendedLevel).FirstOrDefault();
+            if (unlock == null) {
+                Logger.LogError($"Couldn't get unlock for Terminal preview text replacement!");
+                return string.Empty;
+            }
+            return unlock.GetMoonPreviewText(infoType);
+        }
     }
 }
+

@@ -78,37 +78,16 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        internal void Unlock() {
-            ExtendedLevel.IsRouteLocked = false;
-            if (RemainingHidden) {
-                ExtendedLevel.IsRouteHidden = true;
-            } else {
-                ExtendedLevel.IsRouteHidden = false;
-            }
+        internal void RestoreOriginalState() {
+            ExtendedLevel.RoutePrice = OriginalPrice;
+            ExtendedLevel.IsRouteHidden = _originallyHidden;
+            ExtendedLevel.IsRouteLocked = _originallyLocked;
         }
 
-        internal void LockAndHide() {
-            ExtendedLevel.IsRouteHidden = true;
-            ExtendedLevel.IsRouteLocked = true;
-        }
-
-        internal void ApplyPrice() {
-            // only apply price if we have to for compatibility with LQ
-            if (RoutePrice != OriginalPrice) {
-                ExtendedLevel.RoutePrice = RoutePrice;
-            }
-        }
-
-        internal void RefreshSale() {
-            int rnd = UnityEngine.Random.Range(0, 100);
-            if (rnd < ConfigManager.SalesChance && ExtendedLevel.RoutePrice > 0) {
-                OnSale = true;
-                SalesRate = ConfigManager.SalesRate;
-                Logger.LogDebug($"{Name} is on SALE for {SalesRate}% OFF!");
-            } else {
-                OnSale = false;
-                SalesRate = 0;
-            }
+        internal void DesignateAsStoryLocked() {
+            StoryUnlock = true;
+            OriginallyHidden = true;
+            OriginallyLocked = true;
         }
 
         internal void IterateState() {
@@ -116,7 +95,7 @@ namespace LethalMoonUnlocks {
 
             // set permanently discovered if moon was bought (if config enabled)
             if (BuyCount > 0 && ((ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepUnlocks) || (ConfigManager.DiscountMode && ConfigManager.DiscoveryKeepDiscounts))) {
-                if (!PermanentlyDiscovered) {   
+                if (!PermanentlyDiscovered) {
                     PermanentlyDiscovered = true;
                     Logger.LogInfo($"{Name} set to permanently discovered because it's {(ConfigManager.UnlockMode ? "unlocked" : "discounted.")}");
                 }
@@ -141,7 +120,7 @@ namespace LethalMoonUnlocks {
                     }
                 }
             }
-            
+
             // un-hide after # visits (if config enabled)
             if (OriginallyHidden && !OriginallyLocked) {
                 if (ConfigManager.PermanentlyDiscoverHiddenMoonsOnVisit && VisitCount > 0) {
@@ -170,7 +149,7 @@ namespace LethalMoonUnlocks {
             }
             // Embrion condition (old bird id = 18)
             if (Name == "Embrion" && UnlockManager.Instance.Terminal.scannedEnemyIDs.Contains(18)) {
-                    if (StoryUnlock && StoryIsUnlocked == false) {
+                if (StoryUnlock && StoryIsUnlocked == false) {
                     UnlockManager.TryReleaseStoryLock(this.Name);
                 }
             }
@@ -220,16 +199,41 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        internal void RestoreOriginalState() {
-            ExtendedLevel.RoutePrice = OriginalPrice;
-            ExtendedLevel.IsRouteHidden = _originallyHidden;
-            ExtendedLevel.IsRouteLocked = _originallyLocked;
+        internal void Unlock() {
+            ExtendedLevel.IsRouteLocked = false;
+            if (RemainingHidden) {
+                ExtendedLevel.IsRouteHidden = true;
+            } else {
+                ExtendedLevel.IsRouteHidden = false;
+            }
         }
 
-        internal void DesignateAsStoryLocked() {
-            StoryUnlock = true;
-            OriginallyHidden = true;
-            OriginallyLocked = true;
+        internal void LockAndHide() {
+            ExtendedLevel.IsRouteHidden = true;
+            ExtendedLevel.IsRouteLocked = true;
+        }
+
+        internal void ApplyPrice() {
+            // only apply price if we have to for compatibility with LQ
+            if (RoutePrice != OriginalPrice) {
+                ExtendedLevel.RoutePrice = RoutePrice;
+            }
+        }
+
+        internal void RefreshSale() {
+            int rnd = UnityEngine.Random.Range(0, 100);
+            if (rnd < ConfigManager.SalesChance && ExtendedLevel.RoutePrice > 0) {
+                OnSale = true;
+                SalesRate = ConfigManager.SalesRate;
+                Logger.LogDebug($"{Name} is on SALE for {SalesRate}% OFF!");
+            } else {
+                OnSale = false;
+                SalesRate = 0;
+            }
+        }
+
+        internal void Land() {
+            LandingCount++;
         }
 
         internal void VisitMoon() {
@@ -270,10 +274,6 @@ namespace LethalMoonUnlocks {
                 }
             }
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 1);
-        }
-
-        internal void Land() {
-            LandingCount++;
         }
 
         internal Dictionary<string, List<string>> GetMatchingCustomGroups() {
@@ -351,6 +351,42 @@ namespace LethalMoonUnlocks {
             return preview;
         }
 
+        internal string BuildShortTagString() {
+            // LMU Tags
+            string tags = string.Empty;
+            if (NewDiscovery && ConfigManager.DiscoveryMode && ConfigManager.ShowTagNewDiscovery) {
+                tags = AddTagToPreviewText($"[!]", tags);
+            }
+            if (LandingCount > 0 && ConfigManager.ShowTagExplored) {
+                tags = AddTagToPreviewText($"[EXPLORED:{LandingCount}]", tags);
+            } else if (LandingCount == 0 && ConfigManager.ShowTagExplored) {
+                tags = AddTagToPreviewText($"[UNEXPLORED]", tags);
+            }
+            if (FreeVisitCount > 0 && ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.UnlocksResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                tags = AddTagToPreviewText($"[{ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1}]", tags);
+            } else if (FreeVisitCount > 0 && ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                tags = AddTagToPreviewText($"[{ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1}]", tags);
+            } else if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                tags = AddTagToPreviewText("[U]", tags);
+            } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
+                int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
+                if (discountRate != 100) {
+                    tags = AddTagToPreviewText($"[{discountRate}%]", tags);
+                } else {
+                    tags = AddTagToPreviewText($"[U]", tags);
+                }
+            }
+            if (PermanentlyDiscovered && !ConfigManager.DiscoveryNeverShuffle && ConfigManager.DiscoveryMode && ConfigManager.ShowTagPermanentDiscovery) {
+                if (OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding != 0 || OriginalPrice > 0 && ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding != 0) {
+                    tags = AddTagToPreviewText("[P]", tags);
+                }
+            }
+            if (OnSale && SalesRate > 0 && ExtendedLevel.RoutePrice > 0 && ConfigManager.Sales && ConfigManager.ShowTagSale) {
+                tags = AddTagToPreviewText($"[{SalesRate}%]", tags);
+            }
+            return tags;
+        }
+
         private string BuildTagString() {
             // LMU Tags
             string tags = string.Empty;
@@ -414,41 +450,6 @@ namespace LethalMoonUnlocks {
                 if (!string.IsNullOrEmpty(tagsTag)) {
                     tags = AddTagToPreviewText($"[{tagsTag}]", tags);
                 }
-            }
-            return tags;
-        }
-        internal string BuildShortTagString() {
-            // LMU Tags
-            string tags = string.Empty;
-            if (NewDiscovery && ConfigManager.DiscoveryMode && ConfigManager.ShowTagNewDiscovery) {
-                tags = AddTagToPreviewText($"[!]", tags);
-            }
-            if (LandingCount > 0 && ConfigManager.ShowTagExplored) {
-                tags = AddTagToPreviewText($"[EXPLORED:{LandingCount}]", tags);
-            } else if (LandingCount == 0 && ConfigManager.ShowTagExplored) {
-                tags = AddTagToPreviewText($"[UNEXPLORED]", tags);
-            }
-            if (FreeVisitCount > 0 && ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.UnlocksResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                tags = AddTagToPreviewText($"[{ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1}]", tags);
-            } else if (FreeVisitCount > 0 && ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                tags = AddTagToPreviewText($"[{ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1}]", tags);
-            } else if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                tags = AddTagToPreviewText("[U]", tags);
-            } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
-                if (discountRate != 100) {
-                    tags = AddTagToPreviewText($"[{discountRate}%]", tags);
-                } else {
-                    tags = AddTagToPreviewText($"[U]", tags);
-                }
-            }
-            if (PermanentlyDiscovered && !ConfigManager.DiscoveryNeverShuffle && ConfigManager.DiscoveryMode && ConfigManager.ShowTagPermanentDiscovery) {
-                if (OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding != 0 || OriginalPrice > 0 && ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding != 0) {
-                    tags = AddTagToPreviewText("[P]", tags);
-                }
-            }
-            if (OnSale && SalesRate > 0 && ExtendedLevel.RoutePrice > 0 && ConfigManager.Sales && ConfigManager.ShowTagSale) {
-                tags = AddTagToPreviewText($"[{SalesRate}%]", tags);
             }
             return tags;
         }
