@@ -115,7 +115,7 @@ namespace LethalMoonUnlocks {
         }
 
         /// <summary>
-        /// Relase story lock of your moon allowing LMU to handlet it like any other i.e. add it to moon catalog, etc..
+        /// Relase story lock of your moon allowing LMU to handle it like any other i.e. add it to moon catalog, etc..
         /// <br>When you would otherwise unhide and unlock your moon via LLL call this method instead.</br>
         /// </summary>
         /// <param name="numberlessPlanetName">The name of the moon to release from story locked state.</param>
