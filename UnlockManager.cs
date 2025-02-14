@@ -79,7 +79,7 @@ namespace LethalMoonUnlocks {
         public delegate List<string> DesignateStoryUnlocks();
 
         /// <summary>
-        /// Occurs the earliest after <c>Terminal.Start</c>.
+        /// Occurs on lobby creation after <c>Terminal.Start</c> and optionally after being fired (user config).
         /// <br>Allows subscribers to designate moons that should be exclusively locked behind story progression.</br>
         /// <br></br>
         /// Subscribe with a method that returns a list of strings containing 'NumberlessPlanetName's of your moons.
@@ -103,15 +103,6 @@ namespace LethalMoonUnlocks {
             if (Instance == null)
                 Instance = this;
             TerminalManager.onBeforePreviewInfoTextAdded += ReplaceTerminalPreview;
-
-            // LMU Story
-            if (ConfigManager.LMUStoryProgression) {
-                OnCollectStoryLockedMoons += LMUStoryLocks;
-            }
-        }
-
-        private List<string> LMUStoryLocks() {
-            return new List<string> { "Artifice", "Embrion" };
         }
 
         /// <summary>
@@ -165,8 +156,8 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        internal static List<string> CollectStoryLockedMoons() {
-            var storyMoons = new List<string>();
+        internal void CollectStoryLockedMoons() {
+            var storyLocks = new List<string>();
 
             if (OnCollectStoryLockedMoons != null) {
                 var subscribers = OnCollectStoryLockedMoons.GetInvocationList();
@@ -174,26 +165,20 @@ namespace LethalMoonUnlocks {
                 foreach (DesignateStoryUnlocks subscriber in subscribers) {
                     try {
                         List<string> response = subscriber();
-                        storyMoons.AddRange(response);
-                        Logger.LogInfo($"Collected the following story locked moons: {string.Join(", ", storyMoons)}");
+                        storyLocks.AddRange(response);
+                        Logger.LogInfo($"Collected the following story locked moons: {string.Join(", ", storyLocks)}");
                     } catch (Exception ex) {
                         Logger.LogError($"Couldn't handle subscriber response while collecting story locked moons! Error: {ex.Message}");
                     }
                 }
+                foreach (var storyLock in storyLocks) {
+                    var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == storyLock && !u.StoryUnlock);
+                    unlock?.DesignateAsStoryLocked();
+                }
             }
-            return storyMoons;
         }
 
         internal void IterateUnlocks() {
-            // Collect moons unlocked via story progression from other mods
-            List<string> storyUnlocks = CollectStoryLockedMoons();
-            foreach (var moon in storyUnlocks) {
-                var unlock = Unlocks.FirstOrDefault(u => u.Name == moon && !u.StoryUnlock);
-                if (unlock != null) {
-                    unlock.DesignateAsStoryLocked();
-                }
-            }
-
             Logger.LogDebug("Iterating states..");
             foreach (var unlock in Unlocks) {
                 unlock.IterateState();
@@ -205,8 +190,7 @@ namespace LethalMoonUnlocks {
 
         internal void ApplyUnlocks() {
             foreach (var unlock in Unlocks) {
-                unlock.ApplyPrice();
-                unlock.ApplyVisibility();
+                unlock.ApplyState();
             }
             if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
                 Plugin.LethalConstellationsExtension.ApplyUnlocks();
@@ -220,11 +204,9 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.DiscountMode) {
                 if (unlock.BuyCount < ConfigManager.DiscountsCount) {
                     unlock.BuyCount++;
-                    unlock.ApplyPrice();
                 }
             } else {
                 unlock.BuyCount++;
-                unlock.ApplyPrice();
             }
             Logger.LogInfo($"{unlock.Name}: Set buy count to {unlock.BuyCount}");
 
@@ -792,6 +774,16 @@ namespace LethalMoonUnlocks {
 
         private void InitializeNewGame() {
             Logger.LogInfo($"New game initialization..");
+            
+            // LMU Story
+            if (ConfigManager.LMUStoryProgression) {
+                OnCollectStoryLockedMoons -= LMUStoryLocks;
+                OnCollectStoryLockedMoons += LMUStoryLocks;
+            } else {
+                OnCollectStoryLockedMoons -= LMUStoryLocks;
+            }
+            CollectStoryLockedMoons();
+            
             if (ConfigManager.DiscoveryMode) {
                 ShuffleDiscoverable();
                 // Hide [NEW] discovery tag permanently from all moons in initial rotation
@@ -1037,6 +1029,10 @@ namespace LethalMoonUnlocks {
                 return string.Empty;
             }
             return unlock.GetMoonPreviewText(infoType);
+        }
+
+        private List<string> LMUStoryLocks() {
+            return new List<string> { "Artifice", "Embrion" };
         }
     }
 }

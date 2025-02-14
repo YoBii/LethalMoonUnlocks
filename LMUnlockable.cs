@@ -155,7 +155,9 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        internal void ApplyVisibility() {
+        internal void ApplyState() {
+            ApplyPrice();
+
             // special case: story locked moons
             if (StoryUnlock) {
                 if (StoryIsUnlocked) {
