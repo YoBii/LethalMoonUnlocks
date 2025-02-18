@@ -340,6 +340,7 @@ namespace LethalMoonUnlocks {
                 // LAST DAY OF QUOTA - REROUTE SHIP TO COMPANY AND SKIP REST
             } else if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == 0 && ConfigManager.DiscoveryMode) {
                 Logger.LogInfo($"New day is last day of the quota! Not shuffling.");
+                if (ConfigManager.AutoRerouteToCompany) {
                 var company = AllLevels.Where(level => level.NumberlessPlanetName == "Gordion").FirstOrDefault();
                 if (company == null) {
                     Logger.LogError($"Couldn't find company level!");
@@ -350,6 +351,7 @@ namespace LethalMoonUnlocks {
                     NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
                 } else {
                     Logger.LogInfo($"Already at company. No need to reroute.");
+                }
                 }
             } else {
                 // NEW DAY - NOT NEW QUOTA

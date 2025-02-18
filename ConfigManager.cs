@@ -142,6 +142,7 @@ namespace LethalMoonUnlocks {
         private static int _salesRateMin;
         private static int _salesRateMax;
         private static bool AdvancedPrintMoonNames { get; set; }
+        internal static bool AutoRerouteToCompany { get; set; }
         internal static bool GroupCreditsSavingBandAid { get; private set; }
         internal static bool LMUStoryProgression { get; private set; }
         internal static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
@@ -397,6 +398,7 @@ namespace LethalMoonUnlocks {
                 "This prevents the 'free moon exploit'. This band aid should not cause any issues but I don't think I should need to do this in the first place..");
             AdvancedPrintMoonNames = GetConfigValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
                 "You can also grab moons names from the LMU table that is periodically printed to logs even when this is not enabled.");
+            AutoRerouteToCompany = GetConfigValue("6 - Advanced Settings", "Auto reroute to company", true, "When enabled automatically reroutes the ship to the company on deadline day.");
             LMUStoryProgression = GetConfigValue("6 - Advanced Settings", "Vanilla Story Progression", false, "Enable to lock the two hidden vanilla moons behind story progression. To release the lock for Artifice you have to land three times on Adamance, for Embrion you have to scan an old bird. After completing these tasks the moons will be available (for discovery). They will not be hidden.");
 
             CheapMoonBiasPaidRotation = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
