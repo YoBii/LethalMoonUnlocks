@@ -144,13 +144,17 @@ namespace LethalMoonUnlocks {
             if (Name == "Adamance" && LandingCount > 2) {
                 var art = UnlockManager.Instance.Unlocks.FirstOrDefault(u => u.Name == "Artifice");
                 if (art != null && art.StoryUnlock && art.StoryIsUnlocked == false) {
-                    UnlockManager.TryReleaseStoryLock(art.Name);
+                    art.StoryIsUnlocked = true;
+                    Logger.LogInfo($"{art.Name}: Releasing story lock.. {art.Name} now available (for discovery).");
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Incoming transmission! Decoding location data...", Key = "LMU_StoryLockReleasedArtifice" });
                 }
             }
             // Embrion condition (old bird id = 18)
             if (Name == "Embrion" && UnlockManager.Instance.Terminal.scannedEnemyIDs.Contains(18)) {
                 if (StoryUnlock && StoryIsUnlocked == false) {
-                    UnlockManager.TryReleaseStoryLock(this.Name);
+                    StoryIsUnlocked = true;
+                    Logger.LogInfo($"{Name}: Releasing story lock.. {Name} now available (for discovery).");
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Extracting location data from bestiary entry...", Key = "LMU_StoryLockReleasedEmbrion" });
                 }
             }
         }
