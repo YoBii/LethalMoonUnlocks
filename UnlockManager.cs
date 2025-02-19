@@ -102,7 +102,6 @@ namespace LethalMoonUnlocks {
         internal UnlockManager() {
             if (Instance == null)
                 Instance = this;
-            TerminalManager.onBeforePreviewInfoTextAdded += ReplaceTerminalPreview;
         }
 
         /// <summary>
@@ -147,6 +146,15 @@ namespace LethalMoonUnlocks {
             }
             Unlocks = Unlocks.OrderBy(unlock => unlock.OriginalPrice).ToList();
             LogUnlockables(true);
+            
+            // (Un-)subscribe to/from LLL event to replace preview text
+            if (ConfigManager.DisplayTerminalTags || ConfigManager.TerminalFontSizeOverride) {
+                TerminalManager.onBeforePreviewInfoTextAdded -= ReplaceTerminalPreview;
+                TerminalManager.onBeforePreviewInfoTextAdded += ReplaceTerminalPreview;
+            } else {
+                TerminalManager.onBeforePreviewInfoTextAdded -= ReplaceTerminalPreview;
+            }
+
         }
 
         internal void ImportUnlockableData(List<LMUnlockable> newData) {
