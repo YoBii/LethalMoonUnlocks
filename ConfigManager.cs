@@ -145,6 +145,7 @@ namespace LethalMoonUnlocks {
         internal static bool AutoRerouteToCompany { get; set; }
         internal static bool GroupCreditsSavingBandAid { get; private set; }
         internal static bool LMUStoryProgression { get; private set; }
+        internal static bool EnableStoryProgression { get; private set; }
         internal static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
         internal static bool CheapMoonBiasPaidRotation { get; private set; }
         internal static float CheapMoonBiasPaidRotationValue { get; private set; }
@@ -399,7 +400,6 @@ namespace LethalMoonUnlocks {
             AdvancedPrintMoonNames = GetConfigValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
                 "You can also grab moons names from the LMU table that is periodically printed to logs even when this is not enabled.");
             AutoRerouteToCompany = GetConfigValue("6 - Advanced Settings", "Auto reroute to company", true, "When enabled automatically reroutes the ship to the company on deadline day.");
-            LMUStoryProgression = GetConfigValue("6 - Advanced Settings", "Vanilla Story Progression", false, "Enable to lock the two hidden vanilla moons behind story progression. To release the lock for Artifice you have to land three times on Adamance, for Embrion you have to scan an old bird. After completing these tasks the moons will be available (for discovery). They will not be hidden.");
 
             CheapMoonBiasPaidRotation = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
             CheapMoonBiasPaidRotationValue = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation bias value", 0.66f, "Set bias value to adjust how heavily cheap moons are preferred.\n" +
@@ -476,6 +476,9 @@ namespace LethalMoonUnlocks {
             OverrideLockedList = GetConfigValue("6.5 - Overrides", "Override locked list", "", "List of moons LMU will consider to be locked by default.\n" +
                 "For example, 'Vow, March, Artifice'. Those three will be the only moons locked by default.\n" +
                 "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
+
+            EnableStoryProgression = GetConfigValue("6.6 - Story Progression", "Enable Story Progression", true, "Story progression allows locking moons behind various conditions. This can be employed by other mods like Wesley's moons (JLL).\nDisabling this settings will globally ignore any requests to lock moons behind story progressions inlcuding LMU's own Vanilla Story progression.");
+            LMUStoryProgression = GetConfigValue("6.6 - Story Progression", "Vanilla Story Progression", false, "Enable to lock the two hidden vanilla moons behind story progression. To release the lock for Artifice you have to land three times on Adamance, for Embrion you have to scan an old bird. After completing these tasks the moons will be available (for discovery). They will not be hidden.");
 
 
         }

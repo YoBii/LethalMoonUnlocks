@@ -116,6 +116,10 @@ namespace LethalMoonUnlocks {
         /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
         /// </returns>
         public static bool TryReleaseStoryLock (string numberlessPlanetName) {
+            if (!ConfigManager.EnableStoryProgression) {
+                Logger.LogInfo("Received request to release story lock but story locks are ignored by user config.");
+                return false;
+            }
             var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == numberlessPlanetName);
             if (unlock == null || !unlock.StoryUnlock) return false;
             unlock.StoryIsUnlocked = true;
@@ -784,7 +788,9 @@ namespace LethalMoonUnlocks {
             } else {
                 OnCollectStoryLockedMoons -= LMUStoryLocks;
             }
+            if (ConfigManager.EnableStoryProgression) {
             CollectStoryLockedMoons();
+            }
             
             if (ConfigManager.DiscoveryMode) {
                 ShuffleDiscoverable();
