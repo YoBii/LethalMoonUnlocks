@@ -4,7 +4,7 @@
         <AssemblyName>com.xmods.lethalmoonunlocks</AssemblyName>
         <Product>LethalMoonUnlocks</Product>
         <Description>Permanently unlock moons and more</Description>
-        <Version>2.2.0</Version>
+        <Version>2.2.1</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
 
