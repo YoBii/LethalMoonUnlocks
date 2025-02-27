@@ -1,11 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <AssemblyName>LethalMoonUnlocks</AssemblyName>
+        <AssemblyName>com.xmods.lethalmoonunlocks</AssemblyName>
+        <Product>LethalMoonUnlocks</Product>
         <Description>Permanently unlock moons and more</Description>
         <Version>2.2.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
+
+		<PackageId>com.xmods.$(AssemblyName)</PackageId>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<IsPackable>true</IsPackable>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,7 +29,7 @@
 		<PropertyGroup>
 			<CopyToDir>.\release\BepInEx\plugins\</CopyToDir>
 		</PropertyGroup>
-		<Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFiles="$(CopyToDir)\$(ProjectName).dll" />
+		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFiles="$(CopyToDir)\$(AssemblyName).dll" />
 		<Message Text="Copied assembly to $(CopyToDir)" Importance="High" />
 	</Target>
 
