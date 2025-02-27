@@ -8,7 +8,6 @@ using LethalLevelLoader;
 
 namespace LethalMoonUnlocks {
     public class ConfigManager {
-        private static string _configPath = Path.Combine(Paths.ConfigPath, "LethalMoonUnlocks.cfg");
         private static ConfigFile _configFile;
 
         internal static bool ResetWhenFired { get; private set; }
@@ -190,15 +189,22 @@ namespace LethalMoonUnlocks {
             }
         }
 
+        internal static void Initialize(ConfigFile cfg) {
+            string legacyConfigPath = Path.Combine(Paths.ConfigPath, "LethalMoonUnlocks.cfg");
+            if (File.Exists(legacyConfigPath)) {
+                Logger.LogWarning("Legacy config file found. Migrating to default config..");
+                MigrateLegacyConfig(legacyConfigPath, cfg);
+            } else {
+                _configFile = cfg;
+            }
+        }
+
         internal static void RefreshConfig() {
             Logger.LogInfo("Refreshing config..");
-            _configFile = null;
-            EnsureConfigExists();
             RefreshValues();
             if (MoonGroupMatchingCustomDict == null) {
                 MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
             }
-
         }
         internal static Dictionary<string, List<string>> ParseCustomMoonGroups() {
             if (AdvancedPrintMoonNames) {
@@ -238,9 +244,6 @@ namespace LethalMoonUnlocks {
             return customGroups;
         }
         private static void RefreshValues() {
-            // TO DO
-            // - Add min max for Count (e.g. QuotaUnlockCount)
-
             ResetWhenFired = GetConfigValue("1 - General settings", "Reset when fired", true, "Reset your progress when being fired. Unlocks, Discounts, and permanently discovered moons will all be wiped.\n" +
                 "Unlocks, Discounts, Permanently Discovered moons, ..  all of it will persist unless you create a new save.\n" +
                 "The only exception to this option is the base selection of moons in Discovery Mode.");
@@ -494,10 +497,15 @@ namespace LethalMoonUnlocks {
             return _configFile.Bind(section, key, defaultValue, new ConfigDescription(description, range)).Value;
         }
 
-        private static void EnsureConfigExists() {
-            if (_configFile == null) {
-                _configFile = new ConfigFile(_configPath, true);
-            }
+        private static void MigrateLegacyConfig(string legacyConfigPath, ConfigFile cfg) {
+            File.Copy(legacyConfigPath, Path.Combine(Paths.ConfigPath, PluginInfo.PLUGIN_GUID + ".cfg"), true);
+            _configFile = cfg;
+            _configFile.Reload();
+            RefreshValues();
+            Logger.LogInfo("Legacy configuration migrated. Renaming legacy config file..");
+            // Keep a backup around
+            File.Copy(legacyConfigPath, Path.Combine(Paths.ConfigPath, PluginInfo.PLUGIN_GUID + ".cfg.legacy"), true);
+            File.Delete(legacyConfigPath);
         }
     }
 }

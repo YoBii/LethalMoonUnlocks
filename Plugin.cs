@@ -80,6 +80,8 @@ namespace LethalMoonUnlocks
 
             SceneManager.sceneUnloaded += AfterGameInit;
 
+            ConfigManager.Initialize(Config);
+
             Logger.LogInfo($"LethalMoonUnlocks " + PluginInfo.PLUGIN_VERSION + " initialized!");
             _loaded = true;
         }
