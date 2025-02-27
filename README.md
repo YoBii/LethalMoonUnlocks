@@ -420,6 +420,18 @@ Default moons will be set to the cheapest discovered moon in each constellation.
 
 Independent of Discovery Mode, you have the option to override the constellation prices with that of the cheapest (currently discovered) moon, which will consequently also apply unlocks, discounts, and sales to constellations.
 
+#### Wesley's Moons / JLL story progression (Story Locks)
+LMU introduced a **Story Lock** feature that works together with JLL.  
+Any moons using JLL to unlock moons by performing certain actions are implicitly using it when LMU is present.  
+
+By default LMU will handle these moons as expected, only making them available after their trigger was activated.  
+In discovery mode this means they will be added to the pool of discoverable moons once that happened. 
+
+LMU also added its own Vanilla story progression in which you'll need to perform certain actions to gain access to **Embrion** and **Artifice**.  
+Spoilers in the configuration file.
+
+You can globally disable **Story Locks** in the advanced configuration section which will handle story moons like any regular moon. 
+
 #### TerminalFormatter
 Tags are shown in TerminalFormatter moons node. Thanks @mrov!
 
