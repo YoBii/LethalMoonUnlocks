@@ -13,7 +13,10 @@ LethalMoonUnlocks gives players the power to customize their moon unlocking expe
 - **Random Moon Sales**: Enjoy spontaneous sales on moon prices.
 - **Terminal Tags**: Display extra information in the moon catalog (you can toggle this on or off).
 - **Custom Moon Groups**: Organize moons into groups.
-- **Compatibility**: Integrates with [**LethalConstellations**](https://thunderstore.io/c/lethal-company/p/darmuh/Lethal_Constellations/) and other mods.
+- **Compatibility**: Integrates with..
+	- [**LethalConstellations**](https://thunderstore.io/c/lethal-company/p/darmuh/Lethal_Constellations/) 
+	- [**Wesley's Moons**](https://thunderstore.io/c/lethal-company/p/Magic_Wesley/Wesleys_Moons/) story progression (and other moons using JLL)
+	- and more.
 - **Extensive Configuration**: Offers a wide variety of setups - your suggestions are welcome!
 
 LethalMoonUnlocks is a great addition to modpacks suffering from paradox of choice because you just can't stop yourself from adding more custom moons. I know who you are. You're me :)
