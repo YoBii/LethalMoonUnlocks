@@ -109,20 +109,33 @@ namespace LethalMoonUnlocks {
         /// <br>When you would otherwise unhide and unlock your moon via LLL call this method instead.</br>
         /// </summary>
         /// <param name="numberlessPlanetName">The name of the moon to release from story locked state.</param>
+        /// <param name="displayAlert">Whether to display an in-game alert vaguely indicating progress was made</param>
         /// <returns>
         /// <c>true</c> if the moon was found.
         /// <br></br>
         /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
         /// </returns>
-        public static bool TryReleaseStoryLock (string numberlessPlanetName) {
+        public static bool TryReleaseStoryLock (string numberlessPlanetName, bool displayAlert=false) {
             if (!ConfigManager.EnableStoryProgression) {
                 Logger.LogInfo("Received request to release story lock but story locks are ignored by user config.");
                 return false;
             }
             var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == numberlessPlanetName);
-            if (unlock == null || !unlock.StoryUnlock) return false;
+            if (unlock == null) {
+                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name was not found!");
+                return false;
+            } else if (!unlock.StoryUnlock) {
+                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not desiganted as story lock!");
+                return false;
+            }
             unlock.StoryIsUnlocked = true;
             Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
+            Instance?.IterateUnlocks();
+            NetworkManager.Instance?.ServerSendUnlockables(Instance?.Unlocks);
+            if (displayAlert) {
+                NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Incoming transmission! Decoding location data...", Key = "LMU_StoryLockReleasedGeneric" });
+                NetworkManager.Instance?.ServerSendAlertQueueEvent();
+            }
             return true;
         }
 
@@ -353,17 +366,17 @@ namespace LethalMoonUnlocks {
             } else if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == 0 && ConfigManager.DiscoveryMode) {
                 Logger.LogInfo($"New day is last day of the quota! Not shuffling.");
                 if (ConfigManager.AutoRerouteToCompany) {
-                var company = AllLevels.Where(level => level.NumberlessPlanetName == "Gordion").FirstOrDefault();
-                if (company == null) {
-                    Logger.LogError($"Couldn't find company level!");
-                } else if (LevelManager.CurrentExtendedLevel != company) {
-                    Logger.LogInfo($"Rerouting ship to company!");
-                    // wait a bit or the level change fails
-                    DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(company.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
-                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
-                } else {
-                    Logger.LogInfo($"Already at company. No need to reroute.");
-                }
+                    var company = AllLevels.Where(level => level.NumberlessPlanetName == "Gordion").FirstOrDefault();
+                    if (company == null) {
+                        Logger.LogError($"Couldn't find company level!");
+                    } else if (LevelManager.CurrentExtendedLevel != company) {
+                        Logger.LogInfo($"Rerouting ship to company!");
+                        // wait a bit or the level change fails
+                        DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(company.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
+                    } else {
+                        Logger.LogInfo($"Already at company. No need to reroute.");
+                    }
                 }
             } else {
                 // NEW DAY - NOT NEW QUOTA
@@ -797,7 +810,7 @@ namespace LethalMoonUnlocks {
                 OnCollectStoryLockedMoons -= LMUStoryLocks;
             }
             if (ConfigManager.EnableStoryProgression) {
-            CollectStoryLockedMoons();
+                CollectStoryLockedMoons();
             }
             
             if (ConfigManager.DiscoveryMode) {
