@@ -109,13 +109,12 @@ namespace LethalMoonUnlocks {
         /// <br>When you would otherwise unhide and unlock your moon via LLL call this method instead.</br>
         /// </summary>
         /// <param name="numberlessPlanetName">The name of the moon to release from story locked state.</param>
-        /// <param name="displayAlert">Whether to display an in-game alert vaguely indicating progress was made</param>
         /// <returns>
         /// <c>true</c> if the moon was found.
         /// <br></br>
         /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
         /// </returns>
-        public static bool TryReleaseStoryLock (string numberlessPlanetName, bool displayAlert=false) {
+        public static bool TryReleaseStoryLock (string numberlessPlanetName) {
             if (!ConfigManager.EnableStoryProgression) {
                 Logger.LogInfo("Received request to release story lock but story locks are ignored by user config.");
                 return false;
@@ -132,10 +131,39 @@ namespace LethalMoonUnlocks {
             Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
             Instance?.IterateUnlocks();
             NetworkManager.Instance?.ServerSendUnlockables(Instance?.Unlocks);
-            if (displayAlert) {
-                NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Incoming transmission! Decoding location data...", Key = "LMU_StoryLockReleasedGeneric" });
-                NetworkManager.Instance?.ServerSendAlertQueueEvent();
+            return true;
+        }
+
+        /// <summary>
+        /// Release story lock of your moon allowing LMU to handle it like any other i.e. add it to moon catalog, etc..
+        /// <br>When you would otherwise unhide and unlock your moon via LLL call this method instead.</br>
+        /// <br>Also display a generic alert.</br>
+        /// </summary>
+        /// <param name="numberlessPlanetName">The name of the moon to release from story locked state.</param>
+        /// <returns>
+        /// <c>true</c> if the moon was found.
+        /// <br></br>
+        /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
+        /// </returns>
+        public static bool TryReleaseStoryLockWithAlert (string numberlessPlanetName) {
+            if (!ConfigManager.EnableStoryProgression) {
+                Logger.LogInfo("Received request to release story lock but story locks are ignored by user config.");
+                return false;
             }
+            var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == numberlessPlanetName);
+            if (unlock == null) {
+                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name was not found!");
+                return false;
+            } else if (!unlock.StoryUnlock) {
+                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not desiganted as story lock!");
+                return false;
+            }
+            unlock.StoryIsUnlocked = true;
+            Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
+            Instance?.IterateUnlocks();
+            NetworkManager.Instance?.ServerSendUnlockables(Instance?.Unlocks);
+            NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Incoming transmission! Decoding location data...", Key = "LMU_StoryLockReleasedGeneric" });
+            NetworkManager.Instance?.ServerSendAlertQueueEvent();
             return true;
         }
 
