@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 
 namespace LethalMoonUnlocks
 {
-    [BepInPlugin("com.xmods.lethalmoonunlocks", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin(PluginMetadata.PLUGIN_GUID, PluginMetadata.PLUGIN_NAME, PluginMetadata.PLUGIN_VERSION)]
     [BepInDependency("imabatby.lethallevelloader", "1.4.8")]
     [BepInDependency("LethalNetworkAPI", "3.3.2")]
     [BepInDependency(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]

@@ -498,13 +498,13 @@ namespace LethalMoonUnlocks {
         }
 
         private static void MigrateLegacyConfig(string legacyConfigPath, ConfigFile cfg) {
-            File.Copy(legacyConfigPath, Path.Combine(Paths.ConfigPath, PluginInfo.PLUGIN_GUID + ".cfg"), true);
+            File.Copy(legacyConfigPath, Path.Combine(Paths.ConfigPath, PluginMetadata.PLUGIN_GUID + ".cfg"), true);
             _configFile = cfg;
             _configFile.Reload();
             RefreshValues();
             Logger.LogInfo("Legacy configuration migrated. Renaming legacy config file..");
             // Keep a backup around
-            File.Copy(legacyConfigPath, Path.Combine(Paths.ConfigPath, PluginInfo.PLUGIN_GUID + ".cfg.legacy"), true);
+            File.Copy(legacyConfigPath, Path.Combine(Paths.ConfigPath, PluginMetadata.PLUGIN_GUID + ".cfg.legacy"), true);
             File.Delete(legacyConfigPath);
         }
     }
