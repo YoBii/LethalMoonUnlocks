@@ -137,7 +137,7 @@ namespace LethalMoonUnlocks {
         /// <summary>
         /// Release story lock of your moon allowing LMU to handle it like any other i.e. add it to moon catalog, etc..
         /// <br>When you would otherwise unhide and unlock your moon via LLL call this method instead.</br>
-        /// <br>Also display a generic alert.</br>
+        /// <br>Also display a generic alert message.</br>
         /// </summary>
         /// <param name="numberlessPlanetName">The name of the moon to release from story locked state.</param>
         /// <returns>
@@ -145,7 +145,7 @@ namespace LethalMoonUnlocks {
         /// <br></br>
         /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
         /// </returns>
-        public static bool TryReleaseStoryLockWithAlert (string numberlessPlanetName) {
+        public static bool TryReleaseStoryLockShowAlert (string numberlessPlanetName) {
             if (!ConfigManager.EnableStoryProgression) {
                 Logger.LogInfo("Received request to release story lock but story locks are ignored by user config.");
                 return false;
