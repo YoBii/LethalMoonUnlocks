@@ -4,7 +4,7 @@
         <AssemblyName>LethalMoonUnlocks</AssemblyName>
         <Product>LethalMoonUnlocks</Product>
         <Description>Permanently unlock moons and more</Description>
-        <Version>2.2.3</Version>
+        <Version>2.3.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
 
@@ -32,6 +32,12 @@
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFiles="$(CopyToDir)\$(AssemblyName).dll" />
 		<Message Text="Copied assembly to $(CopyToDir)" Importance="High" />
 	</Target>
+
+	<ItemGroup>
+	  <Compile Remove="LethalConstellationsExtension\**" />
+	  <EmbeddedResource Remove="LethalConstellationsExtension\**" />
+	  <None Remove="LethalConstellationsExtension\**" />
+	</ItemGroup>
 
 	<ItemGroup>
         <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />

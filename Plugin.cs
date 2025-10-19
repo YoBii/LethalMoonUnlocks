@@ -7,7 +7,9 @@ using LethalMoonUnlocks.Util;
 using LethalNetworkAPI.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,7 +17,7 @@ using UnityEngine.SceneManagement;
 namespace LethalMoonUnlocks
 {
     [BepInPlugin(PluginMetadata.PLUGIN_GUID, PluginMetadata.PLUGIN_NAME, PluginMetadata.PLUGIN_VERSION)]
-    [BepInDependency("imabatby.lethallevelloader", "1.4.8")]
+    [BepInDependency("imabatby.lethallevelloader", "1.4.11")]
     [BepInDependency("LethalNetworkAPI", "3.3.2")]
     [BepInDependency(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
@@ -113,7 +115,6 @@ namespace LethalMoonUnlocks
                 Logger.LogInfo("LethalConstellations found! Enabling compatibility..");
                 LoadLethalConstellationsExtension();
                 LethalConstellationsPresent = true;
-                LethalConstellationsExtension = new LethalConstellationsExtension();
             }
             // darmuhsTerminalStuff (MoonsPlus)
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID)) {
