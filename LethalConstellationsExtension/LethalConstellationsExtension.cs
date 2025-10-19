@@ -1,16 +1,16 @@
 ﻿using LethalConstellations.PluginCore;
+using LethalMoonUnlocks;
 using LethalMoonUnlocks.Util;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace LethalMoonUnlocks.Compatibility {
-    internal class LethalConstellationsExtension {
-        internal LethalConstellationsExtension() {
+    public class LethalConstellationsExtension : ILethalConstellationsExtension {
+        public LethalConstellationsExtension() {
             LethalConstellations.EventStuff.NewEvents.RouteConstellationSuccess.AddListener(OnConstellationBought);
         }
 
-        internal void ApplyUnlocks() {
+        public void ApplyUnlocks() {
             if (ConfigManager.DiscoveryMode) {
                 ApplyVisibility();
                 ApplyDefaultMoons();
@@ -25,7 +25,7 @@ namespace LethalMoonUnlocks.Compatibility {
             }
         }
 
-        internal string GetConstellationName(LMUnlockable unlock) {
+        public string GetConstellationName(LMUnlockable unlock) {
             ClassMapper constellation = Collections.ConstellationStuff.Where(constellation => constellation.constelMoons.Any(moon => moon == unlock.Name)).FirstOrDefault();
             if (constellation != null) {
                 return constellation.consName;
@@ -33,7 +33,7 @@ namespace LethalMoonUnlocks.Compatibility {
             return string.Empty;
         }
 
-        internal List<LMUnlockable> GetConstellationMatchesForMoon(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch) {
+        public List<LMUnlockable> GetConstellationMatchesForMoon(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch) {
             ClassMapper constellation = Collections.ConstellationStuff.Where(con => con.constelMoons.Any(moon => moon == matchingUnlock.Name)).FirstOrDefault();
             List<LMUnlockable> constellationMatches = new List<LMUnlockable>();
             if (constellation != null) {
@@ -47,7 +47,7 @@ namespace LethalMoonUnlocks.Compatibility {
             return constellationMatches;
         }
 
-        internal LMGroup GetCheapestUndiscoveredConstellation() {
+        public LMGroup GetCheapestUndiscoveredConstellation() {
             LMGroup group = new LMGroup();
             foreach (var constellation in Collections.ConstellationStuff.OrderBy(c => c.constelPrice)) {
                 Logger.LogInfo($"Got cheapest constellation: {constellation.consName}");
@@ -101,9 +101,9 @@ namespace LethalMoonUnlocks.Compatibility {
         }
 
         private bool AllAvailableConstellationsBought() {
-            if (Collections.ConstellationStuff.Any(c => !c.isHidden && !c.isLocked && c.buyOnce &&!c.oneTimePurchase))
+            if (Collections.ConstellationStuff.Any(c => !c.isHidden && !c.isLocked && c.buyOnce && !c.oneTimePurchase))
                 return false;
-            else 
+            else
                 return true;
         }
 

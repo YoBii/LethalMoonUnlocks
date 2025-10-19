@@ -30,7 +30,7 @@ namespace LethalMoonUnlocks
         internal static bool LethalConstellationsPresent = false;
         internal static bool darmuhsTerminalStuffPresent = false;
         internal static bool WeatherTweaksPresent = false;
-        internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
+        internal static ILethalConstellationsExtension LethalConstellationsExtension { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
 
@@ -111,6 +111,7 @@ namespace LethalMoonUnlocks
             // LethalConstellations
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID)) {
                 Logger.LogInfo("LethalConstellations found! Enabling compatibility..");
+                LoadLethalConstellationsExtension();
                 LethalConstellationsPresent = true;
                 LethalConstellationsExtension = new LethalConstellationsExtension();
             }
@@ -141,6 +142,30 @@ namespace LethalMoonUnlocks
 
             // Unload this
             SceneManager.sceneUnloaded -= AfterGameInit;
+        }
+
+        private void LoadLethalConstellationsExtension() {
+            try {
+                string assemblyPath = Path.Combine(Path.GetDirectoryName(Info.Location), "LethalConstellationsExtension.dll");
+
+                if (!File.Exists(assemblyPath)) {
+                    Logger.LogError($"Failed to load LethalConstellations compatibility from {assemblyPath}!");
+                    return;
+                }
+
+                Assembly assembly = Assembly.LoadFrom(assemblyPath);
+                Type type = assembly.GetType("LethalMoonUnlocks.Compatibility.LethalConstellationsExtension");
+
+                if (type != null && typeof(ILethalConstellationsExtension).IsAssignableFrom(type)) {
+                    LethalConstellationsExtension = (ILethalConstellationsExtension)Activator.CreateInstance(type);
+                    Logger.LogInfo("Successfully loaded LethalConstellations compatibility layer");
+                } else {
+                    throw new TypeLoadException($"Type LethalConstellationsExtension not found or doesn't implement ILethalConstellationsExtension");
+                }
+            } catch (Exception ex) {
+                Logger.LogError($"Failed to load LethalConstellations compatibility due to {ex}");
+                LethalConstellationsExtension = null;
+            }
         }
 
         internal static float GetDiscountRate(int discount_number) {
