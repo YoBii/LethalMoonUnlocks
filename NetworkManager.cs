@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEngine.UIElements;
 
 namespace LethalMoonUnlocks {
-    internal class NetworkManager {
+    public class NetworkManager {
         internal NetworkManager() {
             if (Instance == null) {
                 Instance = this;
@@ -24,7 +24,7 @@ namespace LethalMoonUnlocks {
 
             Logger.LogInfo($"NetworkManager created.");
         }
-        internal static NetworkManager Instance { get; private set; }
+        public static NetworkManager Instance { get; private set; }
 
         private static LNetworkMessage<List<LMUnlockable>> UnlockablesMessage;
         private static LNetworkMessage<string> BuyMoonMessage;
@@ -33,7 +33,7 @@ namespace LethalMoonUnlocks {
         private static LNetworkMessage<Notification> AlertMessage;
         private static LNetworkEvent SendAlertQueueEvent;
 
-        internal bool IsServer() {
+        public bool IsServer() {
             return Unity.Netcode.NetworkManager.Singleton.IsServer;
         }
         internal void ServerSendUnlockables(List<LMUnlockable> unlockables, ulong client_id = 0) {
@@ -46,7 +46,7 @@ namespace LethalMoonUnlocks {
                 UnlockablesMessage.SendClients(unlockables);
             }
         }
-        internal void ServerSendAlertMessage(Notification alert) {
+        public void ServerSendAlertMessage(Notification alert) {
             if (!IsServer()) return;
             AlertMessage.SendClients(alert);
         }
@@ -54,7 +54,7 @@ namespace LethalMoonUnlocks {
             if (!IsServer()) return;
             SendAlertQueueEvent.InvokeClients();
         }
-        internal void ClientBuyMoon(string moon) {
+        public void ClientBuyMoon(string moon) {
             if (IsServer()) return;
             Logger.LogInfo($"Sending buy message to host..");
             BuyMoonMessage.SendServer(moon);

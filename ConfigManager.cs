@@ -74,7 +74,7 @@ namespace LethalMoonUnlocks {
         private static int _quotaFullDiscountCountMax;
         internal static int QuotaFullDiscountMaxCount { get; private set; }
         internal static int QuotaFullDiscountMaxPrice { get; private set; }
-        internal static bool DiscoveryMode { get; private set; }
+        public static bool DiscoveryMode { get; private set; }
         private static string DiscoveryWhitelist { get; set; }
         internal static List<string> DiscoveryWhitelistMoons {
             get {
@@ -172,7 +172,7 @@ namespace LethalMoonUnlocks {
         internal static bool PreferLQRisk { get; private set; }
         internal static bool MalfunctionsNavigation {  get; private set; }
         internal static bool AlertMessageQueueing {  get; private set; }
-        internal static bool LethalConstellationsOverridePrice {  get; private set; }
+        public static bool LethalConstellationsOverridePrice {  get; private set; }
 
         internal static bool OverrideHidden { get; private set; }
         private static string OverrideHiddenList { get; set; }

@@ -10,9 +10,9 @@ using UnityEngine;
 namespace LethalMoonUnlocks {
     [Serializable]
     [ES3Serializable]
-    internal class LMUnlockable {
-        [ES3NonSerializable] [NonSerialized] internal ExtendedLevel ExtendedLevel;
-        [SerializeField] [ES3Serializable] internal string Name { get; private set; }
+    public class LMUnlockable {
+        [ES3NonSerializable] [NonSerialized] public ExtendedLevel ExtendedLevel;
+        [SerializeField] [ES3Serializable] public string Name { get; private set; }
         [ES3NonSerializable] internal int OriginalPrice { get; private set; }
         internal bool OriginallyLocked { get {
                 if (ConfigManager.OverrideLocked) return ConfigManager.OverrideLockedListMoons.Contains(Name);
@@ -38,7 +38,7 @@ namespace LethalMoonUnlocks {
         [SerializeField] [ES3Serializable] internal int VisitCount { get; set; }
         [SerializeField] [ES3Serializable] internal int FreeVisitCount { get; set; }
         [SerializeField] [ES3Serializable] internal int LandingCount { get; set; }
-        [SerializeField] [ES3Serializable] internal bool Discovered { get; set; }
+        [SerializeField] [ES3Serializable] public bool Discovered { get; set; }
         [SerializeField] [ES3Serializable] internal bool NewDiscovery { get; set; }
         [SerializeField] [ES3Serializable] internal bool DiscoveredOnce { get; set; }
         [SerializeField] [ES3Serializable] internal bool PermanentlyDiscovered { get; set; }
@@ -206,7 +206,7 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        internal void Unlock() {
+        public void Unlock() {
             ExtendedLevel.IsRouteLocked = false;
             if (RemainingHidden) {
                 ExtendedLevel.IsRouteHidden = true;
@@ -215,7 +215,7 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        internal void LockAndHide() {
+        public void LockAndHide() {
             ExtendedLevel.IsRouteHidden = true;
             ExtendedLevel.IsRouteLocked = true;
         }
@@ -444,7 +444,7 @@ namespace LethalMoonUnlocks {
                     groupTag = customGroupsDict.Keys.First();
                 }
                 tags = AddTagToPreviewText($"[{groupTag.Trim().ToUpper()}]", tags);
-            } else if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && ConfigManager.ShowTagGroups) {
+            } else if (Plugin.LethalConstellationsPresent && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && ConfigManager.ShowTagGroups) {
                 tags = AddTagToPreviewText($"[{Plugin.LethalConstellationsExtension.GetConstellationName(this).ToUpper()}]", tags);
             } else if (ConfigManager.MoonGroupMatchingMethod == "Tag") {
                 var contentTags = ExtendedLevel.ContentTags;

@@ -10,12 +10,12 @@ using UnityEngine;
 namespace LethalMoonUnlocks {
     public class UnlockManager {
 
-        internal static UnlockManager Instance { get; private set; }
+        public static UnlockManager Instance { get; private set; }
         internal static string LogFormatString { get; } = "| {0, -20} | {1, 6} | {2, 7} | {3, 7} | {4, 8} | {5, 11} | {6, 5} | {7, 12} | {8, 12} | {9, 11} |";
         internal static List<string> LogHeader { get; } = ["Name", "Price", "Bought", "Visits", "Catalog", "Discovered", "Sale", "Orig. Price", "Orig. State", "Story Lock"];
         internal Terminal Terminal { get; set; }
         internal List<ExtendedLevel> AllLevels { get; private set; } = PatchedContent.ExtendedLevels;
-        internal List<LMUnlockable> Unlocks { get; set; } = new List<LMUnlockable>();
+        public List<LMUnlockable> Unlocks { get; set; } = new List<LMUnlockable>();
         internal int QuotaCount { get; set; } = 0;
         internal int DayCount { get; set; } = 0;
         internal int QuotaUnlocksCount { get; set; } = 0;
@@ -245,13 +245,13 @@ namespace LethalMoonUnlocks {
             foreach (var unlock in Unlocks) {
                 unlock.ApplyState();
             }
-            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
+            if (Plugin.LethalConstellationsPresent) {
                 Plugin.LethalConstellationsExtension.ApplyUnlocks();
             }
             LogUnlockables(false);
         }
 
-        internal void BuyMoon(string moon) {
+        public void BuyMoon(string moon) {
             Logger.LogInfo($"{moon}: Moon was bought!");
             var unlock = Unlocks.Where(unlock => unlock.Name == moon).FirstOrDefault();
             if (ConfigManager.DiscountMode) {
@@ -784,7 +784,7 @@ namespace LethalMoonUnlocks {
                         break;
                     }
                 case "LethalConstellations":
-                    if (!Plugin.LethalConstellationsPresent || Plugin.LethalConstellationsExtension == null) break;
+                    if (!Plugin.LethalConstellationsPresent) break;
                     string constellationName = Plugin.LethalConstellationsExtension.GetConstellationName(matchingUnlock);
                     List<LMUnlockable> constellationMatches = Plugin.LethalConstellationsExtension.GetConstellationMatchesForMoon(matchingUnlock, unlocksToMatch);
                     if (constellationMatches.Count > 0) {

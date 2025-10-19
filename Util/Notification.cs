@@ -5,19 +5,19 @@ using UnityEngine;
 
 namespace LethalMoonUnlocks.Util {
     [Serializable]
-    internal class Notification {
-        internal Notification() { }
+    public class Notification {
+        public Notification() { }
         [SerializeField]
-        internal string Header { get; init; } = "";
+        public string Header { get; init; } = "";
         [SerializeField]
-        internal string Text { get; init; } = "";
+        public string Text { get; init; } = "";
         [SerializeField]
-        internal bool IsWarning { get; init; } = false;
+        public bool IsWarning { get; init; } = false;
         [SerializeField]
-        internal bool UseSave { get; init; } = false;
+        public bool UseSave { get; init; } = false;
         [SerializeField]
-        internal string Key { get; init; } = "LMU_";
+        public string Key { get; init; } = "LMU_";
         [SerializeField]
-        internal string ExceptWhenKey { get; init; } = "";
+        public string ExceptWhenKey { get; init; } = "";
     }
 }
