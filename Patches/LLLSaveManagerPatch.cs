@@ -31,6 +31,7 @@ namespace LethalMoonUnlocks.Patches {
         private static void Postfix() {
             foreach (var unlock in UnlockManager.Instance.Unlocks) {
                 unlock.ApplyState();
+                unlock.ApplyVisibility();
             }
         }
     }

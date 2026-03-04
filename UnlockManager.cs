@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using Dawn;
+using Dawn.Utils;
+using HarmonyLib;
 using LethalLevelLoader;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
@@ -43,12 +45,12 @@ namespace LethalMoonUnlocks {
         }
         internal List<LMUnlockable> DynamicFreeMoons {
             get {
-                return Unlocks.Where(unlock => unlock.ExtendedLevel.RoutePrice == 0).ToList();
+                return Unlocks.Where(unlock => unlock.RoutePrice == 0).ToList();
             }
         }
         internal List<LMUnlockable> PaidMoons {
             get {
-                return Unlocks.Where(unlock => unlock.ExtendedLevel.RoutePrice > 0).ToList();
+                return Unlocks.Where(unlock => unlock.RoutePrice > 0).ToList();
             }
         }
         internal List<LMUnlockable> DiscoveryCandidates {
@@ -67,12 +69,12 @@ namespace LethalMoonUnlocks {
         }
         internal List<LMUnlockable> DiscoveryDynamicFreeCandidates {
             get {
-                return DiscoveryCandidates.Where(candidate => candidate.ExtendedLevel.RoutePrice == 0).ToList();
+                return DiscoveryCandidates.Where(candidate => candidate.RoutePrice == 0).ToList();
             }
         }
         internal List<LMUnlockable> DiscoveryPaidCandidates {
             get {
-                return DiscoveryCandidates.Where(candidate => candidate.ExtendedLevel.RoutePrice > 0).ToList();
+                return DiscoveryCandidates.Where(candidate => candidate.RoutePrice > 0).ToList();
             }
         }
 
@@ -195,7 +197,32 @@ namespace LethalMoonUnlocks {
             } else {
                 TerminalManager.onBeforePreviewInfoTextAdded -= ReplaceTerminalPreview;
             }
+        }
 
+        internal void InitializeUnlocksDawnLib() {
+            if (LethalContent.Moons == null || LethalContent.Moons.Count == 0) {
+                Logger.LogFatal($"Unable to find levels!");
+                return;
+            }
+            Logger.LogInfo("Initializing LMUnlockables from DawnLib registry..");
+            foreach (var moon in LethalContent.Moons.Values) {
+                if (moon == null
+                    || moon.Key.Key == "test"
+                    || moon.GetNumberlessPlanetName() == "Liquidation" || moon.GetNumberlessPlanetName() == "Gordion") {
+                    string levelName = string.Empty;
+                    if (moon != null && moon.Level)
+                        levelName = ": " + moon.GetNumberlessPlanetName();
+                    Logger.LogDebug($"Skipping level {levelName}..");
+                    continue;
+                }
+                var unlock = Unlocks.FirstOrDefault(unlock => unlock.Name == moon.GetNumberlessPlanetName());
+                if (unlock == null) {
+                    Logger.LogWarning($"Got moon {moon.GetNumberlessPlanetName()} from DawnLib registry that we didn't previously initialize from LLL. Will probably cause errors or misbehaviour.");
+                    Unlocks.Add(new LMUnlockable(moon));
+                }
+            }
+            Unlocks = Unlocks.OrderBy(unlock => unlock.OriginalPrice).ToList();
+            LogUnlockables(true);
         }
 
         internal void ImportUnlockableData(List<LMUnlockable> newData) {
@@ -244,6 +271,7 @@ namespace LethalMoonUnlocks {
         internal void ApplyUnlocks() {
             foreach (var unlock in Unlocks) {
                 unlock.ApplyState();
+                unlock.ApplyVisibility();
             }
             if (Plugin.LethalConstellationsPresent) {
                 Plugin.LethalConstellationsExtension.ApplyUnlocks();
@@ -437,7 +465,7 @@ namespace LethalMoonUnlocks {
         }
 
         internal void OnArrive() {
-            var unlock = Unlocks.Where(unlock => unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName).FirstOrDefault();
+            var unlock = Unlocks.FirstOrDefault(unlock => unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName);
             if (unlock != null) {
                 Logger.LogInfo($"Visiting moon {unlock.Name}!");
                 unlock.VisitMoon();
@@ -446,7 +474,7 @@ namespace LethalMoonUnlocks {
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
         }
         internal void OnLanding(SelectableLevel level) {
-            var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.SelectableLevel.levelID == level.levelID).FirstOrDefault();
+            var unlock = Unlocks.FirstOrDefault(unlock => unlock.ExtendedLevel.SelectableLevel.levelID == level.levelID);
             if (unlock != null) {
                 unlock.Land();
             }
@@ -560,7 +588,7 @@ namespace LethalMoonUnlocks {
                 quotaUnlocks = quotaUnlocks.Where(unlock => unlock.Discovered == true || unlock.PermanentlyDiscovered == true).ToList();
             }
             if (ConfigManager.QuotaUnlockMaxPrice > 0) {
-                quotaUnlocks = quotaUnlocks.Where(moon => moon.ExtendedLevel.RoutePrice <= ConfigManager.QuotaUnlockMaxPrice).ToList();
+                quotaUnlocks = quotaUnlocks.Where(moon => moon.RoutePrice <= ConfigManager.QuotaUnlockMaxPrice).ToList();
             }
             if (ConfigManager.CheapMoonBiasQuotaUnlock) {
                 quotaUnlocks = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaUnlocks, ConfigManager.CheapMoonBiasQuotaUnlockValue), ConfigManager.QuotaUnlockCount);
@@ -591,7 +619,7 @@ namespace LethalMoonUnlocks {
                 quotaDiscounts = quotaDiscounts.Where(unlock => unlock.Discovered || unlock.PermanentlyDiscovered).ToList();
             }
             if (ConfigManager.QuotaDiscountMaxPrice > 0) {
-                quotaDiscounts = quotaDiscounts.Where(moon => moon.ExtendedLevel.RoutePrice <= ConfigManager.QuotaDiscountMaxPrice).ToList();
+                quotaDiscounts = quotaDiscounts.Where(moon => moon.RoutePrice <= ConfigManager.QuotaDiscountMaxPrice).ToList();
             }
 
             if (ConfigManager.CheapMoonBiasQuotaDiscount) {
@@ -619,7 +647,7 @@ namespace LethalMoonUnlocks {
                 quotaFullDiscounts = quotaFullDiscounts.Where(unlock => unlock.Discovered || unlock.PermanentlyDiscovered).ToList();
             }
             if (ConfigManager.QuotaFullDiscountMaxPrice > 0) {
-                quotaFullDiscounts = quotaFullDiscounts.Where(moon => moon.ExtendedLevel.RoutePrice <= ConfigManager.QuotaFullDiscountMaxPrice).ToList();
+                quotaFullDiscounts = quotaFullDiscounts.Where(moon => moon.RoutePrice <= ConfigManager.QuotaFullDiscountMaxPrice).ToList();
             }
             if (ConfigManager.Discounts[ConfigManager.Discounts.Count - 1] < 100) {
                 quotaFullDiscounts = quotaFullDiscounts.Where(unlock => unlock.BuyCount < ConfigManager.DiscountsCount).ToList();
@@ -647,7 +675,7 @@ namespace LethalMoonUnlocks {
         private void NewDayDiscovery() {
             Logger.LogInfo($"New Day Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
 
-            var currentLevelUnlock = Unlocks.Where(unlock => unlock.ExtendedLevel == LevelManager.CurrentExtendedLevel).FirstOrDefault();
+            var currentLevelUnlock = Unlocks.FirstOrDefault(unlock => unlock.ExtendedLevel.NumberlessPlanetName == LevelManager.CurrentExtendedLevel.NumberlessPlanetName);
             List<LMUnlockable> newDayDiscoveries;
             List<LMUnlockable> nddCandidates = DiscoveryCandidates;
             string ndDiscoveryGroupName = "nearby";
@@ -901,7 +929,7 @@ namespace LethalMoonUnlocks {
                 RerouteShipToFreeMoon();
             } else {
                 Logger.LogWarning("All moons would have been hidden from the terminal! Force discovering a free moon..");
-                var unlock = Unlocks.Where(unlock => unlock.ExtendedLevel.RoutePrice == 0).FirstOrDefault();
+                var unlock = Unlocks.Where(unlock => unlock.RoutePrice == 0).FirstOrDefault();
                 if (unlock == null) {
                     Logger.LogWarning("Can't find any free moon to display in moon catalog! You probably want at least one free moon available at all times.. Falling back to a paid moon!");
                     unlock = Unlocks.FirstOrDefault();
