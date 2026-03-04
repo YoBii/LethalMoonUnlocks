@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
+using LethalLevelLoader;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
-using GameNetcodeStuff;
-using HarmonyLib;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -13,12 +14,12 @@ namespace LethalMoonUnlocks.Patches {
     [HarmonyPatch(typeof(PlayerControllerB), "ScrollMouse_performed", typeof(InputAction.CallbackContext))]
     internal class PlayerControllerBPatch {
         private static string CurrentText { get; set; } = "";
-        private static float ScrollAmount = 1 / 4f;
+        private static float _scrollAmount = 1 / 3f;
         private static void ScrollMouse_performed(Scrollbar scrollbar, float scrollDirection) {
             // Perform vanilla scroll if the 'relativeScroll' setting is disabled.
             if (UnlockManager.Instance.Terminal == null || ConfigManager.TerminalScrollAmount < 1) {
                 // Increment scrollbar value by vanilla scroll amount (a third of the page).
-                scrollbar.value += scrollDirection / 4f;
+                scrollbar.value += scrollDirection * _scrollAmount;
                 return;
             }
 
@@ -28,14 +29,15 @@ namespace LethalMoonUnlocks.Patches {
                 CurrentText = UnlockManager.Instance.Terminal.currentText;
 
                 // Calculate relative scroll amount using the number of lines in the current terminal page.
-                int NumberOfLines = CurrentText.Count(c => c.Equals('\n')) + 1;
-                ScrollAmount = ConfigManager.TerminalScrollAmount / (float)NumberOfLines;
+                int numberOfLines = CurrentText.Count(c => c.Equals('\n')) + 1;
+                float numberOfPages = numberOfLines / 25f;
+                _scrollAmount = 1 / (3f * numberOfPages * ConfigManager.TerminalScrollAmount);
 
-                Logger.LogDebug($"Setting terminal scroll amount to '{ScrollAmount}'!");
+                Logger.LogDebug($"Setting terminal scroll amount to '{_scrollAmount}'..");
             }
 
-            // Increment terminal scrollbar value by the relative scroll amount, in the direction given by the mouse wheel input.
-            scrollbar.value += scrollDirection * ScrollAmount;
+            // Increment terminal scrollbar value in the direction given by the mouse wheel input.
+            scrollbar.value += scrollDirection * _scrollAmount;
         }
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {

@@ -460,7 +460,7 @@ namespace LethalMoonUnlocks {
                 "NOTE: With very few moons you might see some ugly line breaks with custom weathers with long names (Meteor Shower).");
             TerminalFontSize = GetConfigValue("6.3 - Terminal", "Terminal font size", 15f, "Customize the Terminal's moon catalog font size.\n" +
                 "NOTE: When using smaller fonts you can increase the maximum tag line width above.", new AcceptableValueRange<float>(8f, 15f));
-            TerminalScrollAmount = GetConfigValue("6.3 - Terminal", "Terminal scroll amount", 0, "Override the Terminal's moon catalog scroll amount. Lines per scroll action. 0 to disable\n" +
+            TerminalScrollAmount = GetConfigValue("6.3 - Terminal", "Terminal scroll amount", 0, "Override the Terminal's moon catalog scroll amount. Increase to scroll by smaller amount / smoother. 1 is vanilla scroll amount but normalized to account for total visible text. 0 to disable\n" +
                 "NOTE: This can help when you have so many moons that some are skipped when scrolling.", new AcceptableValueRange<int>(0, 20));
             TerminalShowRiskWeather = GetConfigValue("6.3 - Terminal", "Terminal show weather in risk preview", false, "Also show the weather when using `preview difficulty`");
 
