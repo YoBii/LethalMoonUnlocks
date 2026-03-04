@@ -1,17 +1,16 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using Dawn;
+using GameNetcodeStuff;
 using HarmonyLib;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Patches;
 using LethalMoonUnlocks.Util;
-using LethalNetworkAPI.Utils;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace LethalMoonUnlocks
@@ -21,18 +20,20 @@ namespace LethalMoonUnlocks
     [BepInDependency("LethalNetworkAPI", "3.3.2")]
     [BepInDependency(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(OpenLib.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(OpenLib.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(WeatherTweaks.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(DawnLib.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         private readonly Harmony _harmony = new(PluginInfo.PLUGIN_GUID);
 
-        internal static Plugin Instance {  get; private set; }
+        internal static Plugin Instance { get; private set; }
         internal static bool LQPresent = false;
         internal static bool LethalConstellationsPresent = false;
         internal static bool darmuhsTerminalStuffPresent = false;
         internal static bool WeatherTweaksPresent = false;
-        internal static ILethalConstellationsExtension LethalConstellationsExtension { get; private set; }
+        internal static bool DawnLibPresent = false; 
+        internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
 
@@ -56,8 +57,8 @@ namespace LethalMoonUnlocks
             _harmony.PatchAll(typeof(Patches.TimeOfDayPatch));
             _harmony.PatchAll(typeof(Patches.HUDManagerPatch));
             _harmony.PatchAll(typeof(Patches.LLLSaveManagerInitPatch));
-
-            Logger.LogInfo("Patching complete."); 
+            
+            Logger.LogInfo("Patching complete.");
             if (!_loaded) Initialize();
         }
 
@@ -127,6 +128,13 @@ namespace LethalMoonUnlocks
                 WeatherTweaksPresent = true;
                 _harmony.PatchAll(typeof(WTCompatibility));
             }
+            // DawnLib
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(DawnLib.PLUGIN_GUID)) {
+                Logger.LogInfo("DawnLib found! Enabling compatibility..");
+                DawnLibPresent = true;
+                _harmony.PatchAll(typeof(DawnLibMoonCataloguePatch));
+                RegisterDawnLibEvent();
+            }
 
             // Refresh config
             ConfigManager.RefreshConfig();
@@ -135,6 +143,11 @@ namespace LethalMoonUnlocks
             if (ConfigManager.TerminalScrollAmount > 0) {
                 Logger.LogInfo("TerminalScrollAmount is set to a positive value! Patching scroll amount..");
                 _harmony.PatchAll(typeof(PlayerControllerBPatch));
+
+                Logger.LogInfo("Unpatching other terminal scroll..");
+                var methodInfo = typeof(PlayerControllerB).GetMethod(nameof(PlayerControllerB.ScrollMouse_performed), BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(InputAction.CallbackContext) }, null);
+                Logger.LogInfo(methodInfo.Name);
+                _harmony.Unpatch(methodInfo, HarmonyPatchType.Prefix, "imabatby.lethallevelloader");
             }
             
             // Create Managers
@@ -145,24 +158,13 @@ namespace LethalMoonUnlocks
             SceneManager.sceneUnloaded -= AfterGameInit;
         }
 
+        private void RegisterDawnLibEvent() {
+            LethalContent.Moons.OnFreeze += () => UnlockManager.InitializeUnlocksDawnLib();
+        }
+
         private void LoadLethalConstellationsExtension() {
             try {
-                string assemblyPath = Path.Combine(Path.GetDirectoryName(Info.Location), "LethalConstellationsExtension.dll");
-
-                if (!File.Exists(assemblyPath)) {
-                    Logger.LogError($"Failed to load LethalConstellations compatibility from {assemblyPath}!");
-                    return;
-                }
-
-                Assembly assembly = Assembly.LoadFrom(assemblyPath);
-                Type type = assembly.GetType("LethalMoonUnlocks.Compatibility.LethalConstellationsExtension");
-
-                if (type != null && typeof(ILethalConstellationsExtension).IsAssignableFrom(type)) {
-                    LethalConstellationsExtension = (ILethalConstellationsExtension)Activator.CreateInstance(type);
-                    Logger.LogInfo("Successfully loaded LethalConstellations compatibility layer");
-                } else {
-                    throw new TypeLoadException($"Type LethalConstellationsExtension not found or doesn't implement ILethalConstellationsExtension");
-                }
+                LethalConstellationsExtension = new LethalConstellationsExtension();
             } catch (Exception ex) {
                 Logger.LogError($"Failed to load LethalConstellations compatibility due to {ex}");
                 LethalConstellationsExtension = null;

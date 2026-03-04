@@ -20,9 +20,16 @@
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
       <DebugType>portable</DebugType>
     </PropertyGroup>
-
-	<PropertyGroup Label="Normalise stack trace file locations">
-		<PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=G:\</PathMap>
+	
+	<!-- Embed Debug Symbols for Easier Debugging -->
+	<PropertyGroup>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>embedded</DebugType>
+		<!--
+        Trim the project path to prevent players from potentially
+        viewing Private Information in stack traces.
+        -->
+		<PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
 	</PropertyGroup>
 
 	<Target Name="CopyAssemblyToRelease" AfterTargets="Build">
@@ -46,6 +53,9 @@
         <PackageReference Include="UnityEngine.Modules" Version="2022.3.9" IncludeAssets="compile" />
 		<PackageReference Include="Xilophor.LethalNetworkAPI" Version="3.*" PrivateAssets="all" />
 		<PackageReference Include="LethalCompany.GameLibs.Steam" Version="67.0.0-ngd.0" Publicize="true" />
+		<PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" />
+		<PackageReference Include="TeamXiaolan.DawnLib" Version="0.6.*" PrivateAssets="all" Publicize="true" />
+		<PackageReference Include="TeamXiaolan.DawnLib.DuskMod" Version="0.6.*" PrivateAssets="all" Publicize="true" />
 		<!-- <PackageReference Include="IAmBatby.LethalLevelLoader" Version="1.4.*" /> -->
     </ItemGroup>
 
@@ -73,7 +83,7 @@
 			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-LethalConstellations\0.2.3\BepInEx\plugins\darmuh-LethalConstellations\LethalConstellations.dll</HintPath>
 		</Reference>
 		<Reference Include="LethalLevelLoader">
-			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\IAmBatby-LethalLevelLoader\1.4.8\BepInEx\plugins\IAmBatby-LethalLevelLoader\LethalLevelLoader.dll</HintPath>
+			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\IAmBatby-LethalLevelLoader\1.6.8\BepInEx\plugins\IAmBatby-LethalLevelLoader\LethalLevelLoader.dll</HintPath>
 		</Reference>
 		<Reference Include="darmuhsTerminalStuff">
 			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-darmuhsTerminalStuff\3.8.5\BepInEx\plugins\darmuh-darmuhsTerminalStuff\darmuhsTerminalStuff.dll</HintPath>
