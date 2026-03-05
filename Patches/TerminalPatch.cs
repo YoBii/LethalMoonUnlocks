@@ -37,6 +37,17 @@ namespace LethalMoonUnlocks.Patches {
                 }
             }
         }
+        
+        [HarmonyPatch("AttemptLoadCreatureFileNode")]
+        [HarmonyPrefix]
+        private static void AttemptLoadCreatureFileNodePrefix(TerminalNode node) {
+            Logger.LogDebug($"Loading bestiary node! Name: {node.creatureName}, FileID: {node.creatureFileID}");
+            if (node.creatureName == "Old birds" && UnlockManager.Instance.Terminal.newlyScannedEnemyIDs.Contains(
+                                                     node.creatureFileID)) {
+                UnlockManager.TryReleaseStoryLockShowAlert("Embrion");
+            }
+        }
+
 
         [HarmonyPatch("LoadNewNodeIfAffordable")]
         [HarmonyPostfix]

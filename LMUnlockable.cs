@@ -179,14 +179,6 @@ namespace LethalMoonUnlocks {
                     NetworkManager.Instance.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Incoming transmission! Decoding location data...", Key = "LMU_StoryLockReleasedArtifice" });
                 }
             }
-            // Embrion condition (old bird id = 18)
-            if (Name == "Embrion" && UnlockManager.Instance.Terminal.scannedEnemyIDs.Contains(18) && !UnlockManager.Instance.Terminal.newlyScannedEnemyIDs.Contains(18)) {
-                if (StoryUnlock && StoryIsUnlocked == false) {
-                    StoryIsUnlocked = true;
-                    Logger.LogInfo($"{Name}: Releasing story lock.. {Name} now available (for discovery).");
-                    NetworkManager.Instance.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Extracting location data from bestiary entry...", Key = "LMU_StoryLockReleasedEmbrion" });
-                }
-            }
         }
 
         internal void ApplyState() {
