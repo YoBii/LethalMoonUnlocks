@@ -157,14 +157,20 @@ namespace LethalMoonUnlocks {
                 Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name was not found!");
                 return false;
             } else if (!unlock.StoryUnlock) {
-                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not desiganted as story lock!");
+                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not designated as story lock!");
                 return false;
             }
             unlock.StoryIsUnlocked = true;
             Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
             Instance?.IterateUnlocks();
             NetworkManager.Instance?.ServerSendUnlockables(Instance?.Unlocks);
-            NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Incoming transmission! Decoding location data...", Key = "LMU_StoryLockReleasedGeneric" });
+            NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Location data detected!\nQueued for processing.", Key = "LMU_StoryLockReleasedGeneric" });
+            if (!ConfigManager.DiscoveryMode) {
+                NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = $"Success! New moon discovered:\n{unlock.ExtendedLevel.SelectableLevel.PlanetName}.", Key = "LMU_StoryLockReleasedGeneric" });
+            }
+            else {
+                NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = $"Destination unreachable! Status: UNKNOWN. Writing location data to backlog...", IsWarning = true, Key = "LMU_StoryLockReleasedGeneric" });
+            }
             NetworkManager.Instance?.ServerSendAlertQueueEvent();
             return true;
         }
