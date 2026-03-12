@@ -224,7 +224,6 @@ namespace LethalMoonUnlocks {
                 var unlock = Unlocks.FirstOrDefault(unlock => unlock.Name == moon.GetNumberlessPlanetName());
                 if (unlock == null) {
                     Logger.LogWarning($"Got moon {moon.GetNumberlessPlanetName()} from DawnLib registry that we didn't previously initialize from LLL. Will probably cause errors or misbehaviour.");
-                    Unlocks.Add(new LMUnlockable(moon));
                 }
             }
             Unlocks = Unlocks.OrderBy(unlock => unlock.OriginalPrice).ToList();
