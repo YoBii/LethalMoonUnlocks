@@ -267,9 +267,6 @@ namespace LethalMoonUnlocks {
             Logger.LogDebug("Iterating states..");
             foreach (var unlock in Unlocks) {
                 unlock.IterateState();
-                if (Plugin.darmuhsTerminalStuffPresent) {
-                    TerminalStuffCompatibility.ApplyAdditionalInfo(unlock);
-                }
             }
         }
 

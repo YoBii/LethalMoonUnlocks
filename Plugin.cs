@@ -9,6 +9,7 @@ using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using TerminalStuff.MoonsTweaks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -19,7 +20,7 @@ namespace LethalMoonUnlocks
     [BepInDependency("imabatby.lethallevelloader", "1.4.11")]
     [BepInDependency("LethalNetworkAPI", "3.3.2")]
     [BepInDependency(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(TerminalStuff.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(OpenLib.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(WeatherTweaks.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(DawnLib.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
@@ -30,7 +31,7 @@ namespace LethalMoonUnlocks
         internal static Plugin Instance { get; private set; }
         internal static bool LQPresent = false;
         internal static bool LethalConstellationsPresent = false;
-        internal static bool darmuhsTerminalStuffPresent = false;
+        internal static bool DarmuhsTerminalStuffPresent = false;
         internal static bool WeatherTweaksPresent = false;
         internal static bool DawnLibPresent = false; 
         internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
@@ -118,9 +119,11 @@ namespace LethalMoonUnlocks
                 LethalConstellationsPresent = true;
             }
             // darmuhsTerminalStuff (MoonsPlus)
-            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(TerminalStuff.Plugin.PluginInfo.PLUGIN_GUID)) {
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("darmuh.TerminalStuff")) {
                 Logger.LogInfo("darmuhsTerminalStuff found! Enabling compatibility..");
-                darmuhsTerminalStuffPresent = true;
+                DarmuhsTerminalStuffPresent = true;
+                RegisterTerminalStuffEvent();
+                _harmony.PatchAll(typeof(TerminalStuffCompatibility));
             }
             // WeatherTweaks
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(WeatherTweaks.PluginInfo.PLUGIN_GUID)) {
@@ -160,6 +163,10 @@ namespace LethalMoonUnlocks
 
         private void RegisterDawnLibEvent() {
             LethalContent.Moons.OnFreeze += () => UnlockManager.InitializeUnlocksDawnLib();
+        }
+
+        private void RegisterTerminalStuffEvent() {
+            MoonsPlus.UpdateMoonsDisplayed.AddListener(TerminalStuffCompatibility.OnUpdateMoonsDisplayed);
         }
 
         private void LoadLethalConstellationsExtension() {

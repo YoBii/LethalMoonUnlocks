@@ -460,39 +460,43 @@ namespace LethalMoonUnlocks {
             return preview;
         }
 
-        internal string BuildShortTagString() {
-            // LMU Tags
+        internal string BuildAdditionalInfoString() {
             string tags = string.Empty;
+            if (ExtendedLevel == LevelManager.CurrentExtendedLevel && ConfigManager.ShowTagInOrbit) {
+                tags = AddTagToPreviewText($"[IN ORBIT]", tags);
+            }
             if (NewDiscovery && ConfigManager.DiscoveryMode && ConfigManager.ShowTagNewDiscovery) {
-                tags = AddTagToPreviewText($"[!]", tags);
+                tags = AddTagToPreviewText($"[NEW]", tags);
             }
             if (LandingCount > 0 && ConfigManager.ShowTagExplored) {
-                tags = AddTagToPreviewText($"[EXPLORED:{LandingCount}]", tags);
+                tags = AddTagToPreviewText($"[LANDINGS:{LandingCount}]", tags);
             } else if (LandingCount == 0 && ConfigManager.ShowTagExplored) {
                 tags = AddTagToPreviewText($"[UNEXPLORED]", tags);
             }
             if (FreeVisitCount > 0 && ConfigManager.UnlockMode && !ConfigManager.DiscountMode && ConfigManager.UnlocksResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                tags = AddTagToPreviewText($"[{ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1}]", tags);
+                tags = AddTagToPreviewText($"[UNLOCK EXPIRES:{ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1}]", tags);
             } else if (FreeVisitCount > 0 && ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                tags = AddTagToPreviewText($"[{ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1}]", tags);
+                tags = AddTagToPreviewText($"[DISCOUNT EXPIRES:{ConfigManager.DiscountsResetAfterVisits - FreeVisitCount + 1}]", tags);
             } else if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                tags = AddTagToPreviewText("[U]", tags);
+                tags = AddTagToPreviewText("[UNLOCKED]", tags);
             } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
                 int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
                 if (discountRate != 100) {
-                    tags = AddTagToPreviewText($"[{discountRate}%]", tags);
+                    tags = AddTagToPreviewText($"[DISCOUNT {discountRate}%]", tags);
                 } else {
-                    tags = AddTagToPreviewText($"[U]", tags);
+                    tags = AddTagToPreviewText($"[FULL DISCOUNT]", tags);
                 }
             }
             if (PermanentlyDiscovered && !ConfigManager.DiscoveryNeverShuffle && ConfigManager.DiscoveryMode && ConfigManager.ShowTagPermanentDiscovery) {
                 if (OriginalPrice == 0 && ConfigManager.PermanentlyDiscoverFreeMoonsOnLanding != 0 || OriginalPrice > 0 && ConfigManager.PermanentlyDiscoverPaidMoonsOnLanding != 0) {
-                    tags = AddTagToPreviewText("[P]", tags);
+                    tags = AddTagToPreviewText("[PINNED]", tags);
                 }
             }
             if (OnSale && SalesRate > 0 && RoutePrice > 0 && ConfigManager.Sales && ConfigManager.ShowTagSale) {
-                tags = AddTagToPreviewText($"[{SalesRate}%]", tags);
+                tags = AddTagToPreviewText($"[SALE {SalesRate}%]", tags);
             }
+
+            tags += "\n";
             return tags;
         }
 
@@ -509,7 +513,7 @@ namespace LethalMoonUnlocks {
             //    tags = AddTagToPreviewText($"[VISITS:{VisitCount}]", tags);
             //}
             if (LandingCount > 0 && ConfigManager.ShowTagExplored) {
-                tags = AddTagToPreviewText($"[EXPLORED:{LandingCount}]", tags);
+                tags = AddTagToPreviewText($"[LANDINGS:{LandingCount}]", tags);
             } else if (LandingCount == 0 && ConfigManager.ShowTagExplored) {
                 tags = AddTagToPreviewText($"[UNEXPLORED]", tags);
             }

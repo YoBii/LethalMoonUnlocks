@@ -28,13 +28,13 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPatch("LoadNewNodeIfAffordable")]
         [HarmonyPrefix]
         private static void TerminalLoadNewNodeIfAffordablePrefix(TerminalNode node) {
-            if (!node) {
+            if (node is null) {
                 Logger.LogFatal("Terminal node in Terminal.LoadNewNodeIfAffordable is null!");
                 return;
             }
             Logger.LogDebug($"Loading new terminal node! Name: {node.name}, ID: {node.buyRerouteToMoon}");
             foreach (LMUnlockable unlock in UnlockManager.Instance.Unlocks) {
-                if (unlock.ExtendedLevel == null) {
+                if (unlock.ExtendedLevel is null) {
                     Logger.LogWarning($"LMUnlockable {unlock.Name} has no ExtendedLevel! Skipping..");
                     continue;
                 }

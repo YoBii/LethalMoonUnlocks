@@ -86,7 +86,7 @@
 			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\IAmBatby-LethalLevelLoader\1.6.8\BepInEx\plugins\IAmBatby-LethalLevelLoader\LethalLevelLoader.dll</HintPath>
 		</Reference>
 		<Reference Include="darmuhsTerminalStuff">
-			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-darmuhsTerminalStuff\3.8.5\BepInEx\plugins\darmuh-darmuhsTerminalStuff\darmuhsTerminalStuff.dll</HintPath>
+			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-darmuhsTerminalStuff\3.9.0\BepInEx\plugins\darmuh-darmuhsTerminalStuff\darmuhsTerminalStuff.dll</HintPath>
 		</Reference>
 		<Reference Include="OpenLib">
 			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\Debug\BepInEx\plugins\darmuh-OpenLib\OpenLib.dll</HintPath>
