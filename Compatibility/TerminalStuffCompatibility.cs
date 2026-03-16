@@ -13,17 +13,18 @@ namespace LethalMoonUnlocks.Compatibility {
             var levelField = AccessTools.Field(typeof(MoonInfo), "Level");
 
             foreach (var moon in moons) {
+                if (!ConfigManager.DisplayTerminalTags) {
+                    moon.AdditionalInfo = string.Empty;
+                }
                 try {
                     var level = (SelectableLevel) levelField.GetValue(moon);
                     var unlock =
                         UnlockManager.Instance.Unlocks.FirstOrDefault(x => x.ExtendedLevel.SelectableLevel == level);
                     if (unlock != null) {
                         moon.AdditionalInfo = unlock.BuildAdditionalInfoString();
-                        Logger.LogDebug($"TerminalStuffCompatibility: Applied additional info to moon {unlock.Name} ..");
                     }
                     else if (level.PlanetName.Contains("Gordion")) {
                         moon.AdditionalInfo = string.Empty + "\n";
-                        Logger.LogDebug("Skipping Gordion moon..");
                     }
                     else {
                         throw new Exception("TerminalStuffCompatibility: Moon not found in UnlockManager!");
