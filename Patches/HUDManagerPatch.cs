@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,15 @@ namespace LethalMoonUnlocks.Patches {
             if (!ConfigManager.AlertMessageQueueing)
                 return true;
             if (!HUDManager.Instance.CanTipDisplay(isWarning, useSave, prefsKey)) {
+                return false;
+            }
+            if (!string.IsNullOrEmpty(bodyText) && headerText == "Route Discovered!" && bodyText.StartsWith("Location: ")) {
+                if (ConfigManager.DiscoveryMode) {
+                    JLLCompatibility.ReplaceJLLAlertDiscovery(bodyText);
+                }
+                else {
+                    JLLCompatibility.ReplaceJLLAlert(bodyText);
+                }
                 return false;
             }
             if (!prefsKey.StartsWith("LMU_")) {
