@@ -211,20 +211,28 @@ namespace LethalMoonUnlocks {
                 return;
             }
             Logger.LogInfo("Initializing LMUnlockables from DawnLib registry..");
-            foreach (var moon in LethalContent.Moons.Values) {
-                if (moon == null
-                    || moon.Key.Key == "test"
-                    || moon.GetNumberlessPlanetName() == "Liquidation" || moon.GetNumberlessPlanetName() == "Gordion") {
+            foreach (var dawnMoon in LethalContent.Moons.Values) {
+                if (dawnMoon == null
+                    || dawnMoon.Key.Key == "test"
+                    || dawnMoon.GetNumberlessPlanetName() == "Liquidation" || dawnMoon.GetNumberlessPlanetName() == "Gordion") {
                     string levelName = string.Empty;
-                    if (moon != null && moon.Level)
-                        levelName = ": " + moon.GetNumberlessPlanetName();
+                    if (dawnMoon != null && dawnMoon.Level)
+                        levelName = ": " + dawnMoon.GetNumberlessPlanetName();
                     Logger.LogDebug($"Skipping level {levelName}..");
                     continue;
                 }
-                var unlock = Unlocks.FirstOrDefault(unlock => unlock.Name == moon.GetNumberlessPlanetName());
-                if (unlock == null) {
-                    Logger.LogWarning($"Got moon {moon.GetNumberlessPlanetName()} from DawnLib registry that we didn't previously initialize from LLL. Will probably cause errors or misbehaviour.");
+
+                if (Unlocks.FirstOrDefault(u =>
+                        u.ExtendedLevel.SelectableLevel.levelID == dawnMoon.Level.levelID) is { } unlock) {
+                    unlock.OverrideDefaultsDawnLib(dawnMoon);
                 }
+                else {
+                    Logger.LogWarning(
+                        $"Got moon {dawnMoon.GetNumberlessPlanetName()} from DawnLib registry that we didn't previously initialize from LLL. Will probably cause errors or misbehaviour.");
+                }
+                
+ 
+                
             }
             Unlocks = Unlocks.OrderBy(unlock => unlock.OriginalPrice).ToList();
             LogUnlockables(true);

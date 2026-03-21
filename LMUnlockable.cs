@@ -59,27 +59,30 @@ namespace LethalMoonUnlocks {
             OriginallyLocked = extendedLevel.IsRouteLocked;
         }
 
-        internal LMUnlockable(DawnMoonInfo dawnMoon) {
-            if (dawnMoon != null) {
-                Name = dawnMoon.GetNumberlessPlanetName();
-                RoutePrice = dawnMoon.DawnPurchaseInfo.Cost.Provide();
-                OriginalPrice = dawnMoon.DawnPurchaseInfo.Cost.Provide();
-                TerminalPurchaseResult result = dawnMoon.DawnPurchaseInfo.PurchasePredicate.CanPurchase();
-                bool isHidden = false;
-                bool isLocked = false;
-                if (result is TerminalPurchaseResult.HiddenPurchaseResult hiddenResult) {
-                    isHidden = true;
-                    if (hiddenResult.IsFailure) {
-                        isLocked = true;
-                    }
-                } else if (result is TerminalPurchaseResult.FailedPurchaseResult) {
-                    isLocked = true;
+        internal void OverrideDefaultsDawnLib(DawnMoonInfo dawnMoon) {
+            // Name = dawnMoon.GetNumberlessPlanetName();
+            RoutePrice = dawnMoon.DawnPurchaseInfo.Cost.Provide();
+            OriginalPrice = dawnMoon.DawnPurchaseInfo.Cost.Provide();
+            TerminalPurchaseResult result = dawnMoon.DawnPurchaseInfo.PurchasePredicate.CanPurchase();
+            bool dawnIsHidden = false;
+            bool dawnIsLocked = false;
+            if (result is TerminalPurchaseResult.HiddenPurchaseResult hiddenResult) {
+                dawnIsHidden = true;
+                if (hiddenResult.IsFailure) {
+                    dawnIsLocked = true;
                 }
-                OriginallyHidden = isHidden;
-                OriginallyLocked = isLocked;
             }
-
+            else if (result is TerminalPurchaseResult.FailedPurchaseResult) {
+                dawnIsLocked = true;
+            }
+            
+            OriginallyHidden = dawnIsHidden;
+            OriginallyLocked = dawnIsLocked;
+            isHidden = dawnIsHidden;
+            isLocked = dawnIsLocked;
+            
             if (OriginallyHidden && !OriginallyLocked) RemainingHidden = true;
+            Logger.LogDebug($"{Name}: Replaced existing base values with DawnLib values.");
         }
 
         internal void OverrideData(LMUnlockable newData) {
@@ -257,7 +260,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void ApplyVisibilityDawnLib() {
-            if (LethalContent.Moons.Values.FirstOrDefault(x => x.GetNumberlessPlanetName() == Name) is {} dawnMoon) {
+            if (LethalContent.Moons.Values.FirstOrDefault(x => x.Level.levelID == ExtendedLevel.SelectableLevel.levelID) is {} dawnMoon) {
                 ITerminalPurchasePredicate predicate = ITerminalPurchasePredicate.AlwaysSuccess();
                 TerminalNode failNode = ScriptableObject.CreateInstance<TerminalNode>();
                 failNode.displayText = "Error while calculating route: UNKNOWN LOCATION";
@@ -321,7 +324,7 @@ namespace LethalMoonUnlocks {
         internal void ApplyPriceDawnLib() {
             // only apply price if we have to for compatibility with LQ
             if (RoutePrice != OriginalPrice) {
-                if (LethalContent.Moons.Values.FirstOrDefault(x => x.GetNumberlessPlanetName() == Name) is {} dawnMoon) {
+                if (LethalContent.Moons.Values.FirstOrDefault(x => x.Level.levelID == ExtendedLevel.SelectableLevel.levelID) is {} dawnMoon) {
                     dawnMoon.DawnPurchaseInfo.Cost = new SimpleProvider<int>(RoutePrice);
                     dawnMoon.Internal_AddTag(DawnLibTags.LunarConfig);
                 }
@@ -363,7 +366,7 @@ namespace LethalMoonUnlocks {
                             PermanentlyDiscovered = false;
                         }
                     } else if (FreeVisitCount > 1) {
-                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Unlock: {Name}", Text = $"Unlock used! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_UnlockUsed" });
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{Name}", Text = $"Unlock redeemed! {(FreeVisitCount - 1).CountToText()} use.\nYou have {(ConfigManager.UnlocksResetAfterVisits - FreeVisitCount + 1).NumberOfWords("use")} left.", Key = "LMU_UnlockUsed" });
                     }
                 }
                 if (ConfigManager.DiscountMode && ConfigManager.DiscountsResetAfterVisits > 0) {
