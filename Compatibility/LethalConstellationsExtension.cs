@@ -196,9 +196,12 @@ namespace LethalMoonUnlocks.Compatibility {
             if (currentConstellation == null) return;
             foreach (var unlock in UnlockManager.Instance.Unlocks) {
                 if (currentConstellation.constelMoons.Any(moon => moon == unlock.Name)) {
-                    unlock.Unlock();
-                    unlock.ApplyVisibility();
-                    Logger.LogDebug($"Making moon {unlock.Name} routable as part of the current constellation! (May be hidden)");
+                    unlock.ApplyState();
+                    if (!unlock.ExtendedLevel.IsRouteLocked) {
+                        Logger.LogDebug($"Making moon {unlock.Name} routable as part of the current constellation! (May be hidden)");
+                    } else {
+                        Logger.LogDebug($"Moon {unlock.Name} is part of the current constellation but the route is locked.");
+                    }
                 }
             }
         }
