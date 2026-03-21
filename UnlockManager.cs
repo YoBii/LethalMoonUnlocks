@@ -259,7 +259,7 @@ namespace LethalMoonUnlocks {
                     try {
                         List<string> response = subscriber();
                         storyLocks.AddRange(response);
-                        Logger.LogInfo($"Collected the following story locked moons: {string.Join(", ", storyLocks)}");
+                        Logger.LogInfo($"Collected the following story locked moons: {string.Join(", ", response)}");
                     } catch (Exception ex) {
                         Logger.LogError($"Couldn't handle subscriber response while collecting story locked moons! Error: {ex.Message}");
                     }
