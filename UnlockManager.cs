@@ -432,16 +432,25 @@ namespace LethalMoonUnlocks {
             } else if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == 0 && ConfigManager.DiscoveryMode) {
                 Logger.LogInfo($"New day is last day of the quota! Not shuffling.");
                 if (ConfigManager.AutoRerouteToCompany) {
-                    var company = AllLevels.Where(level => level.NumberlessPlanetName == "Gordion").FirstOrDefault();
-                    if (company == null) {
-                        Logger.LogError($"Couldn't find company level!");
-                    } else if (LevelManager.CurrentExtendedLevel != company) {
-                        Logger.LogInfo($"Rerouting ship to company!");
-                        // wait a bit or the level change fails
-                        DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(company.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
-                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to the Company building.", Key = "LMU_RerouteCompany" });
+                    ExtendedLevel destination;
+                    ExtendedLevel galetry = AllLevels.FirstOrDefault(level => level.NumberlessPlanetName == "Galetry");
+                    if (ConfigManager.PreferGaletry && galetry != null && !galetry.IsRouteHidden && !galetry.IsRouteLocked) {
+                        destination = galetry;
                     } else {
-                        Logger.LogInfo($"Already at company. No need to reroute.");
+                        destination = AllLevels.FirstOrDefault(level => level.NumberlessPlanetName == "Gordion");
+                    }
+
+                    if (destination == null) {
+                        Logger.LogError($"Couldn't find reroute destination!");
+                    } else if (LevelManager.CurrentExtendedLevel != destination) {
+                        string destinationName = destination.NumberlessPlanetName == "Gordion" ? "the Company building" : destination.NumberlessPlanetName;
+                        Logger.LogInfo($"Rerouting ship to {destinationName}!");
+                        // wait a bit or the level change fails
+                        DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(destination.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
+                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to {destinationName}.", Key = "LMU_RerouteCompany" });
+                    } else {
+                        string destinationName = destination.NumberlessPlanetName == "Gordion" ? "the Company building" : destination.NumberlessPlanetName;
+                        Logger.LogInfo($"Already at {destinationName}. No need to reroute.");
                     }
                 }
             } else {

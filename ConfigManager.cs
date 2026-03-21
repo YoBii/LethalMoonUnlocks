@@ -170,9 +170,10 @@ namespace LethalMoonUnlocks {
         internal static int TerminalScrollAmount { get; set; }
         internal static bool TerminalShowRiskWeather { get; set; }
         internal static bool PreferLQRisk { get; private set; }
-        internal static bool MalfunctionsNavigation {  get; private set; }
-        internal static bool AlertMessageQueueing {  get; private set; }
-        public static bool LethalConstellationsOverridePrice {  get; private set; }
+        internal static bool MalfunctionsNavigation { get; private set; }
+        internal static bool AlertMessageQueueing { get; private set; }
+        public static bool LethalConstellationsOverridePrice { get; private set; }
+        internal static bool PreferGaletry { get; private set; }
 
         internal static bool OverrideHidden { get; private set; }
         private static string OverrideHiddenList { get; set; }
@@ -469,6 +470,7 @@ namespace LethalMoonUnlocks {
             MalfunctionsNavigation = GetConfigValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
             LethalConstellationsOverridePrice = GetConfigValue("6.4 - Compatibility", "LethalConstellations override price", false, "When enabled and LethalConstellations is present override the constellation routing price with the default moon's routing price.\n" + "Routing to the constellation will be considered buying the default moon. Consequently unlocks, discounts and sales of the default moon will be granted and will also apply to the constellation routing price.\n" +
                 "NOTE: In Discovery Mode the default moon will always be set to the cheapest currently discovered moon of that constellation regardless of this setting.");
+            PreferGaletry = GetConfigValue("6.4 - Compatibility", "Prefer Galetry over Gordion", true, "When enabled and Galetry (from Wesley's moons journey) is available and routable, LMU will auto reroute the ship to Galetry instead of Gordion (the company).");
 
             OverrideHidden = GetConfigValue("6.5 - Overrides", "Override moons hidden by default", false, "Enable to hard override any hidden by default information using the list below. Any other information will be ignored. This includes moons hidden in vanilla, via LLL config, etc.");
             OverrideHiddenList = GetConfigValue("6.5 - Overrides", "Override hidden list", "", "List of moons LMU will consider to be hidden by default.\n" +
