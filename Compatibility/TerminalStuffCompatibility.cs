@@ -6,6 +6,8 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using TerminalStuff.Configs;
 using TerminalStuff.MoonsTweaks;
+using TerminalStuff.SpecialStuff;
+using TerminalStuff.StoreTweaks;
 
 namespace LethalMoonUnlocks.Compatibility {
     internal static class TerminalStuffCompatibility {
@@ -15,6 +17,7 @@ namespace LethalMoonUnlocks.Compatibility {
             foreach (var moon in moons) {
                 if (!ConfigManager.DisplayTerminalTags) {
                     moon.AdditionalInfo = string.Empty;
+                    continue;
                 }
                 try {
                     var level = (SelectableLevel) levelField.GetValue(moon);
@@ -44,7 +47,7 @@ namespace LethalMoonUnlocks.Compatibility {
             FieldInfo pageSizeField = moonsPlusMenuField != null
                 ? AccessTools.Field(moonsPlusMenuField.FieldType, "PageSize")
                 : null;
-            MethodInfo replacementMethod = AccessTools.Method(typeof(TerminalStuffCompatibility), nameof(GetConfiguredMenuPageSize));
+            MethodInfo replacementMethod = AccessTools.Method(typeof(TerminalStuffCompatibility), nameof(GetConfiguredMoonsPageSize));
 
             if (moonsPlusMenuField == null || pageSizeField == null || replacementMethod == null) {
                 Logger.LogError("TerminalStuffCompatibility: Failed to resolve MoonsPlus PageSize patch metadata.");
@@ -72,7 +75,7 @@ namespace LethalMoonUnlocks.Compatibility {
             return matcher.InstructionEnumeration();
         }
 
-        private static int GetConfiguredMenuPageSize() {
+        private static int GetConfiguredMoonsPageSize() {
             try {
                 return Math.Max(1, MoonsPlusConfig.MenuPageSize.Value);
             }
@@ -83,5 +86,78 @@ namespace LethalMoonUnlocks.Compatibility {
             }
         }
 
+        [HarmonyPatch(typeof(StorePlus), "InitBetterMenu")]
+        [HarmonyTranspiler] 
+        private static IEnumerable<CodeInstruction> InitBetterMenuTranspiler(IEnumerable<CodeInstruction> instructions) {
+            FieldInfo storePlusMenuField = AccessTools.Field(typeof(StorePlus), "StorePlusMenu");
+            FieldInfo pageSizeField = storePlusMenuField != null
+                ? AccessTools.Field(storePlusMenuField.FieldType, "PageSize")
+                : null;
+            MethodInfo replacementMethod = AccessTools.Method(typeof(TerminalStuffCompatibility), nameof(GetConfiguredStorePageSize));
+
+            if (storePlusMenuField == null || pageSizeField == null || replacementMethod == null) {
+                Logger.LogError("TerminalStuffCompatibility: Failed to resolve StorePlus PageSize patch metadata.");
+                return instructions;
+            }
+
+            var matcher = new CodeMatcher(instructions).MatchForward(false,
+                new CodeMatch(OpCodes.Ldsfld, storePlusMenuField),
+                new CodeMatch(ci => ci.LoadsConstant(6)),
+                new CodeMatch(OpCodes.Stfld, pageSizeField)
+            );
+
+            if (!matcher.IsValid) {
+                Logger.LogError("TerminalStuffCompatibility: Failed to find StorePlus PageSize assignment in SetupBetterMenu.");
+                return instructions;
+            }
+
+            matcher.Advance(1);
+            var replacementInstruction = new CodeInstruction(OpCodes.Call, replacementMethod);
+            replacementInstruction.labels.AddRange(matcher.Instruction.labels);
+            replacementInstruction.blocks.AddRange(matcher.Instruction.blocks);
+            matcher.SetInstruction(replacementInstruction);
+
+            Logger.LogDebug("TerminalStuffCompatibility: Patched StorePlus.SetupBetterMenu PageSize assignment.");
+            return matcher.InstructionEnumeration();
+        }
+
+        private static int GetConfiguredStorePageSize() {
+            try {
+                return Math.Max(1, StorePlusConfig.MenuPageSize.Value);
+            }
+            catch (Exception ex) {
+                Logger.LogError("TerminalStuffCompatibility: Failed to read StorePlusConfig.MenuPageSize.");
+                Logger.LogError(ex.Message);
+                return 6;
+            }
+        }
+
+        private static int _groupCredits;
+        [HarmonyPatch(typeof(MoonInfo), "SelectThisMoon")]
+        [HarmonyPrefix]
+        private static void SelectThisMoonPrefix(MoonInfo __instance) {
+            _groupCredits = UnlockManager.Instance.Terminal.groupCredits;
+        }
+        
+        [HarmonyPatch(typeof(MoonInfo), "SelectThisMoon")]
+        [HarmonyPostfix]
+        private static void SelectThisMoonPostfix(MoonInfo __instance) {
+            if (_groupCredits > UnlockManager.Instance.Terminal.groupCredits) {
+                var pricePaid = _groupCredits - UnlockManager.Instance.Terminal.groupCredits;
+                var levelField = AccessTools.Field(typeof(MoonInfo), "Level");
+                var level = (SelectableLevel) levelField.GetValue(__instance);
+                
+                Logger.LogInfo($"Route to {level.PlanetName} was paid ({pricePaid} credits) (routed via MoonsPlus).");
+
+                if (UnlockManager.Instance.Unlocks.FirstOrDefault(x => x.ExtendedLevel.SelectableLevel == level) is
+                    { } unlock) {
+                    if (NetworkManager.Instance.IsServer()) {
+                        UnlockManager.Instance.BuyMoon(unlock.Name);
+                    } else {
+                        NetworkManager.Instance.ClientBuyMoon(unlock.Name);
+                    }
+                }
+            }
+        }
     }
 }
