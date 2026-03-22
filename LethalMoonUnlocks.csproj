@@ -80,7 +80,7 @@
 			<HintPath>$(APPDATA)\com.kesomannen.gale\lethal-company\profiles\xCore\BepInEx\plugins\BananaPuncher714-LethalQuantities\LethalQuantities.dll</HintPath>
 		</Reference>
 		<Reference Include="LethalConstellations">
-			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-LethalConstellations\0.2.3\BepInEx\plugins\darmuh-LethalConstellations\LethalConstellations.dll</HintPath>
+			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\darmuh-LethalConstellations\0.3.2\BepInEx\plugins\darmuh-LethalConstellations\LethalConstellations.dll</HintPath>
 		</Reference>
 		<Reference Include="LethalLevelLoader">
 			<HintPath>$(APPDATA)\com.kesomannen.gale\cache\IAmBatby-LethalLevelLoader\1.6.8\BepInEx\plugins\IAmBatby-LethalLevelLoader\LethalLevelLoader.dll</HintPath>
