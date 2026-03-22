@@ -13,15 +13,20 @@ namespace LethalMoonUnlocks.Compatibility {
         public void ApplyUnlocks() {
             if (ConfigManager.DiscoveryMode) {
                 ApplyVisibility();
-                ApplyDefaultMoons();
+                ApplyDefaultMoonsDiscovery();
                 AddDiscoveryCount();
                 HideUnlocksNotInCurrentConstellation();
             } else {
+                ApplyDefaultMoons();
                 HideUnlocksNotInCurrentConstellation();
                 ShowUnlocksInCurrentConstellation();
             }
             if (ConfigManager.LethalConstellationsOverridePrice) {
                 ApplyPrices();
+            }
+
+            foreach (var constellation in Collections.ConstellationStuff) {
+                Logger.LogDebug($"Constellation {constellation.consName}: {constellation.constelMoons.Count} moons, hidden state {constellation.isHidden}, locked state {constellation.isLocked}, default moon {constellation.defaultMoon}, price {constellation.constelPrice}, optional params: {constellation.optionalParams}");
             }
         }
 
@@ -131,11 +136,37 @@ namespace LethalMoonUnlocks.Compatibility {
             }
         }
 
+        private void ApplyDefaultMoonsDiscovery() {
+            foreach (ClassMapper constellation in Collections.ConstellationStuff) {
+                var constellationMoons = constellation.constelMoons.ToHashSet();
+                
+                var constellationUnlocks = UnlockManager.Instance.Unlocks
+                    .Where(unlock => constellationMoons.Contains(unlock.Name))
+                    .OrderByDescending(unlock => unlock.Discovered)
+                    .ThenBy(unlock => unlock.ExtendedLevel.RoutePrice).ToList();
+
+                if (constellationUnlocks.Count > 0) {
+                    constellation.defaultMoon = constellationUnlocks.First().Name;
+                    constellation.defaultMoonLevel = constellationUnlocks.First().ExtendedLevel;
+                    Logger.LogDebug($"Constellation {constellation.consName}: set default moon to {constellation.defaultMoon}");
+                }
+                else {
+                    Logger.LogWarning($"Constellation {constellation.consName}: Failed to set default moon! Can't find any moons in this constellation.");
+                }
+            }
+        }
+        
         private void ApplyDefaultMoons() {
             foreach (ClassMapper constellation in Collections.ConstellationStuff) {
-                if (constellation.isHidden) continue;
-                List<string> constellationMoons = constellation.constelMoons;
-                var constellationUnlocks = UnlockManager.Instance.Unlocks.Where(unlock => unlock.Discovered && constellationMoons.Any(moon => unlock.Name == moon)).OrderBy(unlock => unlock.ExtendedLevel.RoutePrice).ToList();
+                var constellationMoons = constellation.constelMoons.ToHashSet();
+                
+                var constellationUnlocks = UnlockManager.Instance.Unlocks
+                    .Where(unlock => constellationMoons.Contains(unlock.Name))
+                    .OrderBy(unlock => !unlock.IsHidden && !unlock.IsLocked)
+                    .ThenBy(unlock => !unlock.IsLocked)
+                    .ThenBy(unlock => unlock.ExtendedLevel.RoutePrice)
+                    .ToList();
+
                 if (constellationUnlocks.Count > 0) {
                     constellation.defaultMoon = constellationUnlocks.First().Name;
                     constellation.defaultMoonLevel = constellationUnlocks.First().ExtendedLevel;
