@@ -31,8 +31,17 @@ namespace LethalMoonUnlocks {
         }
         [SerializeField] [ES3Serializable] private bool isHidden; 
         [SerializeField] [ES3Serializable] private bool isLocked; 
+        [ES3NonSerializable] internal bool IsHidden {
+            get => isHidden;
+            private set => isHidden = value;
+        }
+        [ES3NonSerializable] internal bool IsLocked {
+            get => isLocked;
+            private set => isLocked = value;
+        }
+
         [SerializeField] [ES3Serializable] private bool originallyLocked; 
-        [SerializeField] [ES3Serializable] private bool originallyHidden; 
+        [SerializeField] [ES3Serializable] private bool originallyHidden;
 
         [SerializeField] [ES3Serializable] internal bool RemainingHidden { get; set; }
         [SerializeField] [ES3Serializable] internal bool StoryUnlock { get; private set; }
