@@ -7,13 +7,14 @@ using System.Text;
 
 namespace LethalMoonUnlocks {
     internal static class RandomSelector {
+        private static readonly Random Random = new(DateTime.Now.Millisecond);
         internal static List<T> Get<T>(List<T> objects, int amount) {
             if (objects.Count < amount || objects.Count == 0 || objects == null)
                 return objects;
             List<T> input = new List<T>(objects);
             List<T> selection = new List<T>();
             while (selection.Count < amount) {
-                selection.Add(input[UnityEngine.Random.Range(0, input.Count)]);
+                selection.Add(input[Random.Next(0, input.Count)]);
                 input.Remove(selection.Last());
             }
             CheckResult(selection, amount);
@@ -28,7 +29,7 @@ namespace LethalMoonUnlocks {
 
             while (selection.Count < amount) {
                 int totalWeight = input.Sum(entry => entry.Value);
-                int random = UnityEngine.Random.Range(0, totalWeight);
+                int random = Random.Next(0, totalWeight);
                 T result = default;
                 foreach (var i in input) {
                     if (i.Value == 0)
