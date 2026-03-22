@@ -206,7 +206,7 @@ namespace LethalMoonUnlocks {
         }
 
         internal void InitializeUnlocksDawnLib() {
-            if (LethalContent.Moons == null || LethalContent.Moons.Count == 0) {
+            if (LethalContent.Moons.Count == 0) {
                 Logger.LogFatal($"Unable to find levels!");
                 return;
             }

@@ -115,6 +115,7 @@ namespace LethalMoonUnlocks
             // LethalConstellations
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID)) {
                 Logger.LogInfo("LethalConstellations found! Enabling compatibility..");
+                _harmony.PatchAll(typeof(LethalConstellationsPatch));
                 LoadLethalConstellationsExtension();
                 LethalConstellationsPresent = true;
             }
@@ -136,7 +137,6 @@ namespace LethalMoonUnlocks
                 Logger.LogInfo("DawnLib found! Enabling compatibility..");
                 DawnLibPresent = true;
                 _harmony.PatchAll(typeof(DawnLibMoonCataloguePatch));
-                RegisterDawnLibEvent();
             }
 
             // Refresh config
@@ -159,10 +159,6 @@ namespace LethalMoonUnlocks
 
             // Unload this
             SceneManager.sceneUnloaded -= AfterGameInit;
-        }
-
-        private void RegisterDawnLibEvent() {
-            LethalContent.Moons.OnFreeze += () => UnlockManager.InitializeUnlocksDawnLib();
         }
 
         private void RegisterTerminalStuffEvent() {

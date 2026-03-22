@@ -91,16 +91,12 @@ namespace LethalMoonUnlocks {
             isLocked = dawnIsLocked;
             
             if (OriginallyHidden && !OriginallyLocked) RemainingHidden = true;
-            Logger.LogDebug($"{Name}: Replaced existing base values with DawnLib values.");
         }
 
         internal void OverrideData(LMUnlockable newData) {
             if (Name != newData.Name) {
                 Logger.LogError("Name mismatch during override LMUnlockable data!");
             } else {
-                OriginallyHidden = newData.OriginallyHidden;
-                OriginallyLocked = newData.OriginallyLocked;
-                RemainingHidden = newData.RemainingHidden;
                 StoryUnlock = newData.StoryUnlock;
                 StoryIsUnlocked = newData.StoryIsUnlocked;
                 BuyCount = newData.BuyCount;
@@ -178,9 +174,10 @@ namespace LethalMoonUnlocks {
                 if (ConfigManager.PermanentlyDiscoverHiddenMoonsOnVisit && VisitCount > 0) {
                     RemainingHidden = false;
                     PermanentlyDiscovered = true;
+                } else {
+                    RemainingHidden = true;
+                    PermanentlyDiscovered = false;
                 }
-                RemainingHidden = true;
-                PermanentlyDiscovered = false;
             } else {
                 RemainingHidden = false;
             }

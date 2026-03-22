@@ -7,6 +7,15 @@ using System.Text;
 namespace LethalMoonUnlocks.Patches {
     [HarmonyPatch(typeof(StartOfRound))]
     internal class StartOfRoundPatch {
+        
+        [HarmonyPrefix]
+        [HarmonyAfter("evaisa.lethallib", "imabatby.lethallevelloader", "com.github.teamxiaolan.dawnlib")]
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.Start))]
+        private static void StartOfRoundStartPrefix(StartOfRound __instance, bool __runOriginal) {
+            if (Plugin.DawnLibPresent) {
+                UnlockManager.Instance.InitializeUnlocksDawnLib();
+            }
+        }
 
         [HarmonyPatch("PassTimeToNextDay")]
         [HarmonyPostfix]
