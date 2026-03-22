@@ -1,23 +1,36 @@
-﻿using LethalLevelLoader;
-using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using static UnityEngine.UIElements.UIR.BestFitAllocator;
 
 namespace LethalMoonUnlocks {
     internal static class SaveManager {
+        private static readonly string[] CurrentSaveKeys = [
+            "LMU_Unlockables",
+            "LMU_QuotaCount",
+            "LMU_DayCount",
+            "LMU_QuotaUnlocksCount",
+            "LMU_QuotaDiscountsCount",
+            "LMU_QuotaFullDiscountsCount",
+            "LMU_Progression"
+        ];
+
         internal static Dictionary<string, object> Savedata {
             get { return Load(); }
+        }
+
+        private static bool HasCurrentSaveData(string currentSave) {
+            return CurrentSaveKeys.Any(key => ES3.KeyExists(key, currentSave));
         }
 
         private static Dictionary<string, object> Load() {
             Logger.LogInfo($"Loading save data..");
             var currentSave = GameNetworkManager.Instance.currentSaveFileName;           
             Dictionary<string, object> dictionary = new Dictionary<string, object>();
-            if (ES3.KeyExists("LMU_Unlockables", currentSave)) {
-                List<LMUnlockable> unlockedMoons = ES3.Load<List<LMUnlockable>>("LMU_Unlockables", currentSave);
-                dictionary.Add("LMU_Unlockables", unlockedMoons);
-                Logger.LogInfo($"Found LMU_Unlockables: {string.Join(", ", unlockedMoons.Select(unlock => unlock.Name))}");
+            if (HasCurrentSaveData(currentSave)) {
+                if (ES3.KeyExists("LMU_Unlockables", currentSave)) {
+                    List<LMUnlockable> unlockedMoons = ES3.Load<List<LMUnlockable>>("LMU_Unlockables", currentSave);
+                    dictionary.Add("LMU_Unlockables", unlockedMoons);
+                    Logger.LogInfo($"Found LMU_Unlockables: {string.Join(", ", unlockedMoons.Select(unlock => unlock.Name))}");
+                }
                 if (ES3.KeyExists("LMU_QuotaCount", currentSave)) {
                     int quotaCount = ES3.Load<int>("LMU_QuotaCount", currentSave);
                     dictionary.Add("LMU_QuotaCount", quotaCount);
@@ -33,10 +46,20 @@ namespace LethalMoonUnlocks {
                     dictionary.Add("LMU_QuotaUnlocksCount", quotaUnlocksCount);
                     Logger.LogInfo($"Found LMU_QuotaUnlocksCount: {quotaUnlocksCount}");
                 }
+                if (ES3.KeyExists("LMU_QuotaDiscountsCount", currentSave)) {
+                    int quotaDiscountsCount = ES3.Load<int>("LMU_QuotaDiscountsCount", currentSave);
+                    dictionary.Add("LMU_QuotaDiscountsCount", quotaDiscountsCount);
+                    Logger.LogInfo($"Found LMU_QuotaDiscountsCount: {quotaDiscountsCount}");
+                }
                 if (ES3.KeyExists("LMU_QuotaFullDiscountsCount", currentSave)) {
                     int quotaFullDiscountsCount = ES3.Load<int>("LMU_QuotaFullDiscountsCount", currentSave);
                     dictionary.Add("LMU_QuotaFullDiscountsCount", quotaFullDiscountsCount);
                     Logger.LogInfo($"Found LMU_QuotaFullDiscountsCount: {quotaFullDiscountsCount}");
+                }
+                if (ES3.KeyExists("LMU_Progression", currentSave)) {
+                    ProgressionSaveData progressionSaveData = ES3.Load<ProgressionSaveData>("LMU_Progression", currentSave);
+                    dictionary.Add("LMU_Progression", progressionSaveData);
+                    Logger.LogInfo($"Found LMU_Progression: PaintingsSold={progressionSaveData.PaintingsSold}");
                 }
 
                 // BAND AID FIX for credits being wacky
@@ -113,6 +136,15 @@ namespace LethalMoonUnlocks {
                 Logger.LogInfo($"Saving LMU_QuotaFullDiscountsCount: {string.Join(", ", UnlockManager.Instance.QuotaFullDiscountsCount)}");
             } else if (ES3.KeyExists("LMU_QuotaFullDiscountsCount", currentSave)) {
                 ES3.DeleteKey("LMU_QuotaFullDiscountsCount", currentSave);
+            }
+            if (ProgressionManager.Instance != null) {
+                ProgressionSaveData progressionSaveData = ProgressionManager.Instance.GetSaveData();
+                if (progressionSaveData.HasData()) {
+                    ES3.Save<ProgressionSaveData>("LMU_Progression", progressionSaveData, currentSave);
+                    Logger.LogInfo("Saving LMU_Progression.");
+                } else if (ES3.KeyExists("LMU_Progression", currentSave)) {
+                    ES3.DeleteKey("LMU_Progression", currentSave);
+                }
             }
 
             // BAND AID FIX for group credits being wacky

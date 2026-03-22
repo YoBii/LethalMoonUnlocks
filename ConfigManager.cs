@@ -143,8 +143,10 @@ namespace LethalMoonUnlocks {
         private static bool AdvancedPrintMoonNames { get; set; }
         internal static bool AutoRerouteToCompany { get; set; }
         internal static bool GroupCreditsSavingBandAid { get; private set; }
-        internal static bool LMUStoryProgression { get; private set; }
         internal static bool EnableStoryProgression { get; private set; }
+        internal static bool LMUStoryProgression { get; private set; }
+        internal static bool GaletryStoryLock { get; private set; }
+        internal static int GaletryStoryLockPaintingsAmount { get; private set; }
         internal static bool CheapMoonBiasIgnorePriceChanges { get; private set; }
         internal static bool CheapMoonBiasPaidRotation { get; private set; }
         internal static float CheapMoonBiasPaidRotationValue { get; private set; }
@@ -482,6 +484,8 @@ namespace LethalMoonUnlocks {
 
             EnableStoryProgression = GetConfigValue("6.6 - Story Progression", "Enable Story Progression", true, "Story progression allows locking moons behind various conditions. This can be employed by other mods like Wesley's moons (JLL).\nDisabling this settings will globally ignore any requests to lock moons behind story progressions inlcuding LMU's own Vanilla Story progression.");
             LMUStoryProgression = GetConfigValue("6.6 - Story Progression", "Vanilla Story Progression", false, "Enable to lock the two hidden vanilla moons behind story progression. To release the lock for Artifice you have to land three times on Adamance, for Embrion you have to scan an old bird. After completing these tasks the moons will be available (for discovery). They will not be hidden.");
+            GaletryStoryLock = GetConfigValue("6.6 - Story Progression", "Restrict access to Galetry", false, "When enabled and Wesley's moons is installed Galetry is not available from the start. To gain access you will need to sell a specified number of paintings to the company.");
+            GaletryStoryLockPaintingsAmount = GetConfigValue("6.6 - Story Progression", "Galetry number of paintings", 3, "The number of sold paintings required to gain access to Galetry.");
 
 
         }

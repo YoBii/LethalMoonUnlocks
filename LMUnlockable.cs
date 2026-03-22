@@ -182,6 +182,19 @@ namespace LethalMoonUnlocks {
                     NetworkManager.Instance.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Incoming transmission! Decoding location data...", Key = "LMU_StoryLockReleasedArtifice" });
                 }
             }
+
+            if (Name == "Galetry" && ConfigManager.GaletryStoryLock && ProgressionManager.Instance != null &&
+                ProgressionManager.Instance.PaintingsSold >= ConfigManager.GaletryStoryLockPaintingsAmount) {
+                if (StoryUnlock && StoryIsUnlocked == false) {
+                    StoryIsUnlocked = true;
+                    Logger.LogInfo($"{Name}: Releasing story lock.. {Name} now available (for discovery).");
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
+                        Header = "Art exhibition!",
+                        Text = "The art museum awaits you. Pay us a visit, stare at the art and regain intellectual sustenance.",
+                        Key = "LMU_GaletryProgress"
+                    });
+                }
+            }
         }
 
         internal void ApplyState() {
