@@ -1,5 +1,4 @@
 ﻿using LethalConstellations.PluginCore;
-using LethalMoonUnlocks;
 using LethalMoonUnlocks.Util;
 using System.Collections.Generic;
 using System.Linq;
@@ -228,6 +227,7 @@ namespace LethalMoonUnlocks.Compatibility {
             foreach (var unlock in UnlockManager.Instance.Unlocks) {
                 if (currentConstellation.constelMoons.Any(moon => moon == unlock.Name)) {
                     unlock.ApplyState();
+                    unlock.ApplyVisibility();
                     if (!unlock.ExtendedLevel.IsRouteLocked) {
                         Logger.LogDebug($"Making moon {unlock.Name} routable as part of the current constellation! (May be hidden)");
                     } else {
@@ -236,5 +236,9 @@ namespace LethalMoonUnlocks.Compatibility {
                 }
             }
         }
+        
+        internal void Reset() {
+            Collections.ConstellationStuff.Clear();
+        }   
     }
 }

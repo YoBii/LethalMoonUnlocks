@@ -9,10 +9,8 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPatch(nameof(GameNetworkManager.Disconnect))]
         [HarmonyPostfix]
         private static void DisconnectPatch() {
-            if (GameNetworkManager.Instance.currentLobby != null) {
-                Logger.LogInfo($"Disconnecting from lobby. Restoring original prices and clearing variables..");
-                UnlockManager.Instance.OnDisconnect();
-            }
+            Logger.LogInfo($"Disconnecting from lobby. Restoring original prices and clearing variables..");
+            UnlockManager.Instance.OnDisconnect();
         }
 
         [HarmonyPatch(nameof(GameNetworkManager.SaveGame))]

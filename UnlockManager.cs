@@ -1120,6 +1120,9 @@ namespace LethalMoonUnlocks {
             QuotaUnlocksCount = 0;
             QuotaDiscountsCount = 0;
             QuotaFullDiscountsCount = 0;
+            if (Plugin.LethalConstellationsPresent) {
+                Plugin.LethalConstellationsExtension.Reset();
+            }
         }
 
         private string ReplaceTerminalPreview(ExtendedLevel extendedLevel, PreviewInfoType infoType) {
