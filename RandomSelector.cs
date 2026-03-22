@@ -52,15 +52,16 @@ namespace LethalMoonUnlocks {
         internal static Dictionary<LMUnlockable, int> CalculateBiasedWeights(List<LMUnlockable> unlocks, float bias) {
             var weights = new Dictionary<LMUnlockable, int>();
             if (unlocks.Count < 1) {  return weights; }
-            var sumAllPrices = unlocks.Sum(unlock => unlock.OriginalPrice);
+
+            const double scale = 1000d;
+            var prices = unlocks.ToDictionary(unlock => unlock, unlock => ConfigManager.CheapMoonBiasIgnorePriceChanges
+                ? Math.Clamp(unlock.OriginalPrice, 1, int.MaxValue)
+                : Math.Clamp(unlock.ExtendedLevel.RoutePrice, 1, int.MaxValue));
+            double averagePrice = prices.Values.Average();
+
             foreach (var unlock in unlocks) {
-                int price;
-                if (ConfigManager.CheapMoonBiasIgnorePriceChanges) {
-                    price = Math.Clamp(unlock.OriginalPrice, 1, int.MaxValue);
-                } else {
-                    price = Math.Clamp(unlock.ExtendedLevel.RoutePrice, 1, int.MaxValue);
-                }
-                long result = Math.Clamp((long)Math.Pow(sumAllPrices / price * bias, bias), 1, int.MaxValue / (unlocks.Count + 1));
+                double relativeCheapness = averagePrice / prices[unlock];
+                long result = Math.Clamp((long)Math.Round(Math.Pow(relativeCheapness, bias) * scale), 1, int.MaxValue / (unlocks.Count + 1));
                 weights[unlock] = (int)result;
             }
             Logger.LogDebug($"Cheap moon bias: Assigned the following weights: [ {string.Join(", ", weights.Select(weight => weight.Key.Name + ":" + weight.Value ))} ]");
