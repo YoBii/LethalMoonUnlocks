@@ -501,6 +501,7 @@ namespace LethalMoonUnlocks {
         internal void OnResetGame() {
             if (ConfigManager.ResetWhenFired) {
                 Logger.LogInfo($"Resetting all progress on getting fired!");
+                ProgressionManager.Instance?.Reset();
                 Reset();
                 InitializeUnlocks();
                 DelayHelper.Instance.ExecuteAfterDelay(() => {
@@ -513,6 +514,7 @@ namespace LethalMoonUnlocks {
             }
         }
         internal void OnDisconnect() {
+            ProgressionManager.Instance?.Reset();
             Reset();
         }
 
@@ -879,10 +881,17 @@ namespace LethalMoonUnlocks {
             
             // LMU Story
             if (ConfigManager.LMUStoryProgression) {
-                OnCollectStoryLockedMoons -= LMUStoryLocks;
-                OnCollectStoryLockedMoons += LMUStoryLocks;
+                OnCollectStoryLockedMoons -= ProgressionManager.LMUStoryLocks;
+                OnCollectStoryLockedMoons += ProgressionManager.LMUStoryLocks;
             } else {
-                OnCollectStoryLockedMoons -= LMUStoryLocks;
+                OnCollectStoryLockedMoons -= ProgressionManager.LMUStoryLocks;
+            }
+
+            if (ConfigManager.GaletryStoryLock && AllLevels.Any(level => level.NumberlessPlanetName == "Galetry")) {
+                OnCollectStoryLockedMoons -= ProgressionManager.GaletryStoryLock;
+                OnCollectStoryLockedMoons += ProgressionManager.GaletryStoryLock;
+            } else {
+                OnCollectStoryLockedMoons -= ProgressionManager.GaletryStoryLock;
             }
             if (ConfigManager.EnableStoryProgression) {
                 CollectStoryLockedMoons();
@@ -1036,10 +1045,20 @@ namespace LethalMoonUnlocks {
 
         private bool LoadAndImportSavaData() {
             Dictionary<string, object> savedata = SaveManager.Savedata;
-            if (savedata != null && savedata.ContainsKey("LMU_Unlockables")) {
+            ProgressionManager.Instance?.Reset();
+            if (savedata != null && (
+                savedata.ContainsKey("LMU_Unlockables")
+                || savedata.ContainsKey("LMU_QuotaCount")
+                || savedata.ContainsKey("LMU_DayCount")
+                || savedata.ContainsKey("LMU_QuotaUnlocksCount")
+                || savedata.ContainsKey("LMU_QuotaDiscountsCount")
+                || savedata.ContainsKey("LMU_QuotaFullDiscountsCount")
+                || savedata.ContainsKey("LMU_Progression"))) {
                 Logger.LogInfo($"LMU save data detected!");
                 Logger.LogInfo($"Loading LMU data from save..");
-                ImportUnlockableData((List<LMUnlockable>)savedata["LMU_Unlockables"]);
+                if (savedata.ContainsKey("LMU_Unlockables")) {
+                    ImportUnlockableData((List<LMUnlockable>)savedata["LMU_Unlockables"]);
+                }
                 if (savedata.ContainsKey("LMU_QuotaCount")) {
                     QuotaCount = (int)savedata["LMU_QuotaCount"];
                     Logger.LogInfo($"Loading QuotaCount: {QuotaCount}.");
@@ -1059,6 +1078,10 @@ namespace LethalMoonUnlocks {
                 if (savedata.ContainsKey("LMU_QuotaFullDiscountsCount")) {
                     QuotaFullDiscountsCount = (int)savedata["LMU_QuotaFullDiscountsCount"];
                     Logger.LogInfo($"Loading QuotaFullDiscountsCount: {QuotaFullDiscountsCount}.");
+                }
+                if (savedata.ContainsKey("LMU_Progression")) {
+                    ProgressionManager.Instance?.LoadSaveData((ProgressionSaveData)savedata["LMU_Progression"]);
+                    Logger.LogInfo($"Loading ProgressionManager state: PaintingsSold={ProgressionManager.Instance?.PaintingsSold}.");
                 }
                 if (savedata.ContainsKey("GroupCredits") && ConfigManager.GroupCreditsSavingBandAid) {
                     Terminal.groupCredits = (int)savedata["GroupCredits"];
@@ -1138,9 +1161,6 @@ namespace LethalMoonUnlocks {
             return unlock.GetMoonPreviewText(infoType);
         }
 
-        private List<string> LMUStoryLocks() {
-            return new List<string> { "Artifice", "Embrion" };
-        }
     }
 }
 

@@ -37,6 +37,7 @@ namespace LethalMoonUnlocks
         internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
+        internal ProgressionManager ProgressionManager { get; private set; }
 
         private bool _loaded;
 
@@ -58,6 +59,7 @@ namespace LethalMoonUnlocks
             _harmony.PatchAll(typeof(Patches.TimeOfDayPatch));
             _harmony.PatchAll(typeof(Patches.HUDManagerPatch));
             _harmony.PatchAll(typeof(Patches.LLLSaveManagerInitPatch));
+            _harmony.PatchAll(typeof(Patches.DepositItemsDeskPatch));
             
             Logger.LogInfo("Patching complete.");
             if (!_loaded) Initialize();
@@ -156,6 +158,7 @@ namespace LethalMoonUnlocks
             // Create Managers
             NetworkManager = new NetworkManager();
             UnlockManager = new UnlockManager();
+            ProgressionManager = new ProgressionManager();
 
             // Unload this
             SceneManager.sceneUnloaded -= AfterGameInit;
