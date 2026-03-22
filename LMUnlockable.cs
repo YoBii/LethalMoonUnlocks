@@ -109,12 +109,22 @@ namespace LethalMoonUnlocks {
         }
 
         internal void RestoreOriginalState() {
-            //ExtendedLevel.RoutePrice = OriginalPrice;
-            //ExtendedLevel.IsRouteHidden = _originallyHidden;
-            //ExtendedLevel.IsRouteLocked = _originallyLocked;
             RoutePrice = OriginalPrice;
             isHidden = originallyHidden;
             isLocked = originallyLocked;
+
+            if (ExtendedLevel) {
+                ExtendedLevel.RoutePrice = OriginalPrice;
+            }
+
+            ApplyVisibilityLLL();
+
+            if (Plugin.DawnLibPresent && ExtendedLevel &&
+                LethalContent.Moons.Values.FirstOrDefault(x => x.Level.levelID == ExtendedLevel.SelectableLevel.levelID) is {} dawnMoon) {
+                dawnMoon.DawnPurchaseInfo.Cost = new SimpleProvider<int>(OriginalPrice);
+                dawnMoon.Internal_AddTag(DawnLibTags.LunarConfig);
+                ApplyVisibilityDawnLib();
+            }
         }
 
         internal void DesignateAsStoryLocked() {
@@ -287,7 +297,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void ApplyVisibilityLLL() {
-            if (ExtendedLevel != null) {
+            if (ExtendedLevel) {
                 if (isHidden) {
                     if (isLocked) {
                         ExtendedLevel.IsRouteHidden = true;
@@ -315,7 +325,7 @@ namespace LethalMoonUnlocks {
         internal void ApplyPriceLLL() {
             // only apply price if we have to for compatibility with LQ
             if (RoutePrice != OriginalPrice) {
-                if (ExtendedLevel != null) {
+                if (ExtendedLevel) {
                     ExtendedLevel.RoutePrice = RoutePrice;
                 }
             }
