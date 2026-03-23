@@ -342,21 +342,15 @@ namespace LethalMoonUnlocks {
         }
 
         internal void ApplyPriceLLL() {
-            // only apply price if we have to for compatibility with LQ
-            if (RoutePrice != OriginalPrice) {
-                if (ExtendedLevel) {
-                    ExtendedLevel.RoutePrice = RoutePrice;
-                }
+            if (ExtendedLevel) {
+                ExtendedLevel.RoutePrice = RoutePrice;
             }
         }
         
         internal void ApplyPriceDawnLib() {
-            // only apply price if we have to for compatibility with LQ
-            if (RoutePrice != OriginalPrice) {
-                if (LethalContent.Moons.Values.FirstOrDefault(x => x.Level.levelID == ExtendedLevel.SelectableLevel.levelID) is {} dawnMoon) {
-                    dawnMoon.DawnPurchaseInfo.Cost = new SimpleProvider<int>(RoutePrice);
-                    dawnMoon.Internal_AddTag(DawnLibTags.LunarConfig);
-                }
+            if (LethalContent.Moons.Values.FirstOrDefault(x => x.Level.levelID == ExtendedLevel.SelectableLevel.levelID) is {} dawnMoon) {
+                dawnMoon.DawnPurchaseInfo.Cost = new SimpleProvider<int>(RoutePrice);
+                dawnMoon.Internal_AddTag(DawnLibTags.LunarConfig);
             }
         }
 
