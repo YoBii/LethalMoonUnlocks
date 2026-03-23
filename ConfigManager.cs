@@ -135,6 +135,7 @@ namespace LethalMoonUnlocks {
         internal static bool Sales { get; private set; }
         internal static int SalesChance { get; private set; }
         internal static bool SalesShuffleDaily { get; private set; }
+        internal static int SalesMinDayCount { get; private set; }
         internal static int SalesRate {
             get { return UnityEngine.Random.Range(_salesRateMin, _salesRateMax); }
         }
@@ -395,6 +396,8 @@ namespace LethalMoonUnlocks {
                 "By default, Moon Sales are shuffled after every quota. Only non-free moons can go on sale.\n" +
                 "NOTE: These sales are separate from discounts received via Discount Mode.");
             SalesShuffleDaily = GetConfigValue("5 - Moon Sales", "Shuffle sales daily", false, "Shuffle moon sales daily, instead of after every quota");
+            SalesMinDayCount = GetConfigValue("5 - Moon Sales", "Minimum completed days before sales", 0, "Do not allow any moon sales until at least this many days have passed.\n" +
+                "Before this threshold is reached, you can not get new sales when they're shuffled.", new AcceptableValueRange<int>(0, 30));
             SalesChance = GetConfigValue("5 - Moon Sales", "Moon Sale chance", 20, "The chance for each moon to go on sale every time sales are shuffled.", new AcceptableValueRange<int>(0, 100));
             _salesRateMin = GetConfigValue("5 - Moon Sales", "Minimum sale percent", 5, "The minimum sale percentage a moon can receive.", new AcceptableValueRange<int>(0, 100));
             _salesRateMax = GetConfigValue("5 - Moon Sales", "Maximum sale percent", 30, "The maximum sale percentage a moon can receive", new AcceptableValueRange<int>(1, 100));

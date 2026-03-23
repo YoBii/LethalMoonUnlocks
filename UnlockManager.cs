@@ -389,8 +389,7 @@ namespace LethalMoonUnlocks {
             }
             // SHUFFLE SALES
             if (ConfigManager.Sales) {
-            //if (ConfigManager.Sales && !ConfigManager.SalesShuffleDaily) {
-                Unlocks.Do(unlock => unlock.RefreshSale());
+                RefreshSales();
             }
             // Iterate Unlocks to make sure in discovery mode unlocks/discounts are not granted to undiscovered moons
             IterateUnlocks();
@@ -475,12 +474,25 @@ namespace LethalMoonUnlocks {
                     }
                 }
                 if (ConfigManager.Sales && ConfigManager.SalesShuffleDaily) {
-                    Unlocks.Do(unlock => unlock.RefreshSale());
+                    RefreshSales();
                 }
             }
             IterateUnlocks();
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 3);
+        }
+
+        private void RefreshSales() {
+            if (DayCount < ConfigManager.SalesMinDayCount) {
+                Logger.LogInfo($"Skipping moon sales shuffle because completed days {DayCount} is below configured minimum {ConfigManager.SalesMinDayCount}.");
+                Unlocks.Do(unlock => {
+                    unlock.OnSale = false;
+                    unlock.SalesRate = 0;
+                });
+                return;
+            }
+
+            Unlocks.Do(unlock => unlock.RefreshSale());
         }
 
         internal void OnArrive() {
@@ -905,9 +917,7 @@ namespace LethalMoonUnlocks {
 
             // Shuffle Moon Sales
             if (ConfigManager.Sales) {
-                foreach (var unlock in Unlocks) {
-                    unlock.RefreshSale();
-                } 
+                RefreshSales();
             }
         }
 
