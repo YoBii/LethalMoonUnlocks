@@ -1,27 +1,44 @@
-﻿using LethalLevelLoader;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 
 namespace LethalMoonUnlocks {
-    internal static class RandomSelector {
-        private static readonly Random Random = new(DateTime.Now.Millisecond);
-        internal static List<T> Get<T>(List<T> objects, int amount) {
+    internal static class RandomHelper {
+        private static readonly object RandomLock = new();
+        private static readonly Random Random = new(unchecked(Environment.TickCount ^ (int)DateTime.UtcNow.Ticks));
+
+        internal static int Range(int minInclusive, int maxExclusive) {
+            lock (RandomLock) {
+                return Random.Next(minInclusive, maxExclusive);
+            }
+        }
+
+        internal static bool Chance(int percent) {
+            if (percent <= 0) {
+                return false;
+            }
+            if (percent >= 100) {
+                return true;
+            }
+            return Range(0, 100) < percent;
+        }
+
+        internal static List<T> Select<T>(List<T> objects, int amount) {
             if (objects.Count < amount || objects.Count == 0 || objects == null)
                 return objects;
             List<T> input = new List<T>(objects);
             List<T> selection = new List<T>();
             while (selection.Count < amount) {
-                selection.Add(input[Random.Next(0, input.Count)]);
+                selection.Add(input[RandomHelper.Range(0, input.Count)]);
                 input.Remove(selection.Last());
             }
-            CheckResult(selection, amount);
+            if (selection.Count < amount) {
+                Logger.LogWarning("Couldn't select the desired amount of elements!");
+            }
             return selection;
         }
 
-        internal static List<T> GetWeighted<T>(Dictionary<T, int> objects, int amount) {
+        internal static List<T> SelectWeighted<T>(Dictionary<T, int> objects, int amount) {
             if (objects.Count < amount || objects.Count == 0 || objects == null)
                 return new List<T>(objects.Keys);
             Dictionary<T, int> input = new Dictionary<T, int>(objects);
@@ -29,7 +46,7 @@ namespace LethalMoonUnlocks {
 
             while (selection.Count < amount) {
                 int totalWeight = input.Sum(entry => entry.Value);
-                int random = Random.Next(0, totalWeight);
+                int random = RandomHelper.Range(0, totalWeight);
                 T result = default;
                 foreach (var i in input) {
                     if (i.Value == 0)
@@ -45,7 +62,9 @@ namespace LethalMoonUnlocks {
                 selection.Add(result);
                 input.Remove(result);
             }
-            CheckResult(selection, amount);
+            if (selection.Count < amount) {
+                Logger.LogWarning("Couldn't select the desired amount of elements!");
+            }
             return selection;
         }
 
@@ -66,14 +85,6 @@ namespace LethalMoonUnlocks {
             }
             Logger.LogDebug($"Cheap moon bias: Assigned the following weights: [ {string.Join(", ", weights.Select(weight => weight.Key.Name + ":" + weight.Value ))} ]");
             return weights;
-        }
-
-        private static bool CheckResult<T>(List<T> result, int goal) {
-            if (result.Count < goal) {
-                Logger.LogWarning("Couldn't select the desired amount of elements!");
-                return false;
-            }
-            return true;
         }
     }
 }

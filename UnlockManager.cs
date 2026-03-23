@@ -304,7 +304,7 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.DiscoveryMode) {
                 // TRAVEL DISCOVERY
                 if (ConfigManager.TravelDiscoveries && DiscoveryCandidates.Count > 0) {
-                    if (UnityEngine.Random.Range(0, 100) < ConfigManager.TravelDiscoveryChance) {
+                    if (RandomHelper.Chance(ConfigManager.TravelDiscoveryChance)) {
                         Logger.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
                         TravelDiscovery(unlock);
                     }
@@ -378,7 +378,7 @@ namespace LethalMoonUnlocks {
                     ShuffleDiscoverable();
                 }
                 // QUOTA DISCOVERY
-                if (ConfigManager.QuotaDiscoveries && DiscoveryCandidates.Count > 0 && UnityEngine.Random.Range(0, 100) < ConfigManager.QuotaDiscoveryChance) {
+                if (ConfigManager.QuotaDiscoveries && DiscoveryCandidates.Count > 0 && RandomHelper.Chance(ConfigManager.QuotaDiscoveryChance)) {
                     Logger.LogInfo($"Quota Discovery triggered! (Chance: {ConfigManager.QuotaDiscoveryChance}%)");
                     if (ConfigManager.QuotaDiscoveryCheapestGroup && (ConfigManager.MoonGroupMatchingMethod == "Custom" || ConfigManager.MoonGroupMatchingMethod == "LethalConstellations")) {
                         QuotaDiscoveryGroup();
@@ -396,7 +396,7 @@ namespace LethalMoonUnlocks {
 
             // QUOTA UNLOCK
             if (!ConfigManager.DiscountMode && ConfigManager.QuotaUnlocks && PaidMoons.Count > 0) {
-                if (UnityEngine.Random.Range(0, 100) < ConfigManager.QuotaUnlockChance && (ConfigManager.QuotaUnlockMaxCount < 1 || QuotaUnlocksCount < ConfigManager.QuotaUnlockMaxCount)) {
+                if (RandomHelper.Chance(ConfigManager.QuotaUnlockChance) && (ConfigManager.QuotaUnlockMaxCount < 1 || QuotaUnlocksCount < ConfigManager.QuotaUnlockMaxCount)) {
                     Logger.LogInfo($"Quota unlock triggered! (Chance: {ConfigManager.QuotaUnlockChance}%)");
                     QuotaUnlock();
                 }
@@ -404,12 +404,12 @@ namespace LethalMoonUnlocks {
             // DISCOUNT MODE
             if (ConfigManager.DiscountMode) {
                 // QUOTA DISCOUNT
-                if (ConfigManager.QuotaDiscounts && PaidMoons.Count > 0 && UnityEngine.Random.Range(0, 100) < ConfigManager.QuotaDiscountChance && (ConfigManager.QuotaDiscountMaxCount < 1 || QuotaDiscountsCount < ConfigManager.QuotaDiscountMaxCount)) {
+                if (ConfigManager.QuotaDiscounts && PaidMoons.Count > 0 && RandomHelper.Chance(ConfigManager.QuotaDiscountChance) && (ConfigManager.QuotaDiscountMaxCount < 1 || QuotaDiscountsCount < ConfigManager.QuotaDiscountMaxCount)) {
                     Logger.LogInfo($"Quota Discount triggered! (Chance: {ConfigManager.QuotaDiscountChance}%)");
                     QuotaDiscount();
                 }
                 // QUOTA FULL DISCOUNT
-                if (ConfigManager.QuotaFullDiscounts && PaidMoons.Count > 0 && UnityEngine.Random.Range(0, 100) < ConfigManager.QuotaFullDiscountChance && (ConfigManager.QuotaFullDiscountMaxCount < 1 || QuotaFullDiscountsCount < ConfigManager.QuotaFullDiscountMaxCount)) {
+                if (ConfigManager.QuotaFullDiscounts && PaidMoons.Count > 0 && RandomHelper.Chance(ConfigManager.QuotaFullDiscountChance) && (ConfigManager.QuotaFullDiscountMaxCount < 1 || QuotaFullDiscountsCount < ConfigManager.QuotaFullDiscountMaxCount)) {
                     Logger.LogInfo($"Quota Full Discount triggered! (Chance: {ConfigManager.QuotaFullDiscountChance}%)");
                     QuotaFullDiscount();
                 }
@@ -468,7 +468,7 @@ namespace LethalMoonUnlocks {
                         ShuffleDiscoverable();
                     }
                     // NEW DAY DISCOVERY
-                    if (ConfigManager.NewDayDiscoveries && DiscoveryCandidates.Count > 0 && UnityEngine.Random.Range(0, 100) < ConfigManager.NewDayDiscoveryChance) {
+                    if (ConfigManager.NewDayDiscoveries && DiscoveryCandidates.Count > 0 && RandomHelper.Chance(ConfigManager.NewDayDiscoveryChance)) {
                         Logger.LogInfo($"New Day Discovery triggered! (Chance: {ConfigManager.NewDayDiscoveryChance}%)");
                         NewDayDiscovery();
                     }
@@ -533,9 +533,9 @@ namespace LethalMoonUnlocks {
         private void QuotaDiscovery() {
             var quotaDiscoveries = DiscoveryCandidates;
             if (ConfigManager.CheapMoonBiasQuotaDiscovery) {
-                quotaDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaDiscoveries, ConfigManager.CheapMoonBiasQuotaDiscoveryValue), ConfigManager.QuotaDiscoveryCount);
+                quotaDiscoveries = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(quotaDiscoveries, ConfigManager.CheapMoonBiasQuotaDiscoveryValue), ConfigManager.QuotaDiscoveryCount);
             } else {
-                quotaDiscoveries = RandomSelector.Get(quotaDiscoveries, ConfigManager.QuotaDiscoveryCount);
+                quotaDiscoveries = RandomHelper.Select(quotaDiscoveries, ConfigManager.QuotaDiscoveryCount);
             }
             if (quotaDiscoveries.Count == 0) {
                 Logger.LogInfo($"No moons for Quota Discovery available!");
@@ -591,9 +591,9 @@ namespace LethalMoonUnlocks {
                 group = new LMGroup();
             }
             if (ConfigManager.CheapMoonBiasQuotaDiscovery) {
-                discoveryGroup = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(discoveryGroup, ConfigManager.CheapMoonBiasQuotaDiscoveryValue), ConfigManager.QuotaDiscoveryCount);
+                discoveryGroup = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(discoveryGroup, ConfigManager.CheapMoonBiasQuotaDiscoveryValue), ConfigManager.QuotaDiscoveryCount);
             } else {
-                discoveryGroup = RandomSelector.Get(discoveryGroup, ConfigManager.QuotaDiscoveryCount);
+                discoveryGroup = RandomHelper.Select(discoveryGroup, ConfigManager.QuotaDiscoveryCount);
             }
             if (discoveryGroup.Count == 0) {
                 Logger.LogInfo($"No moons for Quota Discovery available!");
@@ -624,9 +624,9 @@ namespace LethalMoonUnlocks {
                 quotaUnlocks = quotaUnlocks.Where(moon => moon.RoutePrice <= ConfigManager.QuotaUnlockMaxPrice).ToList();
             }
             if (ConfigManager.CheapMoonBiasQuotaUnlock) {
-                quotaUnlocks = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaUnlocks, ConfigManager.CheapMoonBiasQuotaUnlockValue), ConfigManager.QuotaUnlockCount);
+                quotaUnlocks = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(quotaUnlocks, ConfigManager.CheapMoonBiasQuotaUnlockValue), ConfigManager.QuotaUnlockCount);
             } else {
-                quotaUnlocks = RandomSelector.Get(quotaUnlocks, ConfigManager.QuotaUnlockCount);
+                quotaUnlocks = RandomHelper.Select(quotaUnlocks, ConfigManager.QuotaUnlockCount);
             }
             if (quotaUnlocks.Count == 0) {
                 Logger.LogInfo($"No moons for Quota Unlock available!");
@@ -656,9 +656,9 @@ namespace LethalMoonUnlocks {
             }
 
             if (ConfigManager.CheapMoonBiasQuotaDiscount) {
-                quotaDiscounts = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaDiscounts, ConfigManager.CheapMoonBiasQuotaDiscountValue), ConfigManager.QuotaDiscountCount);
+                quotaDiscounts = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(quotaDiscounts, ConfigManager.CheapMoonBiasQuotaDiscountValue), ConfigManager.QuotaDiscountCount);
             } else {
-                quotaDiscounts = RandomSelector.Get(quotaDiscounts, ConfigManager.QuotaDiscountCount);
+                quotaDiscounts = RandomHelper.Select(quotaDiscounts, ConfigManager.QuotaDiscountCount);
             }
             if (quotaDiscounts.Count == 0) {
                 Logger.LogInfo($"No moons for Quota Discount available!");
@@ -686,9 +686,9 @@ namespace LethalMoonUnlocks {
                 quotaFullDiscounts = quotaFullDiscounts.Where(unlock => unlock.BuyCount < ConfigManager.DiscountsCount).ToList();
             }
             if (ConfigManager.CheapMoonBiasQuotaFullDiscount) {
-                quotaFullDiscounts = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(quotaFullDiscounts, ConfigManager.CheapMoonBiasQuotaFullDiscountValue), ConfigManager.QuotaFullDiscountCount);
+                quotaFullDiscounts = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(quotaFullDiscounts, ConfigManager.CheapMoonBiasQuotaFullDiscountValue), ConfigManager.QuotaFullDiscountCount);
             } else {
-                quotaFullDiscounts = RandomSelector.Get(quotaFullDiscounts, ConfigManager.QuotaFullDiscountCount);
+                quotaFullDiscounts = RandomHelper.Select(quotaFullDiscounts, ConfigManager.QuotaFullDiscountCount);
             }
             if (quotaFullDiscounts.Count == 0) {
                 Logger.LogInfo($"No moons for Quota Full Discount available!");
@@ -722,9 +722,9 @@ namespace LethalMoonUnlocks {
                 return;
             }
             if (ConfigManager.CheapMoonBiasNewDayDiscovery) {
-                newDayDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(nddCandidates, ConfigManager.CheapMoonBiasNewDayDiscoveryValue), ConfigManager.NewDayDiscoveryCount);
+                newDayDiscoveries = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(nddCandidates, ConfigManager.CheapMoonBiasNewDayDiscoveryValue), ConfigManager.NewDayDiscoveryCount);
             } else {
-                newDayDiscoveries = RandomSelector.Get(nddCandidates, ConfigManager.NewDayDiscoveryCount);
+                newDayDiscoveries = RandomHelper.Select(nddCandidates, ConfigManager.NewDayDiscoveryCount);
             }
             foreach (var d in newDayDiscoveries) {
                 d.Discovered = true;
@@ -763,9 +763,9 @@ namespace LethalMoonUnlocks {
                 return;
             }
             if (ConfigManager.CheapMoonBiasTravelDiscovery) {
-                travelDiscoveries = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(tdCandidates, ConfigManager.CheapMoonBiasTravelDiscoveryValue), ConfigManager.TravelDiscoveryCount);
+                travelDiscoveries = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(tdCandidates, ConfigManager.CheapMoonBiasTravelDiscoveryValue), ConfigManager.TravelDiscoveryCount);
             } else {
-                travelDiscoveries = RandomSelector.Get(tdCandidates, ConfigManager.TravelDiscoveryCount);
+                travelDiscoveries = RandomHelper.Select(tdCandidates, ConfigManager.TravelDiscoveryCount);
             }
 
             foreach (var d in travelDiscoveries) {
@@ -833,7 +833,7 @@ namespace LethalMoonUnlocks {
                 case "Tag":
                     List<LMUnlockable> tagMatches = new List<LMUnlockable>();
                     List<ContentTag> matchingTags = matchingUnlock.ExtendedLevel.ContentTags;
-                    ContentTag randomTag = matchingTags[UnityEngine.Random.Range(0, matchingTags.Count)];
+                    ContentTag randomTag = matchingTags[RandomHelper.Range(0, matchingTags.Count)];
                     foreach (var unlock in unlocksToMatch) {
                         if (unlock.ExtendedLevel.ContentTags.Select(tag => tag.contentTagName.ToLower()).Contains(randomTag.contentTagName.ToLower()) && !tagMatches.Contains(unlock))
                             tagMatches.Add(unlock);
@@ -858,7 +858,7 @@ namespace LethalMoonUnlocks {
                     Dictionary<string, List<string>> matchingCustomGroups = matchingUnlock.GetMatchingCustomGroups();
                     if (matchingCustomGroups == null || matchingCustomGroups.Count == 0)
                         break;
-                    string randomCustomGroupName = matchingCustomGroups.Keys.ToList()[UnityEngine.Random.Range(0, matchingCustomGroups.Count)];
+                    string randomCustomGroupName = matchingCustomGroups.Keys.ToList()[RandomHelper.Range(0, matchingCustomGroups.Count)];
                     if (matchingCustomGroups.Count > 1) {
                         Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Moon is member of multiple groups. Selected {randomCustomGroupName} for matching.");
                     }
@@ -987,7 +987,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void AddFreeToRotation(int amount) {
-            var freeMoons = RandomSelector.Get(DiscoveryFreeCandidates, amount);
+            var freeMoons = RandomHelper.Select(DiscoveryFreeCandidates, amount);
             Logger.LogInfo($"New free rotation: [ {string.Join(", ", freeMoons.Select(moon => moon.Name))} ]");
             foreach (var candidate in freeMoons) {
                 candidate.Discovered = true;
@@ -995,7 +995,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void AddDynamicFreeToRotation(int amount) {
-            var dynamicFreeMoons = RandomSelector.Get(DiscoveryDynamicFreeCandidates, amount);
+            var dynamicFreeMoons = RandomHelper.Select(DiscoveryDynamicFreeCandidates, amount);
             Logger.LogInfo($"New dynamic free rotation: [ {string.Join(", ", dynamicFreeMoons.Select(moon => moon.Name))} ]");
             foreach (var candidate in dynamicFreeMoons) {
                 candidate.Discovered = true;
@@ -1005,10 +1005,10 @@ namespace LethalMoonUnlocks {
         private void AddPaidToRotation(int amount) {
             List<LMUnlockable> paidMoons;
             if (ConfigManager.CheapMoonBiasPaidRotation) {
-                paidMoons = RandomSelector.GetWeighted(RandomSelector.CalculateBiasedWeights(DiscoveryPaidCandidates, ConfigManager.CheapMoonBiasPaidRotationValue),amount);
+                paidMoons = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(DiscoveryPaidCandidates, ConfigManager.CheapMoonBiasPaidRotationValue),amount);
             }
             else {
-                paidMoons = RandomSelector.Get(DiscoveryPaidCandidates, amount);
+                paidMoons = RandomHelper.Select(DiscoveryPaidCandidates, amount);
             }
             Logger.LogInfo($"New paid rotation: [ {string.Join(", ", paidMoons.Select(moon => moon.Name))} ]");
             foreach (var candidate in paidMoons) {
@@ -1026,7 +1026,7 @@ namespace LethalMoonUnlocks {
                     Logger.LogWarning("Can't find any free and discovered moon! You probably want at least one free moon available at all times.. Abort auto routing ship!");
                     return;
                 }
-                var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[UnityEngine.Random.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
+                var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[RandomHelper.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
                 Logger.LogInfo($"Current moon is not discovered! Rerouting ship to {randomDiscoveredFreeMoon.NumberlessPlanetName}..");
                 if (DayCount > 0) {
                     NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing ship to a safe moon..", Key = "LMU_RerouteFree" });

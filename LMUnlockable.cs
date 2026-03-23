@@ -356,8 +356,7 @@ namespace LethalMoonUnlocks {
 
         internal void RefreshSale() {
             Logger.LogDebug($"{Name}: Refreshing sale rate..");
-            int rnd = UnityEngine.Random.Range(0, 100);
-            if (rnd < ConfigManager.SalesChance && RoutePrice > 0) {
+            if (RandomHelper.Chance(ConfigManager.SalesChance) && RoutePrice > 0) {
                 OnSale = true;
                 SalesRate = ConfigManager.SalesRate;
                 Logger.LogInfo($"{Name} is on SALE for {SalesRate}% OFF!");

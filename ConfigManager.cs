@@ -28,7 +28,7 @@ namespace LethalMoonUnlocks {
         internal static int QuotaUnlockChance { get; private set; }
         internal static int QuotaUnlockCount { 
             get {
-                return UnityEngine.Random.Range(_quotaUnlockCountMin, _quotaUnlockCountMax + 1);
+                return RandomHelper.Range(_quotaUnlockCountMin, _quotaUnlockCountMax + 1);
             } 
         }
         private static int _quotaUnlockCountMin;
@@ -56,7 +56,7 @@ namespace LethalMoonUnlocks {
         internal static int QuotaDiscountChance { get; private set; }
         internal static int QuotaDiscountCount {
             get {
-                return UnityEngine.Random.Range(_quotaDiscountCountMin, _quotaDiscountCountMax + 1);
+                return RandomHelper.Range(_quotaDiscountCountMin, _quotaDiscountCountMax + 1);
             }
         }
         private static int _quotaDiscountCountMin;
@@ -67,7 +67,7 @@ namespace LethalMoonUnlocks {
         internal static int QuotaFullDiscountChance { get; private set; }
         internal static int QuotaFullDiscountCount {
             get {
-                return UnityEngine.Random.Range(_quotaFullDiscountCountMin, _quotaFullDiscountCountMax + 1);
+                return RandomHelper.Range(_quotaFullDiscountCountMin, _quotaFullDiscountCountMax + 1);
             }
         }
         private static int _quotaFullDiscountCountMin;
@@ -98,7 +98,7 @@ namespace LethalMoonUnlocks {
         internal static int QuotaDiscoveryChance { get; private set; }
         internal static int QuotaDiscoveryCount {
             get {
-                return UnityEngine.Random.Range(_quotaDiscoveryCountMin, _quotaDiscoveryCountMax + 1);
+                return RandomHelper.Range(_quotaDiscoveryCountMin, _quotaDiscoveryCountMax + 1);
             }
         }
         private static int _quotaDiscoveryCountMin;
@@ -112,7 +112,7 @@ namespace LethalMoonUnlocks {
         internal static int TravelDiscoveryChance { get; private set; }
         internal static int TravelDiscoveryCount {
             get {
-                return UnityEngine.Random.Range(_travelDiscoveryCountMin, _travelDiscoveryCountMax + 1);
+                return RandomHelper.Range(_travelDiscoveryCountMin, _travelDiscoveryCountMax + 1);
             }
         }
         private static int _travelDiscoveryCountMin;
@@ -124,7 +124,7 @@ namespace LethalMoonUnlocks {
         internal static int NewDayDiscoveryChance { get; private set; }
         internal static int NewDayDiscoveryCount {
             get {
-                return UnityEngine.Random.Range(_newDayDiscoveryCountMin, _newDayDiscoveryCountMax + 1);
+                return RandomHelper.Range(_newDayDiscoveryCountMin, _newDayDiscoveryCountMax + 1);
             }
         }
         private static int _newDayDiscoveryCountMin;
@@ -137,7 +137,7 @@ namespace LethalMoonUnlocks {
         internal static bool SalesShuffleDaily { get; private set; }
         internal static int SalesMinDayCount { get; private set; }
         internal static int SalesRate {
-            get { return UnityEngine.Random.Range(_salesRateMin, _salesRateMax); }
+            get { return RandomHelper.Range(_salesRateMin, _salesRateMax); }
         }
         private static int _salesRateMin;
         private static int _salesRateMax;
