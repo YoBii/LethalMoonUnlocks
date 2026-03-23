@@ -1,3 +1,4 @@
+using System.Linq;
 using HarmonyLib;
 using LethalMoonUnlocks.Util;
 
@@ -15,24 +16,44 @@ namespace LethalMoonUnlocks.Patches {
                 return true;
             }
 
-            bool queuedAlert = false;
+            bool paintingSold = false;
+            
             foreach (var item in __instance.itemsOnCounter) {
-                if (item == null || item.itemProperties == null || item.itemProperties.itemName != "Painting") {
+                if (item == null || item.itemProperties == null) {
                     continue;
                 }
 
-                ProgressionManager.Instance.PaintingsSold++;
+                if (item.itemProperties.itemName.Contains("Painting")) {
+                    ProgressionManager.Instance.PaintingsSold++;
+                    paintingSold = true;
+                }
+            }
+
+            if (paintingSold) {
                 NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
                     Header = "Company Report",
-                    Text = $"{item.itemProperties.itemName}s sold: {ProgressionManager.Instance.PaintingsSold}/{ConfigManager.GaletryStoryLockPaintingsAmount}",
+                    Text = $"Paintings sold: {ProgressionManager.Instance.PaintingsSold}/{ConfigManager.GaletryStoryLockPaintingsAmount}",
                     IsWarning = ProgressionManager.Instance.PaintingsSold >= ConfigManager.GaletryStoryLockPaintingsAmount,
                     Key = "LMU_GaletryProgress"
                 });
-                queuedAlert = true;
-            }
-
-            if (queuedAlert) {
                 NetworkManager.Instance.ServerSendAlertQueueEvent();
+                if (ProgressionManager.Instance.PaintingsSold >= ConfigManager.GaletryStoryLockPaintingsAmount &&
+                    UnlockManager.Instance.Unlocks.FirstOrDefault(
+                        u => u is { Name: "Galetry", StoryUnlock: true, StoryIsUnlocked: false }) is { } galetryUnlock) {
+                    galetryUnlock.StoryIsUnlocked = true;
+                    Logger.LogInfo($"{galetryUnlock.Name}: Releasing story lock.. {galetryUnlock.Name} now available (for discovery).");
+                    NetworkManager.Instance.ServerSendAlertMessage(new Notification()
+                    {
+                        Header = "Art exhibition!",
+                        Text = "The art museum awaits you. Pay us a visit, stare at the art and regain intellectual sustenance.",
+                        Key = "LMU_GaletryProgress"
+                    });
+                    galetryUnlock.Discovered = true;
+                    galetryUnlock.PermanentlyDiscovered = true;
+                    galetryUnlock.IterateState();
+                    galetryUnlock.ApplyState();
+                    galetryUnlock.ApplyVisibility();
+                }
             }
 
             return true;
