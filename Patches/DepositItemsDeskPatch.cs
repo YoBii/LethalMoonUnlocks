@@ -45,7 +45,7 @@ namespace LethalMoonUnlocks.Patches {
                     NetworkManager.Instance.ServerSendAlertMessage(new Notification()
                     {
                         Header = "Art exhibition!",
-                        Text = "The art museum awaits you. Pay us a visit, stare at the art and regain intellectual sustenance.",
+                        Text = "The art museum welcomes visitors. Step inside, stare at the art and regain intellectual sustenance.",
                         Key = "LMU_GaletryProgress"
                     });
                     galetryUnlock.Discovered = true;
