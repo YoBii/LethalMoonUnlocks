@@ -163,8 +163,8 @@ namespace LethalMoonUnlocks.Compatibility {
                 var constellationMoons = constellation.constelMoons.ToHashSet();
                 var constellationUnlocks = UnlockManager.Instance.Unlocks
                     .Where(unlock => constellationMoons.Contains(unlock.Name))
-                    .OrderBy(unlock => !unlock.IsHidden && !unlock.IsLocked)
-                    .ThenBy(unlock => !unlock.IsLocked)
+                    .OrderBy(unlock => !unlock.OriginallyHidden && !unlock.OriginallyLocked)
+                    .ThenBy(unlock => !unlock.OriginallyLocked)
                     .ThenBy(unlock => unlock.ExtendedLevel.RoutePrice)
                     .ToList();
 
