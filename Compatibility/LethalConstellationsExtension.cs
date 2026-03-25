@@ -30,7 +30,7 @@ namespace LethalMoonUnlocks.Compatibility {
         }
 
         public string GetConstellationName(LMUnlockable unlock) {
-            ClassMapper constellation = Collections.ConstellationStuff.Where(constellation => constellation.constelMoons.Any(moon => moon == unlock.Name)).FirstOrDefault();
+            ClassMapper constellation = Collections.ConstellationStuff.FirstOrDefault(constellation => constellation.constelMoons.Any(moon => moon == unlock.Name));
             if (constellation != null) {
                 return constellation.consName;
             }

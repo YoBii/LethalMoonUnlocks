@@ -15,6 +15,7 @@ namespace LethalMoonUnlocks {
         public static UnlockManager Instance { get; private set; }
         internal static string LogFormatString { get; } = "| {0, -20} | {1, 6} | {2, 7} | {3, 7} | {4, 8} | {5, 11} | {6, 5} | {7, 12} | {8, 12} | {9, 11} |";
         internal static List<string> LogHeader { get; } = ["Name", "Price", "Bought", "Visits", "Catalog", "Discovered", "Sale", "Orig. Price", "Orig. State", "Story Lock"];
+        internal static string FormatLogRow(params object[] values) => string.Format(LogFormatString, values);
         internal Terminal Terminal { get; set; }
         internal List<ExtendedLevel> AllLevels { get; private set; } = PatchedContent.ExtendedLevels;
         public List<LMUnlockable> Unlocks { get; set; } = new List<LMUnlockable>();
@@ -324,11 +325,11 @@ namespace LethalMoonUnlocks {
                 }
             }
 
-            string separator = string.Format(LogFormatString, new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11));
+            string header = FormatLogRow(LogHeader.Cast<object>().ToArray());
+            string separator = FormatLogRow(new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11));
             LogLine("| LMUnlockable state table");
-            LogLine(string.Format(LogFormatString, LogHeader.ToArray()));
 
-            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations") {
+            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
                 var groupedUnlocks = new Dictionary<string, List<LMUnlockable>>();
                 var unmatchedUnlocks = new List<LMUnlockable>();
 
@@ -347,27 +348,35 @@ namespace LethalMoonUnlocks {
                 }
 
                 foreach (var constellation in groupedUnlocks) {
-                    LogLine(separator);
                     LogLine($"| Constellation: {constellation.Key}");
+                    LogLine(separator);
+                    LogLine(header);
+                    LogLine(separator);
                     foreach (var unlock in constellation.Value) {
                         LogLine(unlock.ToString());
                     }
+                    LogLine(separator);
                 }
 
                 if (unmatchedUnlocks.Count > 0) {
-                    LogLine(separator);
                     LogLine("| Unmatched moons");
+                    LogLine(separator);
+                    LogLine(header);
+                    LogLine(separator);
                     foreach (var unlock in unmatchedUnlocks) {
                         LogLine(unlock.ToString());
                     }
+                    LogLine(separator);
                     Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation matching is active. This should not exist at runtime: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
                 }
 
                 return;
             }
 
+            LogLine(header);
+            
             foreach (var unlock in Unlocks.Select((value, i) => new { i, value })) {
-                if (unlock.i % 4 == 0) {
+                if (unlock.i % 5 == 0) {
                     LogLine(separator);
                 }
                 LogLine(unlock.value.ToString());

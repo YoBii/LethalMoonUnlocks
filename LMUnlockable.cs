@@ -643,7 +643,7 @@ namespace LethalMoonUnlocks {
             if (StoryUnlock && !StoryIsUnlocked) storyLock = "Locked";
             else if (StoryUnlock && StoryIsUnlocked) storyLock = "Released";
 
-            return string.Format(UnlockManager.LogFormatString, [ Name, RoutePrice, BuyCount, visits, state, discovered, sale, OriginalPrice, originalState, storyLock ]);
+            return UnlockManager.FormatLogRow(Name, RoutePrice, BuyCount, visits, state, discovered, sale, OriginalPrice, originalState, storyLock);
         }
     }
 }
