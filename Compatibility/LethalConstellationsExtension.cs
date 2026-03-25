@@ -157,8 +157,10 @@ namespace LethalMoonUnlocks.Compatibility {
         
         private void ApplyDefaultMoons() {
             foreach (ClassMapper constellation in Collections.ConstellationStuff) {
-                var constellationMoons = constellation.constelMoons.ToHashSet();
+                if (!string.IsNullOrEmpty(constellation.defaultMoon)) continue;
+                Logger.LogDebug($"Constellation {constellation.consName}: No default moon set. Setting default moon to cheapest non-hidden or locked moon in constellation.");
                 
+                var constellationMoons = constellation.constelMoons.ToHashSet();
                 var constellationUnlocks = UnlockManager.Instance.Unlocks
                     .Where(unlock => constellationMoons.Contains(unlock.Name))
                     .OrderBy(unlock => !unlock.IsHidden && !unlock.IsLocked)
