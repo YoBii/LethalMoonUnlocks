@@ -316,22 +316,61 @@ namespace LethalMoonUnlocks {
         }
 
         internal void LogUnlockables(bool debug = true) {
-            if (debug) {
-                Logger.LogDebug("| LMUnlockable state table");
-                Logger.LogDebug(string.Format(LogFormatString, LogHeader.ToArray()));
-                foreach (var unlock in Unlocks.Select((value, i) => new { i, value })) {
-                    if (unlock.i % 4 == 0)
-                        Logger.LogDebug(string.Format(LogFormatString, new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11) ));
-                    Logger.LogDebug(unlock.value);
+            void LogLine(string message) {
+                if (debug) {
+                    Logger.LogDebug(message);
+                } else {
+                    Logger.LogInfo(message);
                 }
-            } else {
-                Logger.LogInfo("| LMUnlockable state table");
-                Logger.LogInfo(string.Format(LogFormatString, LogHeader.ToArray()));
-                foreach (var unlock in Unlocks.Select((value, i) => new { i, value })) {
-                    if (unlock.i % 4 == 0)
-                        Logger.LogInfo(string.Format(LogFormatString, new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11)));
-                    Logger.LogInfo(unlock.value);
+            }
+
+            string separator = string.Format(LogFormatString, new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11));
+            LogLine("| LMUnlockable state table");
+            LogLine(string.Format(LogFormatString, LogHeader.ToArray()));
+
+            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations") {
+                var groupedUnlocks = new Dictionary<string, List<LMUnlockable>>();
+                var unmatchedUnlocks = new List<LMUnlockable>();
+
+                foreach (var unlock in Unlocks) {
+                    string constellationName = Plugin.LethalConstellationsExtension.GetConstellationName(unlock);
+                    if (string.IsNullOrWhiteSpace(constellationName)) {
+                        unmatchedUnlocks.Add(unlock);
+                        continue;
+                    }
+
+                    if (!groupedUnlocks.TryGetValue(constellationName, out var constellationUnlocks)) {
+                        constellationUnlocks = new List<LMUnlockable>();
+                        groupedUnlocks[constellationName] = constellationUnlocks;
+                    }
+                    constellationUnlocks.Add(unlock);
                 }
+
+                foreach (var constellation in groupedUnlocks) {
+                    LogLine(separator);
+                    LogLine($"| Constellation: {constellation.Key}");
+                    foreach (var unlock in constellation.Value) {
+                        LogLine(unlock.ToString());
+                    }
+                }
+
+                if (unmatchedUnlocks.Count > 0) {
+                    LogLine(separator);
+                    LogLine("| Unmatched moons");
+                    foreach (var unlock in unmatchedUnlocks) {
+                        LogLine(unlock.ToString());
+                    }
+                    Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation matching is active. This should not exist at runtime: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
+                }
+
+                return;
+            }
+
+            foreach (var unlock in Unlocks.Select((value, i) => new { i, value })) {
+                if (unlock.i % 4 == 0) {
+                    LogLine(separator);
+                }
+                LogLine(unlock.value.ToString());
             }
         }
 
