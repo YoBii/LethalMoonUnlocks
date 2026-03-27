@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using LethalMoonUnlocks.Compatibility;
 
 namespace LethalMoonUnlocks {
     internal static class SaveManager {
@@ -10,7 +11,8 @@ namespace LethalMoonUnlocks {
             "LMU_QuotaUnlocksCount",
             "LMU_QuotaDiscountsCount",
             "LMU_QuotaFullDiscountsCount",
-            "LMU_Progression"
+            "LMU_Progression",
+            "LMU_LethalConstellations"
         ];
 
         internal static Dictionary<string, object> Savedata {
@@ -60,6 +62,11 @@ namespace LethalMoonUnlocks {
                     ProgressionSaveData progressionSaveData = ES3.Load<ProgressionSaveData>("LMU_Progression", currentSave);
                     dictionary.Add("LMU_Progression", progressionSaveData);
                     Logger.LogInfo($"Found LMU_Progression: PaintingsSold={progressionSaveData.PaintingsSold}");
+                }
+                if (ES3.KeyExists("LMU_LethalConstellations", currentSave)) {
+                    LethalConstellationsSaveData lethalConstellationsSaveData = ES3.Load<LethalConstellationsSaveData>("LMU_LethalConstellations", currentSave);
+                    dictionary.Add("LMU_LethalConstellations", lethalConstellationsSaveData);
+                    Logger.LogInfo($"Found LMU_LethalConstellations: {lethalConstellationsSaveData?.Constellations?.Count ?? 0} constellations, seed={lethalConstellationsSaveData?.DiscoveryRotationSeed ?? 0}");
                 }
 
                 // BAND AID FIX for credits being wacky
@@ -132,7 +139,7 @@ namespace LethalMoonUnlocks {
                 ES3.DeleteKey("LMU_QuotaDiscountsCount", currentSave);
             }
             if (UnlockManager.Instance.QuotaFullDiscountsCount > 0) {
-                ES3.Save<int>("LMU_QuotaFullDiscountsCount", UnlockManager.Instance.QuotaCount, currentSave);
+                ES3.Save<int>("LMU_QuotaFullDiscountsCount", UnlockManager.Instance.QuotaFullDiscountsCount, currentSave);
                 Logger.LogInfo($"Saving LMU_QuotaFullDiscountsCount: {string.Join(", ", UnlockManager.Instance.QuotaFullDiscountsCount)}");
             } else if (ES3.KeyExists("LMU_QuotaFullDiscountsCount", currentSave)) {
                 ES3.DeleteKey("LMU_QuotaFullDiscountsCount", currentSave);
@@ -144,6 +151,20 @@ namespace LethalMoonUnlocks {
                     Logger.LogInfo("Saving LMU_Progression.");
                 } else if (ES3.KeyExists("LMU_Progression", currentSave)) {
                     ES3.DeleteKey("LMU_Progression", currentSave);
+                }
+            }
+            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
+                LethalConstellationsSaveData lethalConstellationsSaveData = Plugin.LethalConstellationsExtension.GetSaveData();
+                lethalConstellationsSaveData.DiscoveryRotationSeed = UnlockManager.Instance?.DiscoveryRotationSeed ?? 0;
+                lethalConstellationsSaveData.LocalConstellationDiscoveries = Plugin.ConstellationManager != null
+                    ? Plugin.ConstellationManager.GetAllLocalMoonDiscoveries()
+                    : new Dictionary<string, List<string>>();
+
+                if (lethalConstellationsSaveData.HasData()) {
+                    ES3.Save<LethalConstellationsSaveData>("LMU_LethalConstellations", lethalConstellationsSaveData, currentSave);
+                    Logger.LogInfo($"Saving LMU_LethalConstellations: {lethalConstellationsSaveData.Constellations.Count} constellations, seed={lethalConstellationsSaveData.DiscoveryRotationSeed}");
+                } else if (ES3.KeyExists("LMU_LethalConstellations", currentSave)) {
+                    ES3.DeleteKey("LMU_LethalConstellations", currentSave);
                 }
             }
 
