@@ -1,4 +1,3 @@
-using System.Linq;
 using HarmonyLib;
 using LethalMoonUnlocks.Util;
 
@@ -38,21 +37,14 @@ namespace LethalMoonUnlocks.Patches {
                 });
                 NetworkManager.Instance.ServerSendAlertQueueEvent();
                 if (ProgressionManager.Instance.PaintingsSold >= ConfigManager.GaletryStoryLockPaintingsAmount &&
-                    UnlockManager.Instance.Unlocks.FirstOrDefault(
-                        u => u is { Name: "Galetry", StoryUnlock: true, StoryIsUnlocked: false }) is { } galetryUnlock) {
-                    galetryUnlock.StoryIsUnlocked = true;
-                    Logger.LogInfo($"{galetryUnlock.Name}: Releasing story lock.. {galetryUnlock.Name} now available (for discovery).");
+                    UnlockManager.TryReleaseStoryLock("Galetry")) {
                     NetworkManager.Instance.ServerSendAlertMessage(new Notification()
                     {
                         Header = "Art exhibition!",
                         Text = "The art museum welcomes visitors. Step inside, stare at the art and regain intellectual sustenance.",
                         Key = "LMU_GaletryProgress"
                     });
-                    galetryUnlock.Discovered = true;
-                    galetryUnlock.PermanentlyDiscovered = true;
-                    galetryUnlock.IterateState();
-                    galetryUnlock.ApplyState();
-                    galetryUnlock.ApplyVisibility();
+                    NetworkManager.Instance.ServerSendAlertQueueEvent();
                 }
             }
 
