@@ -277,195 +277,196 @@ namespace LethalMoonUnlocks {
             return customGroups;
         }
         private static void RefreshValues() {
-            ResetWhenFired = GetConfigValue("1 - General settings", "Reset when fired", true, "Reset your progress when being fired. Unlocks, Discounts, and permanently discovered moons will all be wiped.\n" +
+            ResetWhenFired = BindValue("1 - General settings", "Reset when fired", true, "Reset your progress when being fired. Unlocks, Discounts, and permanently discovered moons will all be wiped.\n" +
                 "Unlocks, Discounts, Permanently Discovered moons, ..  all of it will persist unless you create a new save.\n" +
                 "The only exception to this option is the base selection of moons in Discovery Mode.");
-            ChatMessages = GetConfigValue("1 - General settings", "Show chat messages", true, "When enabled, LethalMoonUnlocks will send messages to the in-game chat whenever something relevant happens.");
-            ShowAlerts = GetConfigValue("1 - General settings", "Show alert messages", false, "When enabled, LethalMoonUnlocks will display alert messages whenever something relevant happens.");
+            ChatMessages = BindValue("1 - General settings", "Show chat messages", true, "When enabled, LethalMoonUnlocks will send messages to the in-game chat whenever something relevant happens.");
+            ShowAlerts = BindValue("1 - General settings", "Show alert messages", false, "When enabled, LethalMoonUnlocks will display alert messages whenever something relevant happens.");
 
-            DisplayTerminalTags = GetConfigValue("1.1 - Terminal moon tags", "Display tags in terminal", false, "When enabled, LethalMoonUnlocks will display additional tags in the Terminal moon catalog.\n" +
+            DisplayTerminalTags = BindValue("1.1 - Terminal moon tags", "Display tags in terminal", false, "When enabled, LethalMoonUnlocks will display additional tags in the Terminal moon catalog.\n" +
                 "These tags will indicate various conditions, such as a moon being unlocked or discounted, being on sale, etc.\n" +
                 "If custom moon groups or matching by LLL tag are enabled, you'll also see the custom groups or LLL tags a moon is associated with.\n" +
                 "NOTE: At this time additional tags will only show in the standard LLL moon catalog and TerminalFormatter. Any other mod replacing the 'moons' command will probably cause issues.");
-            ShowTagInOrbit = GetConfigValue("1.1 - Terminal moon tags", "In orbit tag", true, "Display a tag to indicate the moon you're currently orbiting.");
-            ShowTagExplored = GetConfigValue("1.1 - Terminal moon tags", "Exploration tag", true, "Display a tag to indicate which moons have not been landed on yet. After landing once, it will keep track of how many times you've landed in total.");
-            ShowTagUnlockDiscount = GetConfigValue("1.1 - Terminal moon tags", "Unlock discount tag", true, "Display a tag to indicate Unlocks and Discounts as well as how many routes are left before they expire.");
-            ShowTagNewDiscovery = GetConfigValue("1.1 - Terminal moon tags", "New discovery tag", true, "Discovery Mode only: display a tag to indicate which moons are new discoveries i.e. available in the moon catalog for the first time. The tag will vanish when you route to the moon or the moon catalog is shuffled.");
-            ShowTagPermanentDiscovery = GetConfigValue("1.1 - Terminal moon tags", "Permanent discovery tag", true, "Discovery Mode only: display a tag to indicate permanently discovered moons.\n" +
+            ShowTagInOrbit = BindValue("1.1 - Terminal moon tags", "In orbit tag", true, "Display a tag to indicate the moon you're currently orbiting.");
+            ShowTagExplored = BindValue("1.1 - Terminal moon tags", "Exploration tag", true, "Display a tag to indicate which moons have not been landed on yet. After landing once, it will keep track of how many times you've landed in total.");
+            ShowTagUnlockDiscount = BindValue("1.1 - Terminal moon tags", "Unlock discount tag", true, "Display a tag to indicate Unlocks and Discounts as well as how many routes are left before they expire.");
+            ShowTagNewDiscovery = BindValue("1.1 - Terminal moon tags", "New discovery tag", true, "Discovery Mode only: display a tag to indicate which moons are new discoveries i.e. available in the moon catalog for the first time. The tag will vanish when you route to the moon or the moon catalog is shuffled.");
+            ShowTagPermanentDiscovery = BindValue("1.1 - Terminal moon tags", "Permanent discovery tag", true, "Discovery Mode only: display a tag to indicate permanently discovered moons.\n" +
                 "Displays as [PINNED].");
-            ShowTagSale = GetConfigValue("1.1 - Terminal moon tags", "Sales tag", true, "Moon Sales only: display a tag to indicate which moons are on sale, as well as the percentage of the sale.");
-            ShowTagGroups = GetConfigValue("1.1 - Terminal moon tags", "Group tag", true, "Moon Group Matching only: display a tag to indicate groups a moon belongs to. Limited to custom group and LLL tag matching methods.");
+            ShowTagSale = BindValue("1.1 - Terminal moon tags", "Sales tag", true, "Moon Sales only: display a tag to indicate which moons are on sale, as well as the percentage of the sale.");
+            ShowTagGroups = BindValue("1.1 - Terminal moon tags", "Group tag", true, "Moon Group Matching only: display a tag to indicate groups a moon belongs to. Limited to custom group and LLL tag matching methods.");
 
-            UnlockMode = GetConfigValue("2 - Unlock Mode (Default)", "Enable Unlock Mode", true, "Unlock Mode is the default mode, akin to the original Permanent Moons mod. In Unlock Mode, when you buy a paid moon, it will be 'unlocked'.\n" +
+            UnlockMode = BindValue("2 - Unlock Mode (Default)", "Enable Unlock Mode", true, "Unlock Mode is the default mode, akin to the original Permanent Moons mod. In Unlock Mode, when you buy a paid moon, it will be 'unlocked'.\n" +
                 "Once unlocked, moons are completely free, and by default, will stay free permanently.\n" +
                 "NOTE: This setting and all settings relating to Unlocks will have no effect if Discount Mode is enabled!");
-            UnlocksResetAfterVisits = GetConfigValue("2 - Unlock Mode (Default)", "Unlocks expire", 0, "Unlocks will expire after a set number of free routes, after which they will become paid again.\n" +
+            UnlocksResetAfterVisits = BindValue("2 - Unlock Mode (Default)", "Unlocks expire", 0, "Unlocks will expire after a set number of free routes, after which they will become paid again.\n" +
                 "Set to 0 to disable this feature.");
-            DiscoveryKeepUnlocks = GetConfigValue("2 - Unlock Mode (Default)", "Unlocked moons are permanently discovered", false, "Discovery Mode only: Every unlocked moon is also permanently discovered i.e. added to the moon catalog on top of your base selection.");
-            UnlocksResetAfterVisitsPermDiscovery = GetConfigValue("2 - Unlock Mode (Default)", "Reset permanent discovery on unlock expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its unlock expires.\n" +
+            DiscoveryKeepUnlocks = BindValue("2 - Unlock Mode (Default)", "Unlocked moons are permanently discovered", false, "Discovery Mode only: Every unlocked moon is also permanently discovered i.e. added to the moon catalog on top of your base selection.");
+            UnlocksResetAfterVisitsPermDiscovery = BindValue("2 - Unlock Mode (Default)", "Reset permanent discovery on unlock expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its unlock expires.\n" +
                 "This is the only way permanent discoveries can vanish during a run in Unlock Mode.\n");
 
-            QuotaUnlocks = GetConfigValue("2.1 - Quota Unlocks", "Enable Quota Unlocks", false, "Quota Unlocks are rewarded for meeting the quota. When triggered, Quota Unlocks will grant you one or more unlocks for free.\n" +
+            QuotaUnlocks = BindValue("2.1 - Quota Unlocks", "Enable Quota Unlocks", false, "Quota Unlocks are rewarded for meeting the quota. When triggered, Quota Unlocks will grant you one or more unlocks for free.\n" +
                 "The moons that are unlocked are randomly selected.");
-            QuotaUnlockChance = GetConfigValue("2.1 - Quota Unlocks", "Quota Unlock trigger chance", 100, "The chance to trigger a Quota Unlock every time you meet the quota.", new AcceptableValueRange<int>(0, 100));
-            _quotaUnlockCountMin = GetConfigValue("2.1 - Quota Unlocks", "Minimum unlocked moon count", 1, "The minimum number of moons that will be unlocked each time a Quota Unlock is triggered.", new AcceptableValueRange<int>(1, 10));
-            _quotaUnlockCountMax = GetConfigValue("2.1 - Quota Unlocks", "Maximum unlocked moon count", 1, "The maximum number of moons that will be unlocked each time a Quota Unlock is triggered.", new AcceptableValueRange<int>(1, 10));
-            QuotaUnlockMaxPrice = GetConfigValue("2.1 - Quota Unlocks", "Maximum moon price to unlock", 0, "Only consider moons up to this price to be unlocked.\n" +
+            QuotaUnlockChance = BindValue("2.1 - Quota Unlocks", "Quota Unlock trigger chance", 100, "The chance to trigger a Quota Unlock every time you meet the quota.", new AcceptableValueRange<int>(0, 100));
+            _quotaUnlockCountMin = BindValue("2.1 - Quota Unlocks", "Minimum unlocked moon count", 1, "The minimum number of moons that will be unlocked each time a Quota Unlock is triggered.", new AcceptableValueRange<int>(1, 10));
+            _quotaUnlockCountMax = BindValue("2.1 - Quota Unlocks", "Maximum unlocked moon count", 1, "The maximum number of moons that will be unlocked each time a Quota Unlock is triggered.", new AcceptableValueRange<int>(1, 10));
+            QuotaUnlockMaxPrice = BindValue("2.1 - Quota Unlocks", "Maximum moon price to unlock", 0, "Only consider moons up to this price to be unlocked.\n" +
                 "Set to 0 to disable this feature.");
-            QuotaUnlockMaxCount = GetConfigValue("2.1 - Quota Unlocks", "Limit number of unlocks", 0, "Limit how many Quota Unlocks you can receive during a run. After reaching the limit, Quota Unlocks will no longer be granted.\n" +
+            QuotaUnlockMaxCount = BindValue("2.1 - Quota Unlocks", "Limit number of unlocks", 0, "Limit how many Quota Unlocks you can receive during a run. After reaching the limit, Quota Unlocks will no longer be granted.\n" +
                 "Set to 0 to disable this feature.");
 
-            DiscountMode = GetConfigValue("3 - Discount Mode", "Enable Discount Mode", false, "In Discount Mode, Unlocks are replaced with Discounts.\n" +
+            DiscountMode = BindValue("3 - Discount Mode", "Enable Discount Mode", false, "In Discount Mode, Unlocks are replaced with Discounts.\n" +
                 "Each time you route to a paid moon, you will unlock the next available discount rate until the final discount is reached.\n" +
                 "The discount rates are fully customizable.");
-            DiscountsString = GetConfigValue("3 - Discount Mode", "Discount rates", "50,75,100", "The discount rates that are applied to moon prices as a % off of the original routing price.\n" +
+            DiscountsString = BindValue("3 - Discount Mode", "Discount rates", "50,75,100", "The discount rates that are applied to moon prices as a % off of the original routing price.\n" +
                 "For example, '50,75,100', would make each moon 50% off after the first purchase, 75% off after the second purchase, and free after the third purchase.\n" +
                 "Discount rates are separated by commas and can contain any number of rates");
             Logger.LogInfo($"Discount rates (% off): {string.Join(", ", Discounts.Select(discount => discount + "%"))}");
-            DiscountsResetAfterVisits = GetConfigValue("3 - Discount Mode", "Discounts expire", 0, "Discounts will expire after a set number of free routes, after which they will return to their original price.\n" +
+            DiscountsResetAfterVisits = BindValue("3 - Discount Mode", "Discounts expire", 0, "Discounts will expire after a set number of free routes, after which they will return to their original price.\n" +
                 "Set to 0 to disable this feature.\n" +
                 "NOTE: The final discount rate must be set to '100' for this to work!");
-            DiscoveryKeepDiscounts = GetConfigValue("3 - Discount Mode", "Discounted moons are permanently discovered", false, "Discovery Mode only: Every discounted moon is also permanently discovered i.e. added to the moon catalog on top of your base selection.");
-            DiscountsResetAfterVisitsPermDiscovery = GetConfigValue("3 - Discount Mode", "Reset permanent discoveries on discount expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its discount expires.\n" +
+            DiscoveryKeepDiscounts = BindValue("3 - Discount Mode", "Discounted moons are permanently discovered", false, "Discovery Mode only: Every discounted moon is also permanently discovered i.e. added to the moon catalog on top of your base selection.");
+            DiscountsResetAfterVisitsPermDiscovery = BindValue("3 - Discount Mode", "Reset permanent discoveries on discount expiry", false, "Discovery Mode only: Reset a moon's permanent discovery status when its discount expires.\n" +
                 "This is the only way permanent discoveries can vanish during a run in Discount Mode.\n");
 
-            QuotaDiscounts = GetConfigValue("3.1 - Quota Discounts", "Enable Quota Discounts", false, "Quota Discounts are rewarded for meeting the quota. When triggered Quota Discounts will grant you one or more discounts for free.\n" +
+            QuotaDiscounts = BindValue("3.1 - Quota Discounts", "Enable Quota Discounts", false, "Quota Discounts are rewarded for meeting the quota. When triggered Quota Discounts will grant you one or more discounts for free.\n" +
                 "The moons that are discounted are randomly selected.");
-            QuotaDiscountChance = GetConfigValue("3.1 - Quota Discounts", "Quota Discount trigger chance", 100, "The chance to trigger a Quota Discount every time you meet the quota.\n", new AcceptableValueRange<int>(0, 100));
-            _quotaDiscountCountMin = GetConfigValue("3.1 - Quota Discounts", "Minimum discounted moon count", 1, "The minimum number of moons that will receive a discount each time a Quota Discount is triggered.", new AcceptableValueRange<int>(1, 10));
-            _quotaDiscountCountMax = GetConfigValue("3.1 - Quota Discounts", "Maximum discounted moon count", 1, "The maximum number of moons that will receive a discount each time a Quota Discount is triggered.", new AcceptableValueRange<int>(1, 10));
-            QuotaDiscountMaxPrice = GetConfigValue("3.1 - Quota Discounts", "Maximum moon price to discount", 0, "Only consider moons up to this price to receive a discount.\n" +
+            QuotaDiscountChance = BindValue("3.1 - Quota Discounts", "Quota Discount trigger chance", 100, "The chance to trigger a Quota Discount every time you meet the quota.\n", new AcceptableValueRange<int>(0, 100));
+            _quotaDiscountCountMin = BindValue("3.1 - Quota Discounts", "Minimum discounted moon count", 1, "The minimum number of moons that will receive a discount each time a Quota Discount is triggered.", new AcceptableValueRange<int>(1, 10));
+            _quotaDiscountCountMax = BindValue("3.1 - Quota Discounts", "Maximum discounted moon count", 1, "The maximum number of moons that will receive a discount each time a Quota Discount is triggered.", new AcceptableValueRange<int>(1, 10));
+            QuotaDiscountMaxPrice = BindValue("3.1 - Quota Discounts", "Maximum moon price to discount", 0, "Only consider moons up to this price to receive a discount.\n" +
                 "Set to 0 to disable this feature");
-            QuotaDiscountMaxCount = GetConfigValue("3.1 - Quota Discounts", "Limit number of discounts", 0, "Limit how many Quota Discounts you can receive during a run. After reaching the limit, Quota Discounts will no longer be granted.\n" +
+            QuotaDiscountMaxCount = BindValue("3.1 - Quota Discounts", "Limit number of discounts", 0, "Limit how many Quota Discounts you can receive during a run. After reaching the limit, Quota Discounts will no longer be granted.\n" +
                 "Set to 0 to disable this feature");
 
-            QuotaFullDiscounts = GetConfigValue("3.2 - Quota Full Discounts", "Enable Quota Full Discounts", false, "Quota Full Discounts are rewarded for meeting the quota. When triggered, Quota Full Discounts will apply the final discount rate to one or more moons for free.\n" +
+            QuotaFullDiscounts = BindValue("3.2 - Quota Full Discounts", "Enable Quota Full Discounts", false, "Quota Full Discounts are rewarded for meeting the quota. When triggered, Quota Full Discounts will apply the final discount rate to one or more moons for free.\n" +
                 "The moons that are discounted are randomly selected.");
-            QuotaFullDiscountChance = GetConfigValue("3.2 - Quota Full Discounts", "Quota Full Discount trigger chance", 100, "The chance to trigger a Quota Full Discount every time you meet the quota.", new AcceptableValueRange<int>(0, 100));
-            _quotaFullDiscountCountMin = GetConfigValue("3.2 - Quota Full Discounts", "Minimum fully discounted moon count", 1, "The minimum number of moons that will receive a full discount each time a Quota Full Discount is triggered.", new AcceptableValueRange<int>(1, 10));
-            _quotaFullDiscountCountMax = GetConfigValue("3.2 - Quota Full Discounts", "Maximum fully discounted moon count", 1, "The maximum number of moons that will receive a full discount each time a Quota Full Discount is triggered.", new AcceptableValueRange<int>(1, 10));
-            QuotaFullDiscountMaxPrice = GetConfigValue("3.2 - Quota Full Discounts", "Maximum moon price to fully discount", 0, "Only consider moons up to this price to receive a full discount.\n" +
+            QuotaFullDiscountChance = BindValue("3.2 - Quota Full Discounts", "Quota Full Discount trigger chance", 100, "The chance to trigger a Quota Full Discount every time you meet the quota.", new AcceptableValueRange<int>(0, 100));
+            _quotaFullDiscountCountMin = BindValue("3.2 - Quota Full Discounts", "Minimum fully discounted moon count", 1, "The minimum number of moons that will receive a full discount each time a Quota Full Discount is triggered.", new AcceptableValueRange<int>(1, 10));
+            _quotaFullDiscountCountMax = BindValue("3.2 - Quota Full Discounts", "Maximum fully discounted moon count", 1, "The maximum number of moons that will receive a full discount each time a Quota Full Discount is triggered.", new AcceptableValueRange<int>(1, 10));
+            QuotaFullDiscountMaxPrice = BindValue("3.2 - Quota Full Discounts", "Maximum moon price to fully discount", 0, "Only consider moons up to this price to receive a full discount.\n" +
                 "Set to 0 to disable this feature");
-            QuotaFullDiscountMaxCount = GetConfigValue("3.2 - Quota Full Discounts", "Limit number of full discounts", 0, "Limit how many Quota Full Discounts you can receive during a run. After reaching the limit, Quota Full Discounts will no longer be granted.\n" +
+            QuotaFullDiscountMaxCount = BindValue("3.2 - Quota Full Discounts", "Limit number of full discounts", 0, "Limit how many Quota Full Discounts you can receive during a run. After reaching the limit, Quota Full Discounts will no longer be granted.\n" +
                 "Set to 0 to disable this feature");
 
-            DiscoveryMode = GetConfigValue("4 - Discovery Mode", "Enable Discovery Mode", false, "In Discovery Mode, you start with a limited selection of moons in the Terminal's moon catalog.\n" +
+            DiscoveryMode = BindValue("4 - Discovery Mode", "Enable Discovery Mode", false, "In Discovery Mode, you start with a limited selection of moons in the Terminal's moon catalog.\n" +
                 "By default, this base selection of moons will be shuffled after every quota, and can also be configured to expand over time.\n" +
                 "There are also various options to discover additional moons as you play.\n" +
                 "Permanently discovered moons are added to the moon catalog on top of the base selection, and are not lost on shuffle.");
             
-            DiscoveryNeverShuffle = GetConfigValue("4 - Discovery Mode", "Never shuffle", false, "Never shuffle the rotation of moons available in the moon catalog.\n" +
+            DiscoveryNeverShuffle = BindValue("4 - Discovery Mode", "Never shuffle", false, "Never shuffle the rotation of moons available in the moon catalog.\n" +
                 "New moons must be discovered through other means, but once discovered, they won't vanish, since the selection is never shuffled.\n" +
                 "NOTE: Overrides the 'Shuffle every day' option.");
-            DiscoveryShuffleEveryDay = GetConfigValue("4 - Discovery Mode", "Shuffle every day", false, "Shuffle the rotation of moons available in the moon catalog every day, instead of after every quota.");
+            DiscoveryShuffleEveryDay = BindValue("4 - Discovery Mode", "Shuffle every day", false, "Shuffle the rotation of moons available in the moon catalog every day, instead of after every quota.");
             
-            DiscoveryWhitelist = GetConfigValue("4 - Discovery Mode", "Whitelist", "", "List of moons to keep discovered at all times.\n" +
+            DiscoveryWhitelist = BindValue("4 - Discovery Mode", "Whitelist", "", "List of moons to keep discovered at all times.\n" +
                 "For example, 'Experimentation, Assurance, Vow' would make these three moons start out as permanently discovered on every run.\n" +
                 "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
 
-            DiscoveryFreeCountBase = GetConfigValue("4 - Discovery Mode", "Free moons base count", 1, "The base amount of randomly selected free moons available in the moon catalog.\n" +
+            DiscoveryFreeCountBase = BindValue("4 - Discovery Mode", "Free moons base count", 1, "The base amount of randomly selected free moons available in the moon catalog.\n" +
                 "NOTE: 'Free' only considers moons that are free by default, or configured to be free. Moons that are free due to unlocks or discounts are excluded!");
-            DiscoveryDynamicFreeCountBase = GetConfigValue("4 - Discovery Mode", "Dynamic free moons base count", 2, "The base amount of randomly selected dynamic free moons available in the moon catalog.\n" +
+            DiscoveryDynamicFreeCountBase = BindValue("4 - Discovery Mode", "Dynamic free moons base count", 2, "The base amount of randomly selected dynamic free moons available in the moon catalog.\n" +
                 "NOTE: 'Dynamic free' considers moons that are free due to unlocks or discounts in addition to those that are free by default, or configured to be free.");
-            DiscoveryPaidCountBase = GetConfigValue("4 - Discovery Mode", "Paid moons base count", 3, "The base amount of randomly selected paid moons available in the moon catalog.\n" +
+            DiscoveryPaidCountBase = BindValue("4 - Discovery Mode", "Paid moons base count", 3, "The base amount of randomly selected paid moons available in the moon catalog.\n" +
                 "This is your paid moon rotation and typically the main way to discover new moons to buy - earning unlocks and discounts as you progress.");
             
-            DiscoveryFreeCountIncreaseBy = GetConfigValue("4 - Discovery Mode", "Increase free moon count on shuffle", 0, "The amount of randomly selected free moons added to the rotation each time it's shuffled.\n" +
+            DiscoveryFreeCountIncreaseBy = BindValue("4 - Discovery Mode", "Increase free moon count on shuffle", 0, "The amount of randomly selected free moons added to the rotation each time it's shuffled.\n" +
                 "Set to 0 to disable this feature.");
-            DiscoveryDynamicFreeCountIncreaseBy = GetConfigValue("4 - Discovery Mode", "Increase dynamic free moon count on shuffle by", 0, "The amount of randomly selected dynamic free moons added to the rotation each time it's shuffled.\n" +
+            DiscoveryDynamicFreeCountIncreaseBy = BindValue("4 - Discovery Mode", "Increase dynamic free moon count on shuffle by", 0, "The amount of randomly selected dynamic free moons added to the rotation each time it's shuffled.\n" +
                 "Set to 0 to disable this feature.");
-            DiscoveryPaidCountIncreaseBy = GetConfigValue("4 - Discovery Mode", "Increase paid moon count on shuffle", 0, "The amount of randomly selected paid moons added to the rotation each time it's shuffled.\n" +
+            DiscoveryPaidCountIncreaseBy = BindValue("4 - Discovery Mode", "Increase paid moon count on shuffle", 0, "The amount of randomly selected paid moons added to the rotation each time it's shuffled.\n" +
                 "Set to 0 to disable this feature.");
 
-            PermanentlyDiscoverFreeMoonsOnLanding = GetConfigValue("4 - Discovery Mode", "Landings required to permanently discover free moons", -1, "Any free moon will be permanently discovered after a set amount of landings.\n" +
+            PermanentlyDiscoverFreeMoonsOnLanding = BindValue("4 - Discovery Mode", "Landings required to permanently discover free moons", -1, "Any free moon will be permanently discovered after a set amount of landings.\n" +
                 "Set to -1 to disable this feature.\n" +
                 "NOTE: A value of 0 makes every free moon ever discovered in any way permanently discovered. Not recommended.");
-            PermanentlyDiscoverPaidMoonsOnLanding = GetConfigValue("4 - Discovery Mode", "Landings required to permanently discover paid moons", -1, "Any free moon will be permanently discovered after a set amount of landings.\n" +
+            PermanentlyDiscoverPaidMoonsOnLanding = BindValue("4 - Discovery Mode", "Landings required to permanently discover paid moons", -1, "Any free moon will be permanently discovered after a set amount of landings.\n" +
                 "Set to -1 to disable this feature.\n" +
                 "NOTE: A value of 0 makes every paid moon ever discovered in any way permanently discovered. Not recommended.");
-            PermanentlyDiscoverHiddenMoonsOnVisit = GetConfigValue("4 - Discovery Mode", "Permanently discover hidden moons after routing", false, "Any hidden (LLL config e.g. Embrion) will be permanently discovered after routed to once.");
+            PermanentlyDiscoverHiddenMoonsOnVisit = BindValue("4 - Discovery Mode", "Permanently discover hidden moons after routing", false, "Any hidden (LLL config e.g. Embrion) will be permanently discovered after routed to once.");
 
-            QuotaDiscoveries = GetConfigValue("4.1 - Quota Discoveries", "Enable Quota Discoveries", false, "Quota Discoveries grant additional moon discoveries when a new quota begins.\n" +
+            QuotaDiscoveries = BindValue("4.1 - Quota Discoveries", "Enable Quota Discoveries", false, "Quota Discoveries grant additional moon discoveries when a new quota begins.\n" +
                 "The moons that are discovered are randomly selected.");
-            QuotaDiscoveryChance  = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery trigger chance", 100, "The chance to trigger a Quota Discovery every time you meet the quota.", new AcceptableValueRange<int>(0, 100));
-            _quotaDiscoveryCountMin  = GetConfigValue("4.1 - Quota Discoveries", "Minimum quota discovery moon count", 1, "The minimum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
-            _quotaDiscoveryCountMax  = GetConfigValue("4.1 - Quota Discoveries", "Maximum quota discovery moon count", 1, "The maximum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
-            QuotaDiscoveryPermanent = GetConfigValue("4.1 - Quota Discoveries", "Quota Discoveries are permanent", false, "Moons discovered through Quota Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
-            QuotaDiscoveryCheapestGroup = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest group", false, "Only considers moons from the group/constellation that has the currently cheapest undiscovered moon.\n" +
+            QuotaDiscoveryChance  = BindValue("4.1 - Quota Discoveries", "Quota Discovery trigger chance", 100, "The chance to trigger a Quota Discovery every time you meet the quota.", new AcceptableValueRange<int>(0, 100));
+            _quotaDiscoveryCountMin  = BindValue("4.1 - Quota Discoveries", "Minimum quota discovery moon count", 1, "The minimum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
+            _quotaDiscoveryCountMax  = BindValue("4.1 - Quota Discoveries", "Maximum quota discovery moon count", 1, "The maximum number of moons that will be discovered each time a Quota Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
+            QuotaDiscoveryPermanent = BindValue("4.1 - Quota Discoveries", "Quota Discoveries are permanent", false, "Moons discovered through Quota Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
+            QuotaDiscoveryCheapestGroup = BindValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest group", false, "Only considers moons from the group/constellation that has the currently cheapest undiscovered moon.\n" +
                 "Can effectively discover the 'next tier' or group of moons. Set counts high to discover the entire group.\n" +
                 "NOTE: Highly recommended to only use this with 'Quota Discoveries are permanent' or 'Never shuffle'!");
-            QuotaDiscoveryCheapestGroupFallback = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest group fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+            QuotaDiscoveryCheapestGroupFallback = BindValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest group fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
                 "NOTE: Only relevant when you have moons that are not assigned to any group/constellation.");
-            QuotaDiscoveryCheapestConstellation = GetConfigValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest constellation", false, "LethalConstellations only: when a Quota Discovery is configured to discover a constellation, prefer the cheapest eligible undiscovered constellation.");
+            QuotaDiscoveryCheapestConstellation = BindValue("4.1 - Quota Discoveries", "Quota Discovery match cheapest constellation", false, "LethalConstellations only: when a Quota Discovery is configured to discover a constellation, prefer the cheapest eligible undiscovered constellation.");
             
-            TravelDiscoveries = GetConfigValue("4.2 - Travel Discoveries", "Enable Travel Discoveries", false, "Travel Discoveries grant additional moon discoveries when routing to a paid moon\n" +
+            TravelDiscoveries = BindValue("4.2 - Travel Discoveries", "Enable Travel Discoveries", false, "Travel Discoveries grant additional moon discoveries when routing to a paid moon\n" +
                 "The moons that are discovered are randomly selected.");
-            TravelDiscoveryChance  = GetConfigValue("4.2 - Travel Discoveries", "Travel Discovery trigger chance", 20, "The chance to trigger a Travel Discovery every time you route to a paid moon.", new AcceptableValueRange<int>(0, 100));
-            _travelDiscoveryCountMin  = GetConfigValue("4.2 - Travel Discoveries", "Minimum travel discovery moon count", 1, "The minimum number of moons that will be discovered each time a Travel Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
-            _travelDiscoveryCountMax  = GetConfigValue("4.2 - Travel Discoveries", "Maximum travel discovery moon count", 1, "The maximum number of moons that will be discovered each time a Travel Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
-            TravelDiscoveryPermanent = GetConfigValue("4.2 - Travel Discoveries", "Travel Discoveries are permanent", false, "Moons discovered through Travel Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
-            TravelDiscoveryMatchGroup = GetConfigValue("4.2 - Travel Discoveries", "Travel Discovery group matching", false, "Only consider moons of the same group you're routing to for Travel Discoveries.");
-            TravelDiscoveryMatchGroupFallback = GetConfigValue("4.2 - Travel Discoveries", "Travel Discovery group matching fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+            TravelDiscoveryChance  = BindValue("4.2 - Travel Discoveries", "Travel Discovery trigger chance", 20, "The chance to trigger a Travel Discovery every time you route to a paid moon.", new AcceptableValueRange<int>(0, 100));
+            _travelDiscoveryCountMin  = BindValue("4.2 - Travel Discoveries", "Minimum travel discovery moon count", 1, "The minimum number of moons that will be discovered each time a Travel Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
+            _travelDiscoveryCountMax  = BindValue("4.2 - Travel Discoveries", "Maximum travel discovery moon count", 1, "The maximum number of moons that will be discovered each time a Travel Discovery is triggered.", new AcceptableValueRange<int>(1, 10));
+            TravelDiscoveryPermanent = BindValue("4.2 - Travel Discoveries", "Travel Discoveries are permanent", false, "Moons discovered through Travel Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
+            TravelDiscoveryMatchGroup = BindValue("4.2 - Travel Discoveries", "Travel Discovery group matching", false, "Only consider moons of the same group you're routing to for Travel Discoveries.");
+            TravelDiscoveryMatchGroupFallback = BindValue("4.2 - Travel Discoveries", "Travel Discovery group matching fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
                 "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
 
-            NewDayDiscoveries = GetConfigValue("4.3 - New Day Discoveries", "Enable New Day Discoveries", false, "New Day Discoveries grant additional moon discoveries at the start of a new day.\n" +
+            NewDayDiscoveries = BindValue("4.3 - New Day Discoveries", "Enable New Day Discoveries", false, "New Day Discoveries grant additional moon discoveries at the start of a new day.\n" +
                 "The moons that are discovered are randomly selected.");
-            NewDayDiscoveryChance  = GetConfigValue("4.3 - New Day Discoveries", "New Day Discovery trigger chance", 20, "The chance to trigger a New Day Discovery at the start of a new day.\n" +
+            NewDayDiscoveryChance  = BindValue("4.3 - New Day Discoveries", "New Day Discovery trigger chance", 20, "The chance to trigger a New Day Discovery at the start of a new day.\n" +
                 "Make it a random occurence or guaranteed.", new AcceptableValueRange<int>(0, 100));
-            _newDayDiscoveryCountMin  = GetConfigValue("4.3 - New Day Discoveries", "Minimum new day discovery moon count", 1, "The minimum number of moons to be discovered each time a New Day Discovery is granted.", new AcceptableValueRange<int>(1, 10));
-            _newDayDiscoveryCountMax  = GetConfigValue("4.3 - New Day Discoveries", "Maximum new day discovery moon count", 1, "The maximum number of moons to be discovered each time a New Day Discovery is granted.", new AcceptableValueRange<int>(1, 10));
-            NewDayDiscoveryPermanent = GetConfigValue("4.3 - New Day Discoveries", "New Day Discoveries are permanent", false, "Moons discovered through New Day Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
-            NewDayDiscoveryMatchGroup = GetConfigValue("4.3 - New Day Discoveries", "New Day Discovery group matching", false, "Only consider moons of the same group as the moon you're currently orbiting for New Day Discoveries.");
-            NewDayDiscoveryMatchGroupFallback = GetConfigValue("4.3 - New Day Discoveries", "New Day Discovery group matching fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
+            _newDayDiscoveryCountMin  = BindValue("4.3 - New Day Discoveries", "Minimum new day discovery moon count", 1, "The minimum number of moons to be discovered each time a New Day Discovery is granted.", new AcceptableValueRange<int>(1, 10));
+            _newDayDiscoveryCountMax  = BindValue("4.3 - New Day Discoveries", "Maximum new day discovery moon count", 1, "The maximum number of moons to be discovered each time a New Day Discovery is granted.", new AcceptableValueRange<int>(1, 10));
+            NewDayDiscoveryPermanent = BindValue("4.3 - New Day Discoveries", "New Day Discoveries are permanent", false, "Moons discovered through New Day Discoveries will stay permanently discovered i.e. they won't vanish on shuffle.");
+            NewDayDiscoveryMatchGroup = BindValue("4.3 - New Day Discoveries", "New Day Discovery group matching", false, "Only consider moons of the same group as the moon you're currently orbiting for New Day Discoveries.");
+            NewDayDiscoveryMatchGroupFallback = BindValue("4.3 - New Day Discoveries", "New Day Discovery group matching fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
                 "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
 
-            LethalConstellationsWhitelistString = GetConfigValue("4.4 - LethalConstellations Discoveries", "Constellation whitelist", "", "List of LethalConstellations entries to keep discovered at all times.\n" +
+            LethalConstellationsWhitelistString = BindValue("4.4 - LethalConstellations Discoveries", "Constellation whitelist", "", "List of LethalConstellations entries to keep discovered at all times.\n" +
                 "For example, 'Andromeda, Great Journey Supercluster' would make these constellations start out discovered on every run.\n" +
                 "Constellation names must be separated by commas and must be exact matches. This has priority over LethalConstellation's setting.");
-            AcceptableStartingConstellationsString = GetConfigValue("4.4 - LethalConstellations Discoveries", "Acceptable starting constellations", "", "List of constellations LMU is allowed to use as the first discovered constellation in LethalConstellations mode.\n" +
+            AcceptableStartingConstellationsString = BindValue("4.4 - LethalConstellations Discoveries", "Acceptable starting constellations", "", "List of constellations LMU is allowed to use as the first discovered constellation in LethalConstellations mode.\n" +
                 "Leave empty to allow any eligible constellation.\n" +
                 "Constellation names must be separated by commas and must be exact matches. This has priority over LethalConstellation's setting.");
-            LCStartingConstellationSelectionPolicy = GetConfigValue("4.4 - LethalConstellations Discoveries", "Starting constellation selection policy", LCStartingConstellationSelectionPolicyCheapest, "How LMU chooses the first discovered constellation in LethalConstellations mode.\n" +
+            LCStartingConstellationSelectionPolicy = BindValue("4.4 - LethalConstellations Discoveries", "Starting constellation selection policy", LCStartingConstellationSelectionPolicyCheapest, "How LMU chooses the first discovered constellation in LethalConstellations mode.\n" +
                 "The constellation still has to be story-unlocked and otherwise eligible.",
                 new AcceptableValueList<string>([LCStartingConstellationSelectionPolicyCheapest, LCStartingConstellationSelectionPolicyRandom]));
-            LCStoryReleaseBehavior = GetConfigValue("4.4 - LethalConstellations Discoveries", "Story release behavior", LCStoryReleaseBehaviorHiddenBacklog, "What happens when a default moon's story lock is released in LethalConstellations mode.\n" +
+            LCStoryReleaseBehavior = BindValue("4.4 - LethalConstellations Discoveries", "Story release behavior", LCStoryReleaseBehaviorHiddenBacklog, "What happens when a constellation story release is triggered in LethalConstellations mode.\n" +
+                "This applies both to default-moon story releases and satisfied custom unlock conditions.\n" +
                 "'HiddenBacklog' keeps the constellation hidden until discovery grants it.\n" +
                 "'ImmediateDiscovery' makes the constellation discovered immediately.",
                 new AcceptableValueList<string>([LCStoryReleaseBehaviorHiddenBacklog, LCStoryReleaseBehaviorImmediateDiscovery]));
-            LethalConstellationsQuotaDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations Discoveries", "Quota discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Quota Discoveries target when LethalConstellations is active.",
+            LethalConstellationsQuotaDiscoveryTargetMode = BindValue("4.4 - LethalConstellations Discoveries", "Quota discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Quota Discoveries target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCDiscoveryTargetModeMoonsOnly, LCDiscoveryTargetModeMoonsAndConstellations, LCDiscoveryTargetModeConstellationsOnly, LCDiscoveryTargetModeConstellationsOnlyWithMoonFallback]));
-            LethalConstellationsQuotaDiscoveryChance = GetConfigValue("4.4 - LethalConstellations Discoveries", "Quota discovery constellation chance", 100, "The chance for Quota Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
-            LethalConstellationsTravelDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations Discoveries", "Travel discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Travel Discoveries target when LethalConstellations is active.",
+            LethalConstellationsQuotaDiscoveryChance = BindValue("4.4 - LethalConstellations Discoveries", "Quota discovery constellation chance", 100, "The chance for Quota Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
+            LethalConstellationsTravelDiscoveryTargetMode = BindValue("4.4 - LethalConstellations Discoveries", "Travel discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Travel Discoveries target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCDiscoveryTargetModeMoonsOnly, LCDiscoveryTargetModeMoonsAndConstellations, LCDiscoveryTargetModeConstellationsOnly, LCDiscoveryTargetModeConstellationsOnlyWithMoonFallback]));
-            LethalConstellationsTravelDiscoveryChance = GetConfigValue("4.4 - LethalConstellations Discoveries", "Travel discovery constellation chance", 100, "The chance for Travel Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
-            LethalConstellationsNewDayDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations Discoveries", "New day discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What New Day Discoveries target when LethalConstellations is active.",
+            LethalConstellationsTravelDiscoveryChance = BindValue("4.4 - LethalConstellations Discoveries", "Travel discovery constellation chance", 100, "The chance for Travel Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
+            LethalConstellationsNewDayDiscoveryTargetMode = BindValue("4.4 - LethalConstellations Discoveries", "New day discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What New Day Discoveries target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCDiscoveryTargetModeMoonsOnly, LCDiscoveryTargetModeMoonsAndConstellations, LCDiscoveryTargetModeConstellationsOnly, LCDiscoveryTargetModeConstellationsOnlyWithMoonFallback]));
-            LethalConstellationsNewDayDiscoveryChance = GetConfigValue("4.4 - LethalConstellations Discoveries", "New day discovery constellation chance", 100, "The chance for New Day Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
-            LethalConstellationsOverridePrice = GetConfigValue("4.4 - LethalConstellations Discoveries", "LethalConstellations override price", false, "When enabled and LethalConstellations is present, the configured default moon provides the base routing price for the constellation.\n" +
+            LethalConstellationsNewDayDiscoveryChance = BindValue("4.4 - LethalConstellations Discoveries", "New day discovery constellation chance", 100, "The chance for New Day Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
+            LethalConstellationsOverridePrice = BindValue("4.4 - LethalConstellations Discoveries", "LethalConstellations override price", false, "When enabled and LethalConstellations is present, the configured default moon provides the base routing price for the constellation.\n" +
                 "LMU still applies the constellation's own unlocks, discounts, and sales on top of that base price. To also mirror route progression and travel discovery onto the default moon, enable the separate option below.");
-            LethalConstellationsMirrorDefaultMoonRoute = GetConfigValue("4.4 - LethalConstellations Discoveries", "LethalConstellations mirror default moon route", false, "When enabled, routing to a constellation will also apply the route side effects to its default moon.\n" +
+            LethalConstellationsMirrorDefaultMoonRoute = BindValue("4.4 - LethalConstellations Discoveries", "LethalConstellations mirror default moon route", false, "When enabled, routing to a constellation will also apply the route side effects to its default moon.\n" +
                 "This includes moon buy progression when the route was paid and travel discovery side effects even though the constellation itself remains a first-class progression target.");
-            LethalConstellationsQuotaRewardScope = GetConfigValue("4.4 - LethalConstellations Discoveries", "LethalConstellations quota reward scope", LCQuotaRewardScopeAllDiscoveredConstellations, "Where quota-granted unlocks, discounts, and full discounts may target when LethalConstellations is active.",
+            LethalConstellationsQuotaRewardScope = BindValue("4.4 - LethalConstellations Discoveries", "LethalConstellations quota reward scope", LCQuotaRewardScopeAllDiscoveredConstellations, "Where quota-granted unlocks, discounts, and full discounts may target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCQuotaRewardScopeAllDiscoveredConstellations, LCQuotaRewardScopeCurrentOnly]));
 
-            Sales = GetConfigValue("5 - Moon Sales", "Moon Sales", false, "Each moon has a chance to go on sale for a reduced routing price.\n" +
+            Sales = BindValue("5 - Moon Sales", "Moon Sales", false, "Each moon has a chance to go on sale for a reduced routing price.\n" +
                 "By default, Moon Sales are shuffled after every quota. Only non-free moons can go on sale.\n" +
                 "NOTE: These sales are separate from discounts received via Discount Mode.");
             
-            SalesShuffleDaily = GetConfigValue("5 - Moon Sales", "Shuffle sales daily", false, "Shuffle moon sales daily, instead of after every quota");
-            SalesMinDayCount = GetConfigValue("5 - Moon Sales", "Minimum completed days before sales", 0, "Do not allow any moon sales until at least this many days have passed.\n" +
+            SalesShuffleDaily = BindValue("5 - Moon Sales", "Shuffle sales daily", false, "Shuffle moon sales daily, instead of after every quota");
+            SalesMinDayCount = BindValue("5 - Moon Sales", "Minimum completed days before sales", 0, "Do not allow any moon sales until at least this many days have passed.\n" +
                 "Before this threshold is reached, you can not get new sales when they're shuffled.", new AcceptableValueRange<int>(0, 30));
-            SalesChance = GetConfigValue("5 - Moon Sales", "Moon Sale chance", 20, "The chance for each moon to go on sale every time sales are shuffled.", new AcceptableValueRange<int>(0, 100));
-            _salesRateMin = GetConfigValue("5 - Moon Sales", "Minimum sale percent", 5, "The minimum sale percentage a moon can receive.", new AcceptableValueRange<int>(0, 100));
-            _salesRateMax = GetConfigValue("5 - Moon Sales", "Maximum sale percent", 30, "The maximum sale percentage a moon can receive", new AcceptableValueRange<int>(1, 100));
+            SalesChance = BindValue("5 - Moon Sales", "Moon Sale chance", 20, "The chance for each moon to go on sale every time sales are shuffled.", new AcceptableValueRange<int>(0, 100));
+            _salesRateMin = BindValue("5 - Moon Sales", "Minimum sale percent", 5, "The minimum sale percentage a moon can receive.", new AcceptableValueRange<int>(0, 100));
+            _salesRateMax = BindValue("5 - Moon Sales", "Maximum sale percent", 30, "The maximum sale percentage a moon can receive", new AcceptableValueRange<int>(1, 100));
 
-            GetConfigValue("6 - Advanced Settings", "I have read this", "false", "This section contains advanced configuration options for various features of the mod. Incorrectly tweaking these might cause unexpected behaviour!\n" +
+            BindValue("6 - Advanced Settings", "I have read this", "false", "This section contains advanced configuration options for various features of the mod. Incorrectly tweaking these might cause unexpected behaviour!\n" +
                 "This setting has no effect.");
-            GroupCreditsSavingBandAid= GetConfigValue("6 - Advanced Settings", "Group credits saving fix", true, "When LMU saves data it will also save the credits balance.\n" +
+            GroupCreditsSavingBandAid= BindValue("6 - Advanced Settings", "Group credits saving fix", true, "When LMU saves data it will also save the credits balance.\n" +
                 "This prevents the 'free moon exploit'. This band aid should not cause any issues but I don't think I should need to do this in the first place..");
-            AdvancedPrintMoonNames = GetConfigValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
+            AdvancedPrintMoonNames = BindValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
                 "You can also grab moons names from the LMU table that is periodically printed to logs even when this is not enabled.");
-            AutoRerouteToCompany = GetConfigValue("6 - Advanced Settings", "Auto reroute to company", true, "When enabled automatically reroutes the ship to the company on deadline day.");
+            AutoRerouteToCompany = BindValue("6 - Advanced Settings", "Auto reroute to company", true, "When enabled automatically reroutes the ship to the company on deadline day.");
             const string cheapMoonBiasValueDescription =
                 "Controls how strongly cheaper moons are favored when Cheap Moon Bias is enabled.\n" +
                 "LMU compares each moon's price against the average price of the current candidate pool and turns that into a selection weight.\n" +
@@ -475,21 +476,21 @@ namespace LethalMoonUnlocks {
                 "Values between 0.0 and 1.0 soften the bias. Values above 1.0 strengthen it.\n" +
                 "The calculation uses original prices or current prices depending on the Ignore price changes setting.";
 
-            CheapMoonBiasPaidRotation = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
-            CheapMoonBiasPaidRotationValue = GetConfigValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
-            CheapMoonBiasQuotaDiscovery = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discovery", true, "Use Cheap Moon Bias when selecting moons during Quota Discovery.");
-            CheapMoonBiasQuotaDiscoveryValue = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discovery bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
-            CheapMoonBiasTravelDiscovery = GetConfigValue("6.1 - Cheap Moon Bias", "Travel Discovery", true, "Use Cheap Moon Bias when selecting moons to discover during Travel Discovery.");
-            CheapMoonBiasTravelDiscoveryValue = GetConfigValue("6.1 - Cheap Moon Bias", "Travel Discovery bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
-            CheapMoonBiasNewDayDiscovery = GetConfigValue("6.1 - Cheap Moon Bias", "New Day Discovery", true, "Use Cheap Moon Bias when selecting moons during New Day Discovery.");
-            CheapMoonBiasNewDayDiscoveryValue = GetConfigValue("6.1 - Cheap Moon Bias", "New Day Discovery bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
-            CheapMoonBiasQuotaUnlock = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Unlock", true, "Use Cheap Moon Bias when selecting moons during Quota Unlocks.");
-            CheapMoonBiasQuotaUnlockValue = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Unlock bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
-            CheapMoonBiasQuotaDiscount = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discount", true, "Use Cheap Moon Bias when selecting moons during Quota Discounts.");
-            CheapMoonBiasQuotaDiscountValue = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Discount bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
-            CheapMoonBiasQuotaFullDiscount = GetConfigValue("6.1 - Cheap Moon Bias", "Quota Full Discount", true, "Use Cheap Moon Bias when selecting moons during Quota Full Discounts.");
-            CheapMoonBiasQuotaFullDiscountValue= GetConfigValue("6.1 - Cheap Moon Bias", "Quota Full Discount bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
-            CheapMoonBiasIgnorePriceChanges = GetConfigValue("6.1 - Cheap Moon Bias", "Ignore price changes", true, "Ignore any changes to moon prices by discounts or sales and only consider original price for biased selections.");
+            CheapMoonBiasPaidRotation = BindValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation", true, "Use Cheap Moon Bias when selecting moons for the paid moon rotation when it's shuffled.");
+            CheapMoonBiasPaidRotationValue = BindValue("6.1 - Cheap Moon Bias", "Discovery Mode paid rotation bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaDiscovery = BindValue("6.1 - Cheap Moon Bias", "Quota Discovery", true, "Use Cheap Moon Bias when selecting moons during Quota Discovery.");
+            CheapMoonBiasQuotaDiscoveryValue = BindValue("6.1 - Cheap Moon Bias", "Quota Discovery bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasTravelDiscovery = BindValue("6.1 - Cheap Moon Bias", "Travel Discovery", true, "Use Cheap Moon Bias when selecting moons to discover during Travel Discovery.");
+            CheapMoonBiasTravelDiscoveryValue = BindValue("6.1 - Cheap Moon Bias", "Travel Discovery bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasNewDayDiscovery = BindValue("6.1 - Cheap Moon Bias", "New Day Discovery", true, "Use Cheap Moon Bias when selecting moons during New Day Discovery.");
+            CheapMoonBiasNewDayDiscoveryValue = BindValue("6.1 - Cheap Moon Bias", "New Day Discovery bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaUnlock = BindValue("6.1 - Cheap Moon Bias", "Quota Unlock", true, "Use Cheap Moon Bias when selecting moons during Quota Unlocks.");
+            CheapMoonBiasQuotaUnlockValue = BindValue("6.1 - Cheap Moon Bias", "Quota Unlock bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaDiscount = BindValue("6.1 - Cheap Moon Bias", "Quota Discount", true, "Use Cheap Moon Bias when selecting moons during Quota Discounts.");
+            CheapMoonBiasQuotaDiscountValue = BindValue("6.1 - Cheap Moon Bias", "Quota Discount bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasQuotaFullDiscount = BindValue("6.1 - Cheap Moon Bias", "Quota Full Discount", true, "Use Cheap Moon Bias when selecting moons during Quota Full Discounts.");
+            CheapMoonBiasQuotaFullDiscountValue= BindValue("6.1 - Cheap Moon Bias", "Quota Full Discount bias value", 0.66f, cheapMoonBiasValueDescription, new AcceptableValueRange<float>(0.0f, 2.0f));
+            CheapMoonBiasIgnorePriceChanges = BindValue("6.1 - Cheap Moon Bias", "Ignore price changes", true, "Ignore any changes to moon prices by discounts or sales and only consider original price for biased selections.");
             
             MoonGroupMatchingMethod = _configFile.Bind("6.2 - Moon Group Matching", "Group Matching Method", "Price",
                 new ConfigDescription("The method used to group moons. Group Matching can be used to limit some discoveries to moons of the same group.\n" +
@@ -504,61 +505,61 @@ namespace LethalMoonUnlocks {
                 Logger.LogWarning("Group Matching Method 'LethalConstellations' was removed. Falling back to 'Price'. Check the new LethalConstellations config settings.");
                 MoonGroupMatchingMethod = "Price";
             }
-            MoonGroupMatchingPriceRange = GetConfigValue("6.2 - Moon Group Matching", "Price range", 200, "The price range used for matching moons via 'PriceRange' and 'PriceRangeUpper' methods.\n" +
+            MoonGroupMatchingPriceRange = BindValue("6.2 - Moon Group Matching", "Price range", 200, "The price range used for matching moons via 'PriceRange' and 'PriceRangeUpper' methods.\n" +
                 "It will match all moons priced within the original price +- this value (+ this value for upper range).");
-            MoonGroupMatchingCustom = GetConfigValue("6.2 - Moon Group Matching", "Custom moon groups", "", "Define your own custom moon groups.\n" +
+            MoonGroupMatchingCustom = BindValue("6.2 - Moon Group Matching", "Custom moon groups", "", "Define your own custom moon groups.\n" +
                 "Expected Format: Separate moon groups by \"|\" and moons by \",\".\n" +
                 "Example: 'Group name 1: Experimentation, Assurance, Vow | Group name 2: Offense, March, Adamance'\n" +
                 "Names must be exact matches. The option below can be used to get the names.");
 
-            TerminalTagLineWidth = GetConfigValue("6.3 - Terminal", "Maximum tag line length", 49, "By default LMU tries to fit as many tags as possible into a single line.\n" +
+            TerminalTagLineWidth = BindValue("6.3 - Terminal", "Maximum tag line length", 49, "By default LMU tries to fit as many tags as possible into a single line.\n" +
                 "Decrease this value if you want to have a more organized look at the cost of more scrolling depending on the amount of tags you see.\n" +
                 "NOTE: Don't worry about setting it too low. It will always put at least one tag per line. Only if any additional tag would exceed this value it puts a line break.\n" +
                 "Do not set it larger than default unless you are also decreasing font size below.", new AcceptableValueRange<int>(10, 100));
-            TerminalFontSizeOverride = GetConfigValue("6.3 - Terminal", "Override Terminal font size", true, "Override the font size in the Terminal's moon catalog.\n" +
+            TerminalFontSizeOverride = BindValue("6.3 - Terminal", "Override Terminal font size", true, "Override the font size in the Terminal's moon catalog.\n" +
                 "Prevents inconsistencies with formatting. Disable to let LLL dynamically size the font depending on the number of moons visible\n" +
                 "NOTE: With very few moons you might see some ugly line breaks with custom weathers with long names (Meteor Shower).");
-            TerminalFontSize = GetConfigValue("6.3 - Terminal", "Terminal font size", 15f, "Customize the Terminal's moon catalog font size.\n" +
+            TerminalFontSize = BindValue("6.3 - Terminal", "Terminal font size", 15f, "Customize the Terminal's moon catalog font size.\n" +
                 "NOTE: When using smaller fonts you can increase the maximum tag line width above.", new AcceptableValueRange<float>(8f, 15f));
-            TerminalScrollAmount = GetConfigValue("6.3 - Terminal", "Terminal scroll amount", 0, "Override the Terminal's moon catalog scroll amount. 1 is close to vanilla scroll amount but normalized to account for more text/moons. Increase to make scrolling smoother or rather steps smaller. 0 to disable\n" +
+            TerminalScrollAmount = BindValue("6.3 - Terminal", "Terminal scroll amount", 0, "Override the Terminal's moon catalog scroll amount. 1 is close to vanilla scroll amount but normalized to account for more text/moons. Increase to make scrolling smoother or rather steps smaller. 0 to disable\n" +
                 "NOTE: This can help when you have so many moons that some are skipped when scrolling.", new AcceptableValueRange<int>(0, 20));
-            TerminalShowRiskWeather = GetConfigValue("6.3 - Terminal", "Terminal show weather in risk preview", false, "Also show the weather when using `preview difficulty`");
+            TerminalShowRiskWeather = BindValue("6.3 - Terminal", "Terminal show weather in risk preview", false, "Also show the weather when using `preview difficulty`");
 
-            AlertMessageQueueing = GetConfigValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
-            PreferLQRisk = GetConfigValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalog instead of the default risk levels.");
-            MalfunctionsNavigation = GetConfigValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
-            PreferGaletry = GetConfigValue("6.4 - Compatibility", "Prefer Galetry over Gordion", true, "When enabled and Galetry (from Wesley's moons journey) is available and routable, LMU will auto reroute the ship to Galetry instead of Gordion (the company).");
+            AlertMessageQueueing = BindValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
+            PreferLQRisk = BindValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalog instead of the default risk levels.");
+            MalfunctionsNavigation = BindValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
+            PreferGaletry = BindValue("6.4 - Compatibility", "Prefer Galetry over Gordion", true, "When enabled and Galetry (from Wesley's moons journey) is available and routable, LMU will auto reroute the ship to Galetry instead of Gordion (the company).");
 
-            OverrideHidden = GetConfigValue("6.5 - Overrides", "Override moons hidden by default", false, "Enable to hard override any hidden by default information using the list below. Any other information will be ignored. This includes moons hidden in vanilla, via LLL config, etc.");
-            OverrideHiddenList = GetConfigValue("6.5 - Overrides", "Override hidden list", "", "List of moons LMU will consider to be hidden by default.\n" +
+            OverrideHidden = BindValue("6.5 - Overrides", "Override moons hidden by default", false, "Enable to hard override any hidden by default information using the list below. Any other information will be ignored. This includes moons hidden in vanilla, via LLL config, etc.");
+            OverrideHiddenList = BindValue("6.5 - Overrides", "Override hidden list", "", "List of moons LMU will consider to be hidden by default.\n" +
                 "For example, 'Vow, March, Artifice'. Those three will be the only moons hidden by default. You can still unhide them in various ways. Note that setting this would make Embrion not hidden.\n" +
                 "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
 
-            OverrideLocked = GetConfigValue("6.5 - Overrides", "Override moons locked by default", false, "Enable to hard override any locked by default information using the list below. Any other information will be ignored. This includes moons locked in vanilla, via LLL config, etc.");
-            OverrideLockedList = GetConfigValue("6.5 - Overrides", "Override locked list", "", "List of moons LMU will consider to be locked by default.\n" +
+            OverrideLocked = BindValue("6.5 - Overrides", "Override moons locked by default", false, "Enable to hard override any locked by default information using the list below. Any other information will be ignored. This includes moons locked in vanilla, via LLL config, etc.");
+            OverrideLockedList = BindValue("6.5 - Overrides", "Override locked list", "", "List of moons LMU will consider to be locked by default.\n" +
                 "For example, 'Vow, March, Artifice'. Those three will be the only moons locked by default.\n" +
                 "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
 
-            EnableStoryProgression = GetConfigValue("6.6 - Story Progression", "Enable Story Progression", true, "Story progression allows locking moons behind various conditions. This can be employed by other mods like Wesley's moons (JLL).\nDisabling this settings will globally ignore any requests to lock moons behind story progressions inlcuding LMU's own Vanilla Story progression.");
-            LMUStoryProgression = GetConfigValue("6.6 - Story Progression", "Vanilla Story Progression", false, "Enable to lock the two hidden vanilla moons behind story progression. To release the lock for Artifice you have to land three times on Adamance, for Embrion you have to scan an old bird. After completing these tasks the moons will be available (for discovery). They will not be hidden.");
-            GaletryStoryLock = GetConfigValue("6.6 - Story Progression", "Restrict access to Galetry", false, "When enabled and Wesley's moons is installed Galetry is not available from the start. To gain access you will need to sell a specified number of paintings to the company.");
-            GaletryStoryLockPaintingsAmount = GetConfigValue("6.6 - Story Progression", "Galetry number of paintings", 3, "The number of sold paintings required to gain access to Galetry.");
+            EnableStoryProgression = BindValue("6.6 - Story Progression", "Enable Story Progression", true, "Story progression allows locking moons behind various conditions. This can be employed by other mods like Wesley's moons (JLL).\nDisabling this settings will globally ignore any requests to lock moons behind story progressions inlcuding LMU's own Vanilla Story progression.");
+            LMUStoryProgression = BindValue("6.6 - Story Progression", "Vanilla Story Progression", false, "Enable to lock the two hidden vanilla moons behind story progression. To release the lock for Artifice you have to land three times on Adamance, for Embrion you have to scan an old bird. After completing these tasks the moons will be available (for discovery). They will not be hidden.");
+            GaletryStoryLock = BindValue("6.6 - Story Progression", "Restrict access to Galetry", false, "When enabled and Wesley's moons is installed Galetry is not available from the start. To gain access you will need to sell a specified number of paintings to the company.");
+            GaletryStoryLockPaintingsAmount = BindValue("6.6 - Story Progression", "Galetry number of paintings", 3, "The number of sold paintings required to gain access to Galetry.");
 
 
         }
-        private static T GetConfigValue<T>(string section, string key, T defaultValue, string description) {
+        private static T BindValue<T>(string section, string key, T defaultValue, string description) {
             return _configFile.Bind(section, key, defaultValue, description).Value;
         }
 
-        private static T GetConfigValue<T>(string section, string key, T defaultValue, string description, AcceptableValueRange<int> range) {
+        private static T BindValue<T>(string section, string key, T defaultValue, string description, AcceptableValueRange<int> range) {
             return _configFile.Bind(section, key, defaultValue, new ConfigDescription(description, range)).Value;
         }
 
-        private static T GetConfigValue<T>(string section, string key, T defaultValue, string description, AcceptableValueRange<float> range) {
+        private static T BindValue<T>(string section, string key, T defaultValue, string description, AcceptableValueRange<float> range) {
             return _configFile.Bind(section, key, defaultValue, new ConfigDescription(description, range)).Value;
         }
 
-        private static string GetConfigValue(string section, string key, string defaultValue, string description, AcceptableValueList<string> acceptableValues) {
+        private static string BindValue(string section, string key, string defaultValue, string description, AcceptableValueList<string> acceptableValues) {
             return _configFile.Bind(section, key, defaultValue, new ConfigDescription(description, acceptableValues)).Value;
         }
 

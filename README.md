@@ -289,6 +289,31 @@ New Day Discoveries randomly grant moons when a new day begins.
 - Prefer discovering moons that belong to the same group as the one you're currently located at (see [Moon Groups](#moon-groups)).
 </details>
 
+
+### LethalConstellations Discovery
+> Together with LethalConstellations there are some changes to how Discovery Mode works.
+
+Constellations are tracked as separate progression state. They are excluded from the moon rotation and need to be discovered via other means. 
+Once discovered, a constellation stays discovered i.e., it's always a permanent discovery.
+
+Moon rotation is still configured with the normal free / dynamic free / paid counts, but those picks are selected locally for the current constellation instead of globally across all moons.
+That means each constellation has its own set of discoveries.
+
+When a constellation's default moon is locked behind progression like one of Wesley's moons, it will prevent the entire constellation from being discovered.
+Make sure you don't lock yourself out!  
+ 
+
+<details>
+	<summary>LethalConstellations Discovery Configuration</summary>
+- Whitelist, acceptable starting constellations as well as a policy on which to choose: random or cheapest.
+- Whether to only make a constellation available for discovery once the progression lock on its default moon has been cleared or discover it immediately.
+- Quota, travel, and new day discovery triggers can be configured to target moons, constellations, or both.
+	- Each trigger has their own additional constellation-discovery chance.
+- Regarding the default moon:
+    - constellations can be set to automatically inherit their base price.
+    - the action of routing to a constellation can be mirrored onto its base moon – effectively also buying its route. 
+</details>
+
 </details>
 
 ## Terminal Tags
@@ -412,25 +437,59 @@ The bias can be enabled and tweaked individually for every mechanic that randoml
 
 #### LethalConstellations
 LethalMoonUnlocks is compatible with LethalConstellations!  
-You can even choose to group match moons by their constellation.
 
-In Discovery Mode, only constellations with discovered moons will be visible and available for routing in the LethalConstellations screen on the Terminal.  
-That screen will also show the number of moons currently discovered for every constellation.  
-Default moons will be set to the cheapest discovered moon in each constellation.  
+Most mechanics that work on moons also work for constellations. 
+That means constellation can also be unlocked and have discounts as well as sales. 
 
-Independent of Discovery Mode, you have the option to override the constellation prices with that of the cheapest (currently discovered) moon, which will consequently also apply unlocks, discounts, and sales to constellations.
+In Discovery Mode each constellation has its own discovery state. That means only discovered constellations are available for routing. Once discovered constellations stay discovered permanently. 
+
+Moon discovery state is local to each constellation. That means each constellation will have the following combination of moons discovered:
+- its default moon which is always discovered
+- moons that are discovered as part of the current rotation (which shuffles when enabled)
+- moons that are discovered via other means like new day discoveries or travel discoveries
+- permanent discoveries
+
+The LethalConstellations terminal menu will have additional info about how many moons are discovered within each constellation and also shows LMU tags when enabled.
+
+#### LethalConstellations custom unlock conditions
+LMU will also generate a separate constellation config:
+
+`com.xmods.lethalmoonunlocks.constellations.generated.cfg`
+
+Every section is disabled by default, so it has no gameplay effect unless you configure it.
+
+Each constellation section currently supports:
+
+- `RequiredQuotaCount`
+- `RequiredVisitedMoons`
+- `RequiredUniqueMoonVisits`
+- `MatchMode` (`Any` vs `All`)
+- `IgnoreDefaultMoonStoryLock`
+
+These rules act as a progression gate on discovering their respective constellation and essentially work exactly like a moon that would be locked behin story progression. You can even combine both. 
+
+- other mods can still call `UnlockManager.TryReleaseStoryLock*` to unlock the story related progression gate.
+- constellation unlock conditions are another progression gate.
+- by default both gates must be open before LMU can make the constellation available.
+- once that happens, `Story release behavior` decides whether the constellation is immediately discovered or added to the hidden backlog of constellations that can be discovered.
+- with `IgnoreDefaultMoonStoryLock` the story progression gate can be ignored to where the unlock conditions alone are all that matters. 
 
 #### Wesley's Moons / JLL story progression (Story Locks)
-LMU introduced a **Story Lock** feature that works together with JLL.  
-Any moons using JLL to unlock moons by performing certain actions are implicitly using it when LMU is present.  
+LMU respects the story progression of mods such as Wesley's Moons. Any mod using JLL to unlock moons are implicitly compatible LMU.   
 
-By default LMU will handle these moons as expected, only making them available after their trigger was activated.  
-In discovery mode this means they will be added to the pool of discoverable moons once that happened. 
+When a moon is both hidden and locked in its default state, it is considered to be potentially gated behind story progression. 
+
+As mod maker, when your progression trigger fires, call `UnlockManager.TryReleaseStoryLock(...)` or `UnlockManager.TryReleaseStoryLockShowAlert(...)` on LMU instead of unhiding it directly.  
+
+LMU will handle these moons as expected, only making them available for routing after their trigger was activated.  
+In discovery mode this means they will be added to the pool of discoverable moons once that happens. 
 
 LMU also added its own Vanilla story progression in which you'll need to perform certain actions to gain access to **Embrion** and **Artifice**.  
 Spoilers in the configuration file.
 
-You can globally disable **Story Locks** in the advanced configuration section which will handle story moons like any regular moon. 
+> `UnlockManager.OnCollectStoryLockedMoons` still exists for compatibility reasons, but was depreacted as it is no longer required.
+
+You can globally disable **Story Locks** in the advanced configuration section which will override story moon locking behavior and treat it like any regular moon. 
 
 #### TerminalFormatter
 Tags are shown in TerminalFormatter moons node. Thanks @mrov!
