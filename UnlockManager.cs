@@ -24,18 +24,49 @@ namespace LethalMoonUnlocks {
         internal int QuotaUnlocksCount { get; set; } = 0;
         internal int QuotaDiscountsCount { get; set; } = 0;
         internal int QuotaFullDiscountsCount { get; set; } = 0;
+        private const string DiscoveryTargetModeMoonsOnly = "MoonsOnly";
+        private const string DiscoveryTargetModeMoonsAndConstellations = "MoonsAndConstellations";
+        private const string DiscoveryTargetModeConstellationsOnly = "ConstellationsOnly";
+        private const string DiscoveryTargetModeConstellationsOnlyWithMoonFallback = "ConstellationsOnlyWithMoonFallback";
+        internal bool UseConstellationEconomy =>
+            Plugin.LethalConstellationsPresent
+            && Plugin.LethalConstellationsExtension != null
+            && Plugin.ConstellationManager != null;
+        internal bool UseConstellationDiscovery =>
+            ConfigManager.DiscoveryMode
+            && Plugin.LethalConstellationsPresent
+            && Plugin.LethalConstellationsExtension != null
+            && Plugin.ConstellationManager != null;
         internal int DiscoveredFreeCount {
-            get { return _discoveredFreeCount > DiscoveryFreeCandidates.Count ? DiscoveryFreeCandidates.Count : _discoveredFreeCount; }
+            get {
+                if (UseConstellationDiscovery) {
+                    return _discoveredFreeCount;
+                }
+
+                return _discoveredFreeCount > DiscoveryFreeCandidates.Count ? DiscoveryFreeCandidates.Count : _discoveredFreeCount;
+            }
             set { _discoveredFreeCount = value; }
         }
         private int _discoveredFreeCount;
         internal int DiscoveredDynamicFreeCount {
-            get { return _discoveredDynamicFreeCount > DiscoveryDynamicFreeCandidates.Count ? DiscoveryDynamicFreeCandidates.Count : _discoveredDynamicFreeCount; }
+            get {
+                if (UseConstellationDiscovery) {
+                    return _discoveredDynamicFreeCount;
+                }
+
+                return _discoveredDynamicFreeCount > DiscoveryDynamicFreeCandidates.Count ? DiscoveryDynamicFreeCandidates.Count : _discoveredDynamicFreeCount;
+            }
             set { _discoveredDynamicFreeCount = value; }
         }
         private int _discoveredDynamicFreeCount;
         internal int DiscoveredPaidCount {
-            get { return _discoveredPaidCount > DiscoveryPaidCandidates.Count ? DiscoveryPaidCandidates.Count : _discoveredPaidCount; }
+            get {
+                if (UseConstellationDiscovery) {
+                    return _discoveredPaidCount;
+                }
+
+                return _discoveredPaidCount > DiscoveryPaidCandidates.Count ? DiscoveryPaidCandidates.Count : _discoveredPaidCount;
+            }
             set { _discoveredPaidCount = value; }
         }
         private int _discoveredPaidCount;
@@ -56,11 +87,10 @@ namespace LethalMoonUnlocks {
         }
         internal List<LMUnlockable> DiscoveryCandidates {
             get {
-                return Unlocks.Where( unlock => (
-                    (!unlock.OriginallyLocked && !unlock.OriginallyHidden && !unlock.StoryUnlock
-                    || (unlock.StoryUnlock && unlock.StoryIsUnlocked))
-                    && !unlock.Discovered && !unlock.PermanentlyDiscovered)
-                    ).ToList();
+                return Unlocks.Where(unlock =>
+                    ((!unlock.OriginallyLocked && !unlock.OriginallyHidden && !unlock.StoryUnlock)
+                     || (unlock.StoryUnlock && unlock.StoryIsUnlocked))
+                    && !IsGloballyDiscovered(unlock)).ToList();
             }
         }
         internal List<LMUnlockable> DiscoveryFreeCandidates {
@@ -118,20 +148,10 @@ namespace LethalMoonUnlocks {
         /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
         /// </returns>
         public static bool TryReleaseStoryLock (string numberlessPlanetName) {
-            if (!ConfigManager.EnableStoryProgression) {
-                Logger.LogInfo("Received request to release story lock but story locks are ignored by user config.");
+            if (!TryReleaseStoryLockInternal(numberlessPlanetName, out _, out _)) {
                 return false;
             }
-            var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == numberlessPlanetName);
-            if (unlock == null) {
-                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name was not found!");
-                return false;
-            } else if (!unlock.StoryUnlock) {
-                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not desiganted as story lock!");
-                return false;
-            }
-            unlock.StoryIsUnlocked = true;
-            Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
+
             Instance?.IterateUnlocks();
             NetworkManager.Instance?.ServerSendUnlockables(Instance?.Unlocks);
             return true;
@@ -149,31 +169,74 @@ namespace LethalMoonUnlocks {
         /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
         /// </returns>
         public static bool TryReleaseStoryLockShowAlert (string numberlessPlanetName) {
+            if (!TryReleaseStoryLockInternal(numberlessPlanetName, out var unlock, out var constellationReleaseResult)) {
+                return false;
+            }
+
+            Instance?.IterateUnlocks();
+            NetworkManager.Instance?.ServerSendUnlockables(Instance?.Unlocks);
+            NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Location data detected!\nQueued for processing.", Key = "LMU_StoryLockReleasedGeneric" });
+            SendStoryReleaseAlert(unlock, constellationReleaseResult);
+            NetworkManager.Instance?.ServerSendAlertQueueEvent();
+            return true;
+        }
+
+        private static bool TryReleaseStoryLockInternal(string numberlessPlanetName, out LMUnlockable unlock, out LethalConstellationsManager.StoryReleaseResult constellationReleaseResult) {
+            unlock = null;
+            constellationReleaseResult = null;
+
             if (!ConfigManager.EnableStoryProgression) {
                 Logger.LogInfo("Received request to release story lock but story locks are ignored by user config.");
                 return false;
             }
-            var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == numberlessPlanetName);
+
+            unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == numberlessPlanetName);
             if (unlock == null) {
                 Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name was not found!");
                 return false;
-            } else if (!unlock.StoryUnlock) {
+            }
+
+            if (!unlock.StoryUnlock) {
                 Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not designated as story lock!");
                 return false;
             }
+
             unlock.StoryIsUnlocked = true;
+            if (Plugin.LethalConstellationsPresent && LethalConstellationsManager.Instance != null) {
+                constellationReleaseResult = LethalConstellationsManager.Instance.ReleaseStoryLockForMoon(numberlessPlanetName);
+            }
+
             Logger.LogInfo($"{unlock.Name}: Request to release story lock received! Releasing lock.. {unlock.Name} now available (for discovery).");
-            Instance?.IterateUnlocks();
-            NetworkManager.Instance?.ServerSendUnlockables(Instance?.Unlocks);
-            NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Location data detected!\nQueued for processing.", Key = "LMU_StoryLockReleasedGeneric" });
+            return true;
+        }
+
+        private static void SendStoryReleaseAlert(LMUnlockable unlock, LethalConstellationsManager.StoryReleaseResult constellationReleaseResult) {
+            if (constellationReleaseResult != null && constellationReleaseResult.AnyAffected) {
+                if (constellationReleaseResult.ImmediateDiscovery) {
+                    string discoveredNames = string.Join(", ", constellationReleaseResult.AffectedConstellations);
+                    NetworkManager.Instance?.ServerSendAlertMessage(new Notification {
+                        Header = "Autopilot",
+                        Text = $"Success! New {constellationReleaseResult.AffectedConstellations.Count.SinglePluralWord("constellation")} discovered:\n{discoveredNames}.",
+                        Key = "LMU_StoryLockReleasedGeneric"
+                    });
+                    return;
+                }
+
+                NetworkManager.Instance?.ServerSendAlertMessage(new Notification {
+                    Header = "Autopilot",
+                    Text = "Destination unreachable! Status: UNKNOWN. Writing location data to backlog...",
+                    IsWarning = true,
+                    Key = "LMU_StoryLockReleasedGeneric"
+                });
+                return;
+            }
+
             if (!ConfigManager.DiscoveryMode) {
                 NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = $"Success! New moon discovered:\n{unlock.ExtendedLevel.SelectableLevel.PlanetName}.", Key = "LMU_StoryLockReleasedGeneric" });
+                return;
             }
-            else {
-                NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = $"Destination unreachable! Status: UNKNOWN. Writing location data to backlog...", IsWarning = true, Key = "LMU_StoryLockReleasedGeneric" });
-            }
-            NetworkManager.Instance?.ServerSendAlertQueueEvent();
-            return true;
+
+            NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Destination unreachable! Status: UNKNOWN. Writing location data to backlog...", IsWarning = true, Key = "LMU_StoryLockReleasedGeneric" });
         }
 
         internal void InitializeUnlocks() {
@@ -292,25 +355,51 @@ namespace LethalMoonUnlocks {
 
         public void BuyMoon(string moon) {
             Logger.LogInfo($"{moon}: Moon was bought!");
-            var unlock = Unlocks.Where(unlock => unlock.Name == moon).FirstOrDefault();
-            if (ConfigManager.DiscountMode) {
-                if (unlock.BuyCount < ConfigManager.DiscountsCount) {
+            var unlock = Unlocks.FirstOrDefault(candidate => candidate.Name == moon);
+            if (unlock == null) {
+                Logger.LogError($"Couldn't find moon '{moon}' for route progression.");
+                return;
+            }
+
+            ApplyMoonRouteProgression(unlock, wasPaid: true, allowTravelDiscovery: true, broadcastState: true);
+        }
+
+        internal void ApplyMoonRouteProgression(LMUnlockable unlock, bool wasPaid, bool allowTravelDiscovery, bool broadcastState) {
+            if (unlock == null) {
+                return;
+            }
+
+            if (wasPaid) {
+                if (ConfigManager.DiscountMode) {
+                    if (unlock.BuyCount < ConfigManager.DiscountsCount) {
+                        unlock.BuyCount++;
+                    }
+                } else {
                     unlock.BuyCount++;
                 }
-            } else {
-                unlock.BuyCount++;
+                Logger.LogInfo($"{unlock.Name}: Set buy count to {unlock.BuyCount}");
             }
-            Logger.LogInfo($"{unlock.Name}: Set buy count to {unlock.BuyCount}");
 
-            if (ConfigManager.DiscoveryMode) {
-                // TRAVEL DISCOVERY
-                if (ConfigManager.TravelDiscoveries && DiscoveryCandidates.Count > 0) {
-                    if (RandomHelper.Chance(ConfigManager.TravelDiscoveryChance)) {
-                        Logger.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
-                        TravelDiscovery(unlock);
+            if (allowTravelDiscovery && ConfigManager.DiscoveryMode) {
+                var travelDiscoveryCandidates = GetTriggerMoonDiscoveryCandidates();
+                if (ConfigManager.TravelDiscoveries
+                    && (UseConstellationDiscovery
+                        ? HasDiscoveryTargets(GetConstellationDiscoveryTargetMode("Travel"), travelDiscoveryCandidates)
+                        : DiscoveryCandidates.Count > 0)
+                    && RandomHelper.Chance(ConfigManager.TravelDiscoveryChance)) {
+                    Logger.LogInfo($"Travel Discovery triggered! (Chance: {ConfigManager.TravelDiscoveryChance}%)");
+                    if (UseConstellationDiscovery) {
+                        TryHandleDiscoveryTrigger("Travel", travelDiscoveryCandidates, candidates => TravelDiscovery(unlock, candidates));
+                    } else {
+                        TravelDiscovery(unlock, DiscoveryCandidates);
                     }
                 }
             }
+
+            if (!broadcastState) {
+                return;
+            }
+
             IterateUnlocks();
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 2);
@@ -329,7 +418,7 @@ namespace LethalMoonUnlocks {
             string separator = FormatLogRow(new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11));
             LogLine("| LMUnlockable state table");
 
-            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
+            if (UseConstellationDiscovery) {
                 var groupedUnlocks = new Dictionary<string, List<LMUnlockable>>();
                 var unmatchedUnlocks = new List<LMUnlockable>();
 
@@ -347,8 +436,15 @@ namespace LethalMoonUnlocks {
                     constellationUnlocks.Add(unlock);
                 }
 
+                string currentConstellationName = LethalConstellations.PluginCore.Collections.CurrentConstellation;
+
                 foreach (var constellation in groupedUnlocks) {
-                    LogLine($"| Constellation: {constellation.Key}");
+                    string groupHeader = $"| Constellation: {constellation.Key}";
+                    if (!string.IsNullOrWhiteSpace(currentConstellationName)
+                        && string.Equals(currentConstellationName, constellation.Key, StringComparison.OrdinalIgnoreCase)) {
+                        groupHeader += " (Current)";
+                    }
+                    LogLine(groupHeader);
                     LogLine(separator);
                     LogLine(header);
                     LogLine(separator);
@@ -359,7 +455,7 @@ namespace LethalMoonUnlocks {
                 }
 
                 if (unmatchedUnlocks.Count > 0) {
-                    LogLine("| Unmatched moons");
+                    LogLine("| Moons without Constellation");
                     LogLine(separator);
                     LogLine(header);
                     LogLine(separator);
@@ -367,7 +463,7 @@ namespace LethalMoonUnlocks {
                         LogLine(unlock.ToString());
                     }
                     LogLine(separator);
-                    Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation matching is active. This should not exist at runtime: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
+                    Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation discovery is active. If this happens past round initialization something is broken: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
                 }
 
                 return;
@@ -396,11 +492,13 @@ namespace LethalMoonUnlocks {
             bool loadSuccess = LoadAndImportSavaData();
             if (!loadSuccess) {
                 InitializeNewGame();
+            } else if (UseConstellationDiscovery) {
+                Plugin.ConstellationManager.ApplyCurrentConstellationVisibility();
             }
             
             // Force shuffle if discovery mode is enabled and no moons are discovered
             // This can happen after loading a save that didn't have Discovery mode enabled
-            if (loadSuccess && ConfigManager.DiscoveryMode && Unlocks.All(unlock => !unlock.Discovered)) {
+            if (ShouldForceDiscoveryShuffleOnLoad(loadSuccess)) {
                 ShuffleDiscoverable();
             }
 
@@ -421,17 +519,29 @@ namespace LethalMoonUnlocks {
                 Unlocks.Where(unlock => unlock.NewDiscovery).Do(unlock => { unlock.NewDiscovery = false; });
                 // SHUFFLE ON NEW QUOTA
                 if (!ConfigManager.DiscoveryNeverShuffle) {
-                //if (!ConfigManager.DiscoveryNeverShuffle && !ConfigManager.DiscoveryShuffleEveryDay) {
                     Logger.LogInfo($"Shuffling moon rotation on new Quota..");
                     ShuffleDiscoverable();
                 }
                 // QUOTA DISCOVERY
-                if (ConfigManager.QuotaDiscoveries && DiscoveryCandidates.Count > 0 && RandomHelper.Chance(ConfigManager.QuotaDiscoveryChance)) {
+                var quotaDiscoveryCandidates = GetTriggerMoonDiscoveryCandidates();
+                if (ConfigManager.QuotaDiscoveries
+                    && (UseConstellationDiscovery
+                        ? HasDiscoveryTargets(GetConstellationDiscoveryTargetMode("Quota"), quotaDiscoveryCandidates)
+                        : DiscoveryCandidates.Count > 0)
+                    && RandomHelper.Chance(ConfigManager.QuotaDiscoveryChance)) {
                     Logger.LogInfo($"Quota Discovery triggered! (Chance: {ConfigManager.QuotaDiscoveryChance}%)");
-                    if (ConfigManager.QuotaDiscoveryCheapestGroup && (ConfigManager.MoonGroupMatchingMethod == "Custom" || ConfigManager.MoonGroupMatchingMethod == "LethalConstellations")) {
-                        QuotaDiscoveryGroup();
+                    if (UseConstellationDiscovery) {
+                        TryHandleDiscoveryTrigger(
+                            "Quota",
+                            quotaDiscoveryCandidates,
+                            candidates => (ConfigManager.QuotaDiscoveryCheapestGroup && ConfigManager.MoonGroupMatchingMethod == "Custom")
+                                ? QuotaDiscoveryGroup(candidates)
+                                : QuotaDiscovery(candidates),
+                            preferCheapestConstellation: ConfigManager.QuotaDiscoveryCheapestConstellation);
+                    } else if (ConfigManager.QuotaDiscoveryCheapestGroup && ConfigManager.MoonGroupMatchingMethod == "Custom") {
+                        QuotaDiscoveryGroup(DiscoveryCandidates);
                     } else {
-                        QuotaDiscovery();
+                        QuotaDiscovery(DiscoveryCandidates);
                     }
                 }
             }
@@ -443,7 +553,7 @@ namespace LethalMoonUnlocks {
             IterateUnlocks();
 
             // QUOTA UNLOCK
-            if (!ConfigManager.DiscountMode && ConfigManager.QuotaUnlocks && PaidMoons.Count > 0) {
+            if (!ConfigManager.DiscountMode && ConfigManager.QuotaUnlocks && (UseConstellationEconomy || PaidMoons.Count > 0)) {
                 if (RandomHelper.Chance(ConfigManager.QuotaUnlockChance) && (ConfigManager.QuotaUnlockMaxCount < 1 || QuotaUnlocksCount < ConfigManager.QuotaUnlockMaxCount)) {
                     Logger.LogInfo($"Quota unlock triggered! (Chance: {ConfigManager.QuotaUnlockChance}%)");
                     QuotaUnlock();
@@ -452,12 +562,12 @@ namespace LethalMoonUnlocks {
             // DISCOUNT MODE
             if (ConfigManager.DiscountMode) {
                 // QUOTA DISCOUNT
-                if (ConfigManager.QuotaDiscounts && PaidMoons.Count > 0 && RandomHelper.Chance(ConfigManager.QuotaDiscountChance) && (ConfigManager.QuotaDiscountMaxCount < 1 || QuotaDiscountsCount < ConfigManager.QuotaDiscountMaxCount)) {
+                if (ConfigManager.QuotaDiscounts && (UseConstellationEconomy || PaidMoons.Count > 0) && RandomHelper.Chance(ConfigManager.QuotaDiscountChance) && (ConfigManager.QuotaDiscountMaxCount < 1 || QuotaDiscountsCount < ConfigManager.QuotaDiscountMaxCount)) {
                     Logger.LogInfo($"Quota Discount triggered! (Chance: {ConfigManager.QuotaDiscountChance}%)");
                     QuotaDiscount();
                 }
                 // QUOTA FULL DISCOUNT
-                if (ConfigManager.QuotaFullDiscounts && PaidMoons.Count > 0 && RandomHelper.Chance(ConfigManager.QuotaFullDiscountChance) && (ConfigManager.QuotaFullDiscountMaxCount < 1 || QuotaFullDiscountsCount < ConfigManager.QuotaFullDiscountMaxCount)) {
+                if (ConfigManager.QuotaFullDiscounts && (UseConstellationEconomy || PaidMoons.Count > 0) && RandomHelper.Chance(ConfigManager.QuotaFullDiscountChance) && (ConfigManager.QuotaFullDiscountMaxCount < 1 || QuotaFullDiscountsCount < ConfigManager.QuotaFullDiscountMaxCount)) {
                     Logger.LogInfo($"Quota Full Discount triggered! (Chance: {ConfigManager.QuotaFullDiscountChance}%)");
                     QuotaFullDiscount();
                 }
@@ -516,9 +626,18 @@ namespace LethalMoonUnlocks {
                         ShuffleDiscoverable();
                     }
                     // NEW DAY DISCOVERY
-                    if (ConfigManager.NewDayDiscoveries && DiscoveryCandidates.Count > 0 && RandomHelper.Chance(ConfigManager.NewDayDiscoveryChance)) {
+                    var newDayDiscoveryCandidates = GetTriggerMoonDiscoveryCandidates();
+                    if (ConfigManager.NewDayDiscoveries
+                        && (UseConstellationDiscovery
+                            ? HasDiscoveryTargets(GetConstellationDiscoveryTargetMode("NewDay"), newDayDiscoveryCandidates)
+                            : DiscoveryCandidates.Count > 0)
+                        && RandomHelper.Chance(ConfigManager.NewDayDiscoveryChance)) {
                         Logger.LogInfo($"New Day Discovery triggered! (Chance: {ConfigManager.NewDayDiscoveryChance}%)");
-                        NewDayDiscovery();
+                        if (UseConstellationDiscovery) {
+                            TryHandleDiscoveryTrigger("NewDay", newDayDiscoveryCandidates, NewDayDiscovery);
+                        } else {
+                            NewDayDiscovery(DiscoveryCandidates);
+                        }
                     }
                 }
                 if (ConfigManager.Sales && ConfigManager.SalesShuffleDaily) {
@@ -537,10 +656,21 @@ namespace LethalMoonUnlocks {
                     unlock.OnSale = false;
                     unlock.SalesRate = 0;
                 });
+                if (UseConstellationEconomy) {
+                    foreach (var constellation in Plugin.LethalConstellationsExtension.ConstellationStates.Values) {
+                        constellation.OnSale = false;
+                        constellation.SalesRate = 0;
+                    }
+
+                    Plugin.ConstellationManager.ApplyConstellationState();
+                }
                 return;
             }
 
             Unlocks.Do(unlock => unlock.RefreshSale());
+            if (UseConstellationEconomy) {
+                Plugin.ConstellationManager.RefreshConstellationSales();
+            }
         }
 
         internal void OnArrive() {
@@ -578,8 +708,193 @@ namespace LethalMoonUnlocks {
             Reset();
         }
 
-        private void QuotaDiscovery() {
-            var quotaDiscoveries = DiscoveryCandidates;
+        private List<LMUnlockable> GetTriggerMoonDiscoveryCandidates() {
+            if (!UseConstellationDiscovery || Plugin.ConstellationManager == null) {
+                return DiscoveryCandidates;
+            }
+
+            return Plugin.ConstellationManager.GetCurrentConstellationDiscoveryCandidates();
+        }
+
+        private static string GetDiscoveryTriggerName(string triggerKey) {
+            return triggerKey switch {
+                "Quota" => "Quota Discovery",
+                "Travel" => "Travel Discovery",
+                "NewDay" => "New Day Discovery",
+                _ => "Discovery"
+            };
+        }
+
+        private string GetConstellationDiscoveryTargetMode(string triggerKey) {
+            return triggerKey switch {
+                "Quota" => ConfigManager.LethalConstellationsQuotaDiscoveryTargetMode,
+                "Travel" => ConfigManager.LethalConstellationsTravelDiscoveryTargetMode,
+                "NewDay" => ConfigManager.LethalConstellationsNewDayDiscoveryTargetMode,
+                _ => DiscoveryTargetModeMoonsOnly
+            };
+        }
+
+        private int GetConstellationDiscoveryChance(string triggerKey) {
+            return triggerKey switch {
+                "Quota" => ConfigManager.LethalConstellationsQuotaDiscoveryChance,
+                "Travel" => ConfigManager.LethalConstellationsTravelDiscoveryChance,
+                "NewDay" => ConfigManager.LethalConstellationsNewDayDiscoveryChance,
+                _ => 0
+            };
+        }
+
+        private List<LethalConstellationsManager.ConstellationEconomyTarget> GetConstellationQuotaRewardCandidates() {
+            if (!UseConstellationEconomy || Plugin.ConstellationManager == null) {
+                return new List<LethalConstellationsManager.ConstellationEconomyTarget>();
+            }
+
+            return Plugin.ConstellationManager.GetQuotaRewardTargets();
+        }
+
+        private static List<LethalConstellationsManager.ConstellationEconomyTarget> SelectRewardTargetsWeighted(List<LethalConstellationsManager.ConstellationEconomyTarget> candidates, float bias, int amount) {
+            if (candidates == null || candidates.Count == 0) {
+                return new List<LethalConstellationsManager.ConstellationEconomyTarget>();
+            }
+
+            const double scale = 1000d;
+            var weights = new Dictionary<LethalConstellationsManager.ConstellationEconomyTarget, int>();
+            var prices = candidates.ToDictionary(candidate => candidate, candidate => Math.Clamp(
+                ConfigManager.CheapMoonBiasIgnorePriceChanges ? candidate.EffectiveOriginalPrice : candidate.EffectivePrice,
+                1,
+                int.MaxValue));
+            double averagePrice = prices.Values.Average();
+
+            foreach (var candidate in candidates) {
+                double relativeCheapness = averagePrice / prices[candidate];
+                long result = Math.Clamp((long)Math.Round(Math.Pow(relativeCheapness, bias) * scale), 1, int.MaxValue / (candidates.Count + 1));
+                weights[candidate] = (int)result;
+            }
+
+            Logger.LogDebug($"Cheap moon bias: Assigned the following constellation weights: [ {string.Join(", ", weights.Select(weight => weight.Key.Name + ":" + weight.Value))} ]");
+            return RandomHelper.SelectWeighted(weights, amount);
+        }
+
+        private bool HasDiscoveryTargets(string targetMode, List<LMUnlockable> moonCandidates) {
+            bool hasMoonCandidates = moonCandidates.Count > 0;
+            bool hasUndiscoveredConstellations = Plugin.ConstellationManager?.HasUndiscoveredConstellations() == true;
+            bool hasEligibleUndiscoveredConstellations = Plugin.ConstellationManager?.HasEligibleUndiscoveredConstellations() == true;
+
+            return targetMode switch {
+                DiscoveryTargetModeMoonsOnly => hasMoonCandidates,
+                DiscoveryTargetModeMoonsAndConstellations => hasMoonCandidates || hasEligibleUndiscoveredConstellations,
+                DiscoveryTargetModeConstellationsOnly => hasEligibleUndiscoveredConstellations,
+                DiscoveryTargetModeConstellationsOnlyWithMoonFallback => hasUndiscoveredConstellations ? hasEligibleUndiscoveredConstellations : hasMoonCandidates,
+                _ => hasMoonCandidates
+            };
+        }
+
+        private void ApplyMoonDiscoveries(List<LMUnlockable> discoveries, bool permanent) {
+            if (discoveries == null || discoveries.Count == 0) {
+                return;
+            }
+
+            foreach (var discovery in discoveries) {
+                if (UseConstellationDiscovery) {
+                    discovery.SetDiscoveryState(true);
+                } else {
+                    discovery.Discovered = true;
+                    if (!discovery.DiscoveredOnce) {
+                        discovery.DiscoveredOnce = true;
+                        discovery.NewDiscovery = true;
+                    }
+                }
+
+                if (permanent) {
+                    discovery.PermanentlyDiscovered = true;
+                    Logger.LogDebug($"{discovery.Name}: Discovery is permanent");
+                }
+            }
+
+            if (UseConstellationDiscovery) {
+                if (!permanent) {
+                    Plugin.ConstellationManager.AddLocalMoonDiscoveries(LethalConstellations.PluginCore.Collections.CurrentConstellation, discoveries);
+                }
+                Plugin.ConstellationManager.ApplyCurrentConstellationVisibility();
+            }
+        }
+
+        private bool TryDiscoverConstellationForTrigger(string triggerKey, bool preferCheapestConstellation) {
+            if (Plugin.ConstellationManager == null || !Plugin.ConstellationManager.TryDiscoverConstellation(preferCheapestConstellation, out var constellationName)) {
+                return false;
+            }
+
+            string triggerName = GetDiscoveryTriggerName(triggerKey);
+            NotificationHelper.SendChatMessage($"{triggerName} granted:\n<color=white>{constellationName}</color>");
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
+                Header = $"{triggerName}!",
+                Text = $"Received coordinates for constellation: {constellationName}",
+                IsWarning = true,
+                Key = $"LMU_{triggerKey}ConstellationDiscovery"
+            });
+            Logger.LogInfo($"{triggerName}: Discovered constellation '{constellationName}'.");
+            return true;
+        }
+
+        private bool TryHandleDiscoveryTrigger(string triggerKey, List<LMUnlockable> moonCandidates, Func<List<LMUnlockable>, bool> moonDiscoveryAction, bool preferCheapestConstellation = false) {
+            if (!UseConstellationDiscovery || Plugin.ConstellationManager == null) {
+                return false;
+            }
+
+            string targetMode = GetConstellationDiscoveryTargetMode(triggerKey);
+            bool hasUndiscoveredConstellations = Plugin.ConstellationManager.HasUndiscoveredConstellations();
+            bool hasEligibleUndiscoveredConstellations = Plugin.ConstellationManager.HasEligibleUndiscoveredConstellations();
+            int constellationDiscoveryChance = GetConstellationDiscoveryChance(triggerKey);
+            bool changed = false;
+            Logger.LogInfo(
+                $"{GetDiscoveryTriggerName(triggerKey)}: Handling trigger with target mode '{targetMode}', moon candidates={moonCandidates.Count}, undiscovered constellations={(hasUndiscoveredConstellations ? "yes" : "no")}, eligible undiscovered constellations={(hasEligibleUndiscoveredConstellations ? "yes" : "no")}, constellation chance={constellationDiscoveryChance}%.");
+
+            switch (targetMode) {
+                case DiscoveryTargetModeMoonsOnly:
+                    return moonCandidates.Count > 0 && moonDiscoveryAction(moonCandidates);
+
+                case DiscoveryTargetModeMoonsAndConstellations:
+                    if (moonCandidates.Count > 0) {
+                        changed |= moonDiscoveryAction(moonCandidates);
+                    }
+                    if (hasEligibleUndiscoveredConstellations && RandomHelper.Chance(constellationDiscoveryChance)) {
+                        changed |= TryDiscoverConstellationForTrigger(triggerKey, preferCheapestConstellation);
+                    }
+                    return changed;
+
+                case DiscoveryTargetModeConstellationsOnly:
+                    if (!hasEligibleUndiscoveredConstellations) {
+                        Logger.LogInfo($"{GetDiscoveryTriggerName(triggerKey)}: No eligible undiscovered constellations are available.");
+                        return false;
+                    }
+                    if (!RandomHelper.Chance(constellationDiscoveryChance)) {
+                        Logger.LogInfo($"{GetDiscoveryTriggerName(triggerKey)}: Constellation discovery chance missed ({constellationDiscoveryChance}%).");
+                        return false;
+                    }
+                    return TryDiscoverConstellationForTrigger(triggerKey, preferCheapestConstellation);
+
+                case DiscoveryTargetModeConstellationsOnlyWithMoonFallback:
+                    if (hasUndiscoveredConstellations) {
+                        if (!hasEligibleUndiscoveredConstellations) {
+                            Logger.LogInfo($"{GetDiscoveryTriggerName(triggerKey)}: Undiscovered constellations remain story-locked or otherwise ineligible. Moon fallback is blocked.");
+                            return false;
+                        }
+                        if (!RandomHelper.Chance(constellationDiscoveryChance)) {
+                            Logger.LogInfo($"{GetDiscoveryTriggerName(triggerKey)}: Constellation discovery chance missed ({constellationDiscoveryChance}%). Moon fallback is blocked until all constellations are discovered.");
+                            return false;
+                        }
+                        return TryDiscoverConstellationForTrigger(triggerKey, preferCheapestConstellation);
+                    }
+
+                    return moonCandidates.Count > 0 && moonDiscoveryAction(moonCandidates);
+
+                default:
+                    Logger.LogWarning($"{GetDiscoveryTriggerName(triggerKey)}: Unknown target mode '{targetMode}'. Falling back to moon discoveries only.");
+                    return moonCandidates.Count > 0 && moonDiscoveryAction(moonCandidates);
+            }
+        }
+
+        private bool QuotaDiscovery(List<LMUnlockable> candidates) {
+            var quotaDiscoveries = candidates;
             if (ConfigManager.CheapMoonBiasQuotaDiscovery) {
                 quotaDiscoveries = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(quotaDiscoveries, ConfigManager.CheapMoonBiasQuotaDiscoveryValue), ConfigManager.QuotaDiscoveryCount);
             } else {
@@ -587,46 +902,32 @@ namespace LethalMoonUnlocks {
             }
             if (quotaDiscoveries.Count == 0) {
                 Logger.LogInfo($"No moons for Quota Discovery available!");
-                return;
+                return false;
             }
-            foreach (var qd in quotaDiscoveries) {
-                qd.Discovered = true;
-                if (ConfigManager.QuotaDiscoveryPermanent) {
-                    qd.PermanentlyDiscovered = true;
-                    Logger.LogInfo($"Quota Discovery is permanent: {qd.Name}");
-                }
-            }
+            ApplyMoonDiscoveries(quotaDiscoveries, ConfigManager.QuotaDiscoveryPermanent);
             NotificationHelper.SendChatMessage($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n<color=white>{string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name))}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
             Logger.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
+            return true;
         }
 
-        private void QuotaDiscoveryGroup() {
-            var quotaDiscoveries = DiscoveryCandidates;
+        private bool QuotaDiscoveryGroup(List<LMUnlockable> candidates) {
+            var quotaDiscoveries = candidates;
             List<LMUnlockable> discoveryGroup = new List<LMUnlockable>();
             LMGroup group = new LMGroup();
-            if (Plugin.LethalConstellationsPresent && ConfigManager.QuotaDiscoveryCheapestConstellation && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations") {
-                group = Plugin.LethalConstellationsExtension.GetCheapestUndiscoveredConstellation();
-                foreach (var member in group.Members) {
-                    if (!member.Discovered && !member.PermanentlyDiscovered) {
-                        discoveryGroup.Add(member);
-                    }
-                }
-            } else {
-                foreach (var candidate in quotaDiscoveries.OrderBy(c => c.OriginalPrice)) {
-                    Logger.LogInfo($"Got cheapest candidate: {candidate.Name}");
-                    Logger.LogInfo($"Checking for groups..");
-                    group = MatchMoonGroup(candidate, quotaDiscoveries, false);
-                    if (group.Members.Count > 0) {
-                        foreach (var member in group.Members) {
-                            if (!member.Discovered && !member.PermanentlyDiscovered) {
-                                discoveryGroup.Add(member);
-                            }
+            foreach (var candidate in quotaDiscoveries.OrderBy(c => c.OriginalPrice)) {
+                Logger.LogInfo($"Got cheapest candidate: {candidate.Name}");
+                Logger.LogInfo($"Checking for groups..");
+                group = MatchMoonGroup(candidate, quotaDiscoveries, false);
+                if (group.Members.Count > 0) {
+                    foreach (var member in group.Members) {
+                        if (!IsGloballyDiscovered(member)) {
+                            discoveryGroup.Add(member);
                         }
-                        break;
-                    } else {
-                        Logger.LogInfo("Candidate has no group matches. Try next..");
                     }
+                    break;
+                } else {
+                    Logger.LogInfo("Candidate has no group matches. Try next..");
                 }
             }
             if (group.Members.Count <= discoveryGroup.Count) {
@@ -645,15 +946,9 @@ namespace LethalMoonUnlocks {
             }
             if (discoveryGroup.Count == 0) {
                 Logger.LogInfo($"No moons for Quota Discovery available!");
-                return;
+                return false;
             }
-            foreach (var qd in discoveryGroup) {
-                qd.Discovered = true;
-                if (ConfigManager.QuotaDiscoveryPermanent) {
-                    qd.PermanentlyDiscovered = true;
-                    Logger.LogInfo($"Quota Discovery is permanent: {qd.Name}");
-                }
-            }
+            ApplyMoonDiscoveries(discoveryGroup, ConfigManager.QuotaDiscoveryPermanent);
             string message_groupname = string.Empty;
             if (group.Name != string.Empty) {
                 message_groupname = $" in <color=red>{group.Name}</color>";
@@ -661,12 +956,54 @@ namespace LethalMoonUnlocks {
             NotificationHelper.SendChatMessage($"{discoveryGroup.Count.SinglePluralWord("Discovery")} granted{message_groupname}:\n<color=white>{string.Join(", ", discoveryGroup.Select(qd => qd.Name))}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
             Logger.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
+            return true;
         }
 
         private void QuotaUnlock() {
+            if (UseConstellationEconomy) {
+                var constellationQuotaUnlocks = GetConstellationQuotaRewardCandidates().Where(constellation => constellation.EffectivePrice > 0).ToList();
+                if (ConfigManager.QuotaUnlockMaxPrice > 0) {
+                    constellationQuotaUnlocks = constellationQuotaUnlocks.Where(constellation => constellation.EffectivePrice <= ConfigManager.QuotaUnlockMaxPrice).ToList();
+                }
+                if (ConfigManager.CheapMoonBiasQuotaUnlock) {
+                    constellationQuotaUnlocks = SelectRewardTargetsWeighted(constellationQuotaUnlocks, ConfigManager.CheapMoonBiasQuotaUnlockValue, ConfigManager.QuotaUnlockCount);
+                } else {
+                    constellationQuotaUnlocks = RandomHelper.Select(constellationQuotaUnlocks, ConfigManager.QuotaUnlockCount);
+                }
+                if (constellationQuotaUnlocks.Count == 0) {
+                    Logger.LogInfo("No constellations for Quota Unlock available!");
+                    return;
+                }
+
+                foreach (var unlock in constellationQuotaUnlocks.Select(target => target.State)) {
+                    unlock.AdvanceBuyProgression();
+                    unlock.FreeVisitCount = 1;
+                    unlock.IterateState();
+                }
+
+                var unlockedMoonNames = constellationQuotaUnlocks
+                    .Select(target => target.DefaultMoon?.Name ?? target.Name)
+                    .ToList();
+
+                QuotaUnlocksCount++;
+                if (constellationQuotaUnlocks.Count > 1) {
+                    NotificationHelper.SendChatMessage($"New moons unlocked:\n<color=green>{string.Join(", ", unlockedMoonNames)}</color>");
+                } else {
+                    NotificationHelper.SendChatMessage($"New moon unlocked:\n<color=green>{unlockedMoonNames.First()}</color>");
+                }
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
+                    Header = $"{constellationQuotaUnlocks.Count.SinglePluralWord("Unlock")} granted!",
+                    Text = $"You earned unlocks for:\n{string.Join(", ", unlockedMoonNames)}",
+                    Key = "LMU_NewQuotaUnlock"
+                });
+                Logger.LogInfo($"New Quota Unlocks: {string.Join(", ", unlockedMoonNames)}");
+                Plugin.ConstellationManager.ApplyConstellationState();
+                return;
+            }
+
             List<LMUnlockable> quotaUnlocks = PaidMoons;
             if (ConfigManager.DiscoveryMode) {
-                quotaUnlocks = quotaUnlocks.Where(unlock => unlock.Discovered == true || unlock.PermanentlyDiscovered == true).ToList();
+                quotaUnlocks = quotaUnlocks.Where(IsGloballyDiscovered).ToList();
             }
             if (ConfigManager.QuotaUnlockMaxPrice > 0) {
                 quotaUnlocks = quotaUnlocks.Where(moon => moon.RoutePrice <= ConfigManager.QuotaUnlockMaxPrice).ToList();
@@ -688,16 +1025,61 @@ namespace LethalMoonUnlocks {
             if (quotaUnlocks.Count > 1) {
                 NotificationHelper.SendChatMessage($"New moons unlocked:\n<color=green>{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}</color>");
             } else if (quotaUnlocks.Count == 1) {
-                NotificationHelper.SendChatMessage($"New moon unlocked:\n<color=green>{quotaUnlocks.FirstOrDefault().Name}</color>");
+                NotificationHelper.SendChatMessage($"New moon unlocked:\n<color=green>{quotaUnlocks.FirstOrDefault()?.Name}</color>");
             }
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaUnlocks.Count.SinglePluralWord("Unlock")} granted!", Text = $"You earned unlocks for:\n{string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaUnlock" });
             Logger.LogInfo($"New Quota Unlocks: {string.Join(", ", quotaUnlocks.Select(unlock => unlock.Name))}");
         }
 
         private void QuotaDiscount() {
+            if (UseConstellationEconomy) {
+                var constellationQuotaDiscounts = GetConstellationQuotaRewardCandidates().Where(constellation => constellation.EffectivePrice > 0).ToList();
+                if (ConfigManager.QuotaDiscountMaxPrice > 0) {
+                    constellationQuotaDiscounts = constellationQuotaDiscounts.Where(constellation => constellation.EffectivePrice <= ConfigManager.QuotaDiscountMaxPrice).ToList();
+                }
+
+                if (ConfigManager.CheapMoonBiasQuotaDiscount) {
+                    constellationQuotaDiscounts = SelectRewardTargetsWeighted(constellationQuotaDiscounts, ConfigManager.CheapMoonBiasQuotaDiscountValue, ConfigManager.QuotaDiscountCount);
+                } else {
+                    constellationQuotaDiscounts = RandomHelper.Select(constellationQuotaDiscounts, ConfigManager.QuotaDiscountCount);
+                }
+                if (constellationQuotaDiscounts.Count == 0) {
+                    Logger.LogInfo("No constellations for Quota Discount available!");
+                    return;
+                }
+
+                foreach (var discount in constellationQuotaDiscounts.Select(target => target.State)) {
+                    discount.AdvanceBuyProgression();
+                    discount.IterateState();
+                }
+
+                var discountedMoonNames = constellationQuotaDiscounts
+                    .Select(target => target.DefaultMoon?.Name ?? target.Name)
+                    .ToList();
+
+                var discountedMoonDescriptions = constellationQuotaDiscounts
+                    .Select(target => $"{target.DefaultMoon?.Name ?? target.Name} {100 - (int)(Plugin.GetDiscountRate(target.State.BuyCount) * 100)}%")
+                    .ToList();
+
+                QuotaDiscountsCount++;
+                if (constellationQuotaDiscounts.Count == 1) {
+                    NotificationHelper.SendChatMessage($"Discount granted:\n<color=green>{discountedMoonNames.First()}</color>");
+                } else {
+                    NotificationHelper.SendChatMessage($"Discounts granted:\n<color=green>{string.Join(", ", discountedMoonNames)}</color>");
+                }
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
+                    Header = $"{constellationQuotaDiscounts.Count.SinglePluralWord("Discount")} granted!",
+                    Text = $"You earned discounts for:\n{string.Join(", ", discountedMoonDescriptions)}",
+                    Key = "LMU_NewQuotaDiscount"
+                });
+                Logger.LogInfo($"New Quota Discounts: {string.Join(", ", discountedMoonDescriptions)}");
+                Plugin.ConstellationManager.ApplyConstellationState();
+                return;
+            }
+
             var quotaDiscounts = PaidMoons;
             if (ConfigManager.DiscoveryMode) {
-                quotaDiscounts = quotaDiscounts.Where(unlock => unlock.Discovered || unlock.PermanentlyDiscovered).ToList();
+                quotaDiscounts = quotaDiscounts.Where(IsGloballyDiscovered).ToList();
             }
             if (ConfigManager.QuotaDiscountMaxPrice > 0) {
                 quotaDiscounts = quotaDiscounts.Where(moon => moon.RoutePrice <= ConfigManager.QuotaDiscountMaxPrice).ToList();
@@ -723,9 +1105,53 @@ namespace LethalMoonUnlocks {
         }
 
         private void QuotaFullDiscount() {
+            if (UseConstellationEconomy) {
+                var constellationQuotaFullDiscounts = GetConstellationQuotaRewardCandidates().Where(constellation => constellation.EffectivePrice > 0).ToList();
+                if (ConfigManager.QuotaFullDiscountMaxPrice > 0) {
+                    constellationQuotaFullDiscounts = constellationQuotaFullDiscounts.Where(constellation => constellation.EffectivePrice <= ConfigManager.QuotaFullDiscountMaxPrice).ToList();
+                }
+                if (ConfigManager.Discounts[ConfigManager.Discounts.Count - 1] < 100) {
+                    constellationQuotaFullDiscounts = constellationQuotaFullDiscounts.Where(unlock => unlock.State.BuyCount < ConfigManager.DiscountsCount).ToList();
+                }
+                if (ConfigManager.CheapMoonBiasQuotaFullDiscount) {
+                    constellationQuotaFullDiscounts = SelectRewardTargetsWeighted(constellationQuotaFullDiscounts, ConfigManager.CheapMoonBiasQuotaFullDiscountValue, ConfigManager.QuotaFullDiscountCount);
+                } else {
+                    constellationQuotaFullDiscounts = RandomHelper.Select(constellationQuotaFullDiscounts, ConfigManager.QuotaFullDiscountCount);
+                }
+                if (constellationQuotaFullDiscounts.Count == 0) {
+                    Logger.LogInfo("No constellations for Quota Full Discount available!");
+                    return;
+                }
+
+                foreach (var fullDiscount in constellationQuotaFullDiscounts.Select(target => target.State)) {
+                    fullDiscount.BuyCount = ConfigManager.DiscountsCount;
+                    fullDiscount.FreeVisitCount = 1;
+                    fullDiscount.IterateState();
+                }
+
+                var fullyDiscountedMoonNames = constellationQuotaFullDiscounts
+                    .Select(target => target.DefaultMoon?.Name ?? target.Name)
+                    .ToList();
+
+                QuotaFullDiscountsCount++;
+                if (constellationQuotaFullDiscounts.Count == 1) {
+                    NotificationHelper.SendChatMessage($"Full discount granted:\n<color=green>{fullyDiscountedMoonNames.First()}</color>");
+                } else {
+                    NotificationHelper.SendChatMessage($"Full discounts granted:\n<color=green>{string.Join(", ", fullyDiscountedMoonNames)}</color>");
+                }
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
+                    Header = $" Full {constellationQuotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!",
+                    Text = $"You earned full discounts for:\n{string.Join(", ", fullyDiscountedMoonNames)}",
+                    Key = "LMU_NewQuotaFullDiscount"
+                });
+                Logger.LogInfo($"New Quota Full Discounts: {string.Join(", ", fullyDiscountedMoonNames)}");
+                Plugin.ConstellationManager.ApplyConstellationState();
+                return;
+            }
+
             List<LMUnlockable> quotaFullDiscounts = PaidMoons;
             if (ConfigManager.DiscoveryMode) {
-                quotaFullDiscounts = quotaFullDiscounts.Where(unlock => unlock.Discovered || unlock.PermanentlyDiscovered).ToList();
+                quotaFullDiscounts = quotaFullDiscounts.Where(IsGloballyDiscovered).ToList();
             }
             if (ConfigManager.QuotaFullDiscountMaxPrice > 0) {
                 quotaFullDiscounts = quotaFullDiscounts.Where(moon => moon.RoutePrice <= ConfigManager.QuotaFullDiscountMaxPrice).ToList();
@@ -753,34 +1179,28 @@ namespace LethalMoonUnlocks {
             Logger.LogInfo($"New Quota Full Discounts: {string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}");
         }
 
-        private void NewDayDiscovery() {
-            Logger.LogInfo($"New Day Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
+        private bool NewDayDiscovery(List<LMUnlockable> candidates) {
+            Logger.LogInfo($"New Day Discovery Candidates: {string.Join(", ", candidates.Select(unlock => unlock.Name))}");
 
             var currentLevelUnlock = Unlocks.FirstOrDefault(unlock => unlock.ExtendedLevel.NumberlessPlanetName == LevelManager.CurrentExtendedLevel.NumberlessPlanetName);
             List<LMUnlockable> newDayDiscoveries;
-            List<LMUnlockable> nddCandidates = DiscoveryCandidates;
+            List<LMUnlockable> nddCandidates = candidates;
             string ndDiscoveryGroupName = "nearby";
             if (ConfigManager.NewDayDiscoveryMatchGroup && currentLevelUnlock != null) {
-                LMGroup moonGroup = MatchMoonGroup(currentLevelUnlock, DiscoveryCandidates, ConfigManager.NewDayDiscoveryMatchGroupFallback);
+                LMGroup moonGroup = MatchMoonGroup(currentLevelUnlock, candidates, ConfigManager.NewDayDiscoveryMatchGroupFallback);
                 nddCandidates = moonGroup.Members;
                 if (!string.IsNullOrEmpty(moonGroup.Name)) ndDiscoveryGroupName = $"in <color=red>{moonGroup.Name}</color>";
             }
             if (nddCandidates.Count < 1) {
                 Logger.LogInfo($"No discoverable moons found!");
-                return;
+                return false;
             }
             if (ConfigManager.CheapMoonBiasNewDayDiscovery) {
                 newDayDiscoveries = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(nddCandidates, ConfigManager.CheapMoonBiasNewDayDiscoveryValue), ConfigManager.NewDayDiscoveryCount);
             } else {
                 newDayDiscoveries = RandomHelper.Select(nddCandidates, ConfigManager.NewDayDiscoveryCount);
             }
-            foreach (var d in newDayDiscoveries) {
-                d.Discovered = true;
-                if (ConfigManager.NewDayDiscoveryPermanent) {
-                    d.PermanentlyDiscovered = true;
-                    Logger.LogDebug($"{d.Name}: Discovery is permanent");
-                }
-            }
+            ApplyMoonDiscoveries(newDayDiscoveries, ConfigManager.NewDayDiscoveryPermanent);
             if (newDayDiscoveries.Count == 1) {
                 NotificationHelper.SendChatMessage($"Autopilot discovered moon suitable for landing {ndDiscoveryGroupName}:\n<color=white>{newDayDiscoveries.FirstOrDefault().Name}</color>");
                 Logger.LogInfo($"New Day Discoveries: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
@@ -792,23 +1212,23 @@ namespace LethalMoonUnlocks {
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New Day {newDayDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {newDayDiscoveries.Count.SinglePluralWord("moon")} {ndDiscoveryGroupName}.\n" +
                 $"Moon catalog updated!", Key = "LMU_NewDayDiscovery" });
             Logger.LogInfo($"New Day Discoveries: {string.Join(", ", newDayDiscoveries.Select(unlock => unlock.Name))}");
-
+            return true;
         }
 
-        private void TravelDiscovery(LMUnlockable unlock) {
-            Logger.LogInfo($"Travel Discovery Candidates: {string.Join(", ", DiscoveryCandidates.Select(unlock => unlock.Name))}");
-            List<LMUnlockable> tdCandidates = DiscoveryCandidates;
+        private bool TravelDiscovery(LMUnlockable unlock, List<LMUnlockable> candidates) {
+            Logger.LogInfo($"Travel Discovery Candidates: {string.Join(", ", candidates.Select(candidate => candidate.Name))}");
+            List<LMUnlockable> tdCandidates = candidates;
             List<LMUnlockable> travelDiscoveries;
                 
             string tdMessageGroupName = string.Empty;
             if (ConfigManager.TravelDiscoveryMatchGroup) {
-                LMGroup moonGroup = MatchMoonGroup(unlock, DiscoveryCandidates, ConfigManager.TravelDiscoveryMatchGroupFallback);
+                LMGroup moonGroup = MatchMoonGroup(unlock, candidates, ConfigManager.TravelDiscoveryMatchGroupFallback);
                 tdCandidates = moonGroup.Members;
                 if (!string.IsNullOrEmpty(moonGroup.Name)) tdMessageGroupName = $" to <color=red>{moonGroup.Name}</color>";
             }
             if (tdCandidates.Count < 1) {
                 Logger.LogInfo($"No discoverable moons found!");
-                return;
+                return false;
             }
             if (ConfigManager.CheapMoonBiasTravelDiscovery) {
                 travelDiscoveries = RandomHelper.SelectWeighted(RandomHelper.CalculateBiasedWeights(tdCandidates, ConfigManager.CheapMoonBiasTravelDiscoveryValue), ConfigManager.TravelDiscoveryCount);
@@ -816,13 +1236,7 @@ namespace LethalMoonUnlocks {
                 travelDiscoveries = RandomHelper.Select(tdCandidates, ConfigManager.TravelDiscoveryCount);
             }
 
-            foreach (var d in travelDiscoveries) {
-                d.Discovered = true;
-                if (ConfigManager.TravelDiscoveryPermanent) {
-                    d.PermanentlyDiscovered = true;
-                    Logger.LogDebug($"{d.Name}: Discovery is permanent");
-                }
-            }
+            ApplyMoonDiscoveries(travelDiscoveries, ConfigManager.TravelDiscoveryPermanent);
 
             if (travelDiscoveries.Count > 1) {
                 NotificationHelper.SendChatMessage($"Discovered new moons on route{tdMessageGroupName}:\n<color=white>{string.Join(", ", travelDiscoveries.Select(td => td.Name))}</color>");
@@ -833,6 +1247,7 @@ namespace LethalMoonUnlocks {
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
                 $"Moon catalog updated!", Key = "LMU_TravelDiscovery" });
             Logger.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
+            return true;
         }
 
         private LMGroup MatchMoonGroup(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch, bool fallback) {
@@ -892,16 +1307,6 @@ namespace LethalMoonUnlocks {
                     } else {
                         break;
                     }
-                case "LethalConstellations":
-                    if (!Plugin.LethalConstellationsPresent) break;
-                    string constellationName = Plugin.LethalConstellationsExtension.GetConstellationName(matchingUnlock);
-                    List<LMUnlockable> constellationMatches = Plugin.LethalConstellationsExtension.GetConstellationMatchesForMoon(matchingUnlock, unlocksToMatch);
-                    if (constellationMatches.Count > 0) {
-                        Logger.LogInfo($"Matching moon {matchingUnlock.Name}: Matched by constellation [{constellationName}]; Matches = [ {string.Join(", ", constellationMatches.Select(unlock => unlock.Name))} ]");
-                        return new LMGroup() { Name = constellationName, Members = constellationMatches };
-                    } else {
-                        break;
-                    }
                 case "Custom":
                     Dictionary<string, List<string>> matchingCustomGroups = matchingUnlock.GetMatchingCustomGroups();
                     if (matchingCustomGroups == null || matchingCustomGroups.Count == 0)
@@ -958,9 +1363,7 @@ namespace LethalMoonUnlocks {
             }
             
             if (ConfigManager.DiscoveryMode) {
-                ShuffleDiscoverable();
-                // Hide [NEW] discovery tag permanently from all moons in initial rotation
-                Unlocks.Where(unlock => unlock.Discovered).Do(unlock => { unlock.DiscoveredOnce = true; });
+                ShuffleDiscoverable(suppressNewDiscovery: true);
             }
 
             // Shuffle Moon Sales
@@ -969,7 +1372,7 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        private void ShuffleDiscoverable() {
+        private void ShuffleDiscoverable(bool suppressNewDiscovery = false) {
             Logger.LogInfo("Shuffling discovered moon rotations.. ");
 
             // Reset rotation
@@ -977,37 +1380,21 @@ namespace LethalMoonUnlocks {
                 if (candidate.NewDiscovery) candidate.NewDiscovery = false;
                 candidate.Discovered = false;
             }
-            // increase counts
-            if (ConfigManager.DiscoveryFreeCountIncreaseBy > 0) {
-                var newFreeCount = ConfigManager.DiscoveryFreeCountBase + (ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryFreeCountIncreaseBy;
-                DiscoveredFreeCount = newFreeCount;
-                Logger.LogInfo($"Increasing DiscoverFreeCount (Base = {ConfigManager.DiscoveryFreeCountBase}, Increase = {(ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryFreeCountIncreaseBy}, Result = {newFreeCount}, Corrected = {DiscoveredFreeCount})");
-            } else {
-                DiscoveredFreeCount = ConfigManager.DiscoveryFreeCountBase;
-                Logger.LogInfo($"DiscoveredFreeCount (Config value = {ConfigManager.DiscoveryFreeCountBase}, Corrected = {DiscoveredFreeCount})");
-            }
-            if (ConfigManager.DiscoveryDynamicFreeCountIncreaseBy > 0 ) {
-                var newDynamicFreeCount = ConfigManager.DiscoveryDynamicFreeCountBase + (ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryDynamicFreeCountIncreaseBy;
-                DiscoveredDynamicFreeCount = newDynamicFreeCount;
-                Logger.LogInfo($"Increasing DiscoveredDynamicFreeCount (Base = {ConfigManager.DiscoveryDynamicFreeCountBase}, Increase = {(ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryDynamicFreeCountIncreaseBy}, Result = {newDynamicFreeCount}, Corrected = {DiscoveredDynamicFreeCount})");
-            } else {
-                DiscoveredDynamicFreeCount = ConfigManager.DiscoveryDynamicFreeCountBase;
-                Logger.LogInfo($"DiscoveredDynamicFreeCount (Config value = {ConfigManager.DiscoveryDynamicFreeCountBase}, Corrected = {DiscoveredDynamicFreeCount})");
-            }
-            if (ConfigManager.DiscoveryPaidCountIncreaseBy > 0) {
-                var newPaidCount = ConfigManager.DiscoveryPaidCountBase + (ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryPaidCountIncreaseBy;
-                DiscoveredPaidCount = newPaidCount;
-                Logger.LogInfo($"Increasing DiscoveredPaidCount (Base = {ConfigManager.DiscoveryPaidCountBase}, Increase = {(ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryPaidCountIncreaseBy}, Result = {newPaidCount}, Corrected = {DiscoveredPaidCount})");
-            } else {
-                DiscoveredPaidCount = ConfigManager.DiscoveryPaidCountBase;
-                Logger.LogInfo($"DiscoveredPaidCount (Config value = {ConfigManager.DiscoveryPaidCountBase}, Corrected = {DiscoveredPaidCount})");
-            }
+            RefreshDiscoveryRotationCounts();
             
             // select new rotation
             ApplyDiscoveryWhitelist();
-            AddFreeToRotation(DiscoveredFreeCount);
-            AddDynamicFreeToRotation(DiscoveredDynamicFreeCount);
-            AddPaidToRotation(DiscoveredPaidCount);
+            if (UseConstellationDiscovery) {
+                Plugin.ConstellationManager.ClearAllConstellationRotations();
+                Plugin.ConstellationManager.ClearLocalMoonDiscoveries();
+                Plugin.ConstellationManager.RegenerateAllConstellationRotations();
+                Logger.LogInfo("Regenerated stored LethalConstellations moon rotations.");
+                Plugin.ConstellationManager.ApplyCurrentConstellationVisibility(suppressNewDiscovery);
+            } else {
+                AddFreeToRotation(DiscoveredFreeCount);
+                AddDynamicFreeToRotation(DiscoveredDynamicFreeCount);
+                AddPaidToRotation(DiscoveredPaidCount);
+            }
 
             // Make sure there's at least one moon discovered
             bool oneMoonDiscovered = Unlocks.Any(unlock => unlock.Discovered);
@@ -1024,7 +1411,15 @@ namespace LethalMoonUnlocks {
                     Logger.LogError("Can't find any moon! No unlockable data initialized. Please check your configs (LMU + LLL). If this persists report it on GitHub or Discord.");
                     return;
                 } else {
-                    unlock.Discovered = true;
+                    if (UseConstellationDiscovery) {
+                        unlock.SetDiscoveryState(true, suppressNewDiscovery);
+                    } else {
+                        unlock.Discovered = true;
+                        if (suppressNewDiscovery) {
+                            unlock.DiscoveredOnce = true;
+                            unlock.NewDiscovery = false;
+                        }
+                    }
                     RerouteShipToFreeMoon();
                 }
             }
@@ -1069,7 +1464,11 @@ namespace LethalMoonUnlocks {
             if (Unlocks.Any(unlock => (unlock.Discovered || unlock.PermanentlyDiscovered ) && unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName) || LevelManager.CurrentExtendedLevel.NumberlessPlanetName == "Gordion") {
                 Logger.LogInfo($"Current moon is discovered. Not rerouting ship.");
             } else {
-                var currentDiscoveredFreeMoons = DynamicFreeMoons.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered)).ToList();
+                var currentDiscoveredFreeMoons = UseConstellationDiscovery
+                    ? Plugin.ConstellationManager.GetCurrentVisibleUnlocks()
+                        .Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered) && unlock.RoutePrice == 0)
+                        .ToList()
+                    : DynamicFreeMoons.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered)).ToList();
                 if (currentDiscoveredFreeMoons.Count < 1) {
                     Logger.LogWarning("Can't find any free and discovered moon! You probably want at least one free moon available at all times.. Abort auto routing ship!");
                     return;
@@ -1091,13 +1490,73 @@ namespace LethalMoonUnlocks {
                     foreach (var unlock in Unlocks) {
                         if (unlock.Name.Contains(entry.Trim(), StringComparison.OrdinalIgnoreCase)) {
                             matched = true;
-                            unlock.Discovered = true;
-                            Logger.LogDebug($"Whitelist entry set to discovered: {entry}");
+                            if (UseConstellationDiscovery) {
+                                unlock.PermanentlyDiscovered = true;
+                                unlock.DiscoveredOnce = true;
+                                unlock.NewDiscovery = false;
+                                Logger.LogDebug($"Whitelist entry set to permanently discovered: {entry}");
+                            } else {
+                                unlock.Discovered = true;
+                                Logger.LogDebug($"Whitelist entry set to discovered: {entry}");
+                            }
                             break;
                         }
                     }
                     if (!matched) Logger.LogWarning($"Couldn't match whitelist entry! Is this a valid moon name: {entry} ?");
                 }
+            }
+        }
+
+        private bool ShouldForceDiscoveryShuffleOnLoad(bool loadSuccess) {
+            if (!loadSuccess || !ConfigManager.DiscoveryMode) {
+                return false;
+            }
+
+            if (UseConstellationDiscovery) {
+                return false;
+            }
+
+            return Unlocks.All(unlock => !unlock.Discovered);
+        }
+
+        private bool IsGloballyDiscovered(LMUnlockable unlock) {
+            if (unlock == null) {
+                return false;
+            }
+
+            if (!UseConstellationDiscovery) {
+                return unlock.Discovered || unlock.PermanentlyDiscovered;
+            }
+
+            return unlock.PermanentlyDiscovered || Plugin.ConstellationManager.IsDerivedVisibleAnywhere(unlock);
+        }
+
+        private void RefreshDiscoveryRotationCounts() {
+            if (ConfigManager.DiscoveryFreeCountIncreaseBy > 0) {
+                var newFreeCount = ConfigManager.DiscoveryFreeCountBase + (ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryFreeCountIncreaseBy;
+                DiscoveredFreeCount = newFreeCount;
+                Logger.LogInfo($"Increasing DiscoverFreeCount (Base = {ConfigManager.DiscoveryFreeCountBase}, Increase = {(ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryFreeCountIncreaseBy}, Result = {newFreeCount}, Corrected = {DiscoveredFreeCount})");
+            } else {
+                DiscoveredFreeCount = ConfigManager.DiscoveryFreeCountBase;
+                Logger.LogInfo($"DiscoveredFreeCount (Config value = {ConfigManager.DiscoveryFreeCountBase}, Corrected = {DiscoveredFreeCount})");
+            }
+
+            if (ConfigManager.DiscoveryDynamicFreeCountIncreaseBy > 0 ) {
+                var newDynamicFreeCount = ConfigManager.DiscoveryDynamicFreeCountBase + (ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryDynamicFreeCountIncreaseBy;
+                DiscoveredDynamicFreeCount = newDynamicFreeCount;
+                Logger.LogInfo($"Increasing DiscoveredDynamicFreeCount (Base = {ConfigManager.DiscoveryDynamicFreeCountBase}, Increase = {(ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryDynamicFreeCountIncreaseBy}, Result = {newDynamicFreeCount}, Corrected = {DiscoveredDynamicFreeCount})");
+            } else {
+                DiscoveredDynamicFreeCount = ConfigManager.DiscoveryDynamicFreeCountBase;
+                Logger.LogInfo($"DiscoveredDynamicFreeCount (Config value = {ConfigManager.DiscoveryDynamicFreeCountBase}, Corrected = {DiscoveredDynamicFreeCount})");
+            }
+
+            if (ConfigManager.DiscoveryPaidCountIncreaseBy > 0) {
+                var newPaidCount = ConfigManager.DiscoveryPaidCountBase + (ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryPaidCountIncreaseBy;
+                DiscoveredPaidCount = newPaidCount;
+                Logger.LogInfo($"Increasing DiscoveredPaidCount (Base = {ConfigManager.DiscoveryPaidCountBase}, Increase = {(ConfigManager.DiscoveryShuffleEveryDay ? DayCount : QuotaCount) * ConfigManager.DiscoveryPaidCountIncreaseBy}, Result = {newPaidCount}, Corrected = {DiscoveredPaidCount})");
+            } else {
+                DiscoveredPaidCount = ConfigManager.DiscoveryPaidCountBase;
+                Logger.LogInfo($"DiscoveredPaidCount (Config value = {ConfigManager.DiscoveryPaidCountBase}, Corrected = {DiscoveredPaidCount})");
             }
         }
 
@@ -1111,7 +1570,8 @@ namespace LethalMoonUnlocks {
                 || savedata.ContainsKey("LMU_QuotaUnlocksCount")
                 || savedata.ContainsKey("LMU_QuotaDiscountsCount")
                 || savedata.ContainsKey("LMU_QuotaFullDiscountsCount")
-                || savedata.ContainsKey("LMU_Progression"))) {
+                || savedata.ContainsKey("LMU_Progression")
+                || (savedata.ContainsKey("LMU_LethalConstellations") && Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null))) {
                 Logger.LogInfo($"LMU save data detected!");
                 Logger.LogInfo($"Loading LMU data from save..");
                 if (savedata.ContainsKey("LMU_Unlockables")) {
@@ -1140,6 +1600,22 @@ namespace LethalMoonUnlocks {
                 if (savedata.ContainsKey("LMU_Progression")) {
                     ProgressionManager.Instance?.LoadSaveData((ProgressionSaveData)savedata["LMU_Progression"]);
                     Logger.LogInfo($"Loading ProgressionManager state: PaintingsSold={ProgressionManager.Instance?.PaintingsSold}.");
+                }
+                if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
+                    if (savedata.ContainsKey("LMU_LethalConstellations")) {
+                        LethalConstellationsSaveData lethalConstellationsSaveData = (LethalConstellationsSaveData)savedata["LMU_LethalConstellations"];
+                        Plugin.LethalConstellationsExtension.LoadSaveData(lethalConstellationsSaveData);
+                        Plugin.ConstellationManager?.ReplaceLocalMoonDiscoveries(lethalConstellationsSaveData?.LocalConstellationDiscoveries);
+                        Plugin.ConstellationManager?.ReplaceAllConstellationRotations(lethalConstellationsSaveData?.ConstellationRotationMoons);
+                        Plugin.ConstellationManager?.ApplyConstellationState();
+                        Logger.LogInfo($"Loading LethalConstellations state: {lethalConstellationsSaveData?.Constellations?.Count ?? 0} constellations, rotations={lethalConstellationsSaveData?.ConstellationRotationMoons?.Count ?? 0}, locals={lethalConstellationsSaveData?.LocalConstellationDiscoveries?.Count ?? 0}.");
+                    } else {
+                        Plugin.LethalConstellationsExtension.LoadSaveData(null);
+                        Plugin.ConstellationManager?.ReplaceLocalMoonDiscoveries(null);
+                        Plugin.ConstellationManager?.ReplaceAllConstellationRotations(null);
+                        Plugin.ConstellationManager?.ApplyConstellationState();
+                        Logger.LogInfo("No saved LethalConstellations progression found. Reinitialized constellation definitions.");
+                    }
                 }
                 if (savedata.ContainsKey("GroupCredits") && ConfigManager.GroupCreditsSavingBandAid) {
                     Terminal.groupCredits = (int)savedata["GroupCredits"];
@@ -1221,4 +1697,3 @@ namespace LethalMoonUnlocks {
 
     }
 }
-

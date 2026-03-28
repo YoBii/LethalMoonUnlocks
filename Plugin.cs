@@ -35,6 +35,7 @@ namespace LethalMoonUnlocks
         internal static bool WeatherTweaksPresent = false;
         internal static bool DawnLibPresent = false; 
         internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
+        internal static LethalConstellationsManager ConstellationManager { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
         internal ProgressionManager ProgressionManager { get; private set; }
@@ -118,8 +119,7 @@ namespace LethalMoonUnlocks
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalConstellations.Plugin.PluginInfo.PLUGIN_GUID)) {
                 Logger.LogInfo("LethalConstellations found! Enabling compatibility..");
                 _harmony.PatchAll(typeof(LethalConstellationsPatch));
-                LoadLethalConstellationsExtension();
-                LethalConstellationsPresent = true;
+                LethalConstellationsPresent = LoadLethalConstellationsExtension();
             }
             // darmuhsTerminalStuff (MoonsPlus)
             if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("darmuh.TerminalStuff")) {
@@ -168,12 +168,19 @@ namespace LethalMoonUnlocks
             MoonsPlus.UpdateMoonsDisplayed.AddListener(TerminalStuffCompatibility.OnUpdateMoonsDisplayed);
         }
 
-        private void LoadLethalConstellationsExtension() {
+        private bool LoadLethalConstellationsExtension() {
             try {
-                LethalConstellationsExtension = new LethalConstellationsExtension();
+                var extension = new LethalConstellationsExtension();
+                var manager = new LethalConstellationsManager(extension);
+                extension.SetManager(manager);
+                LethalConstellationsExtension = extension;
+                ConstellationManager = manager;
+                return true;
             } catch (Exception ex) {
                 Logger.LogError($"Failed to load LethalConstellations compatibility due to {ex}");
                 LethalConstellationsExtension = null;
+                ConstellationManager = null;
+                return false;
             }
         }
 
