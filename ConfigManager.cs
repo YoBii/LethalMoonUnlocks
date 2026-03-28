@@ -206,7 +206,7 @@ namespace LethalMoonUnlocks {
         internal static bool MalfunctionsNavigation { get; private set; }
         internal static bool AlertMessageQueueing { get; private set; }
         public static bool LethalConstellationsOverridePrice { get; private set; }
-        internal static bool LethalConstellationsMirrorAnchorMoonRoute { get; private set; }
+        internal static bool LethalConstellationsMirrorDefaultMoonRoute { get; private set; }
         internal static string LethalConstellationsQuotaRewardScope { get; private set; }
         internal static bool PreferGaletry { get; private set; }
 
@@ -237,10 +237,9 @@ namespace LethalMoonUnlocks {
 
         internal static void RefreshConfig() {
             Logger.LogInfo("Refreshing config..");
+            _configFile?.Reload();
             RefreshValues();
-            if (MoonGroupMatchingCustomDict == null) {
-                MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
-            }
+            MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
         }
         internal static Dictionary<string, List<string>> ParseCustomMoonGroups() {
             if (AdvancedPrintMoonNames) {
@@ -272,10 +271,8 @@ namespace LethalMoonUnlocks {
                 }
             }
             Logger.LogInfo($"Parsing custom moon groups:");
-            // fancy table
-            Logger.LogInfo($"{"Name", -32} {"Members", -60}");
             foreach (var group in customGroups) {
-                Logger.LogInfo($"{group.Key,-32} [{string.Join(", ", group.Value) + ']',-60}");
+                Logger.LogInfo($"{group.Key}: [{string.Join(", ", group.Value) + ']'}");
             }
             return customGroups;
         }
@@ -422,34 +419,35 @@ namespace LethalMoonUnlocks {
             NewDayDiscoveryMatchGroupFallback = GetConfigValue("4.3 - New Day Discoveries", "New Day Discovery group matching fallback", true, "When enabled will fallback to selecting from all discoverable moons when no moons could be matched.\n" +
                 "NOTE: It is recommended to keep this on for matching by exact price but with other methods you might prefer to turn it off.");
 
-            LethalConstellationsWhitelistString = GetConfigValue("4.4 - LethalConstellations Discovery", "Constellation whitelist", "", "List of LethalConstellations entries to keep discovered at all times.\n" +
+            LethalConstellationsWhitelistString = GetConfigValue("4.4 - LethalConstellations Discoveries", "Constellation whitelist", "", "List of LethalConstellations entries to keep discovered at all times.\n" +
                 "For example, 'Andromeda, Great Journey Supercluster' would make these constellations start out discovered on every run.\n" +
                 "Constellation names must be separated by commas and must be exact matches. This has priority over LethalConstellation's setting.");
-            AcceptableStartingConstellationsString = GetConfigValue("4.4 - LethalConstellations Discovery", "Acceptable starting constellations", "", "List of constellations LMU is allowed to use as the first discovered constellation in LethalConstellations mode.\n" +
+            AcceptableStartingConstellationsString = GetConfigValue("4.4 - LethalConstellations Discoveries", "Acceptable starting constellations", "", "List of constellations LMU is allowed to use as the first discovered constellation in LethalConstellations mode.\n" +
                 "Leave empty to allow any eligible constellation.\n" +
                 "Constellation names must be separated by commas and must be exact matches. This has priority over LethalConstellation's setting.");
-            LCStartingConstellationSelectionPolicy = GetConfigValue("4.4 - LethalConstellations Discovery", "Starting constellation selection policy", LCStartingConstellationSelectionPolicyCheapest, "How LMU chooses the first discovered constellation in LethalConstellations mode.\n" +
+            LCStartingConstellationSelectionPolicy = GetConfigValue("4.4 - LethalConstellations Discoveries", "Starting constellation selection policy", LCStartingConstellationSelectionPolicyCheapest, "How LMU chooses the first discovered constellation in LethalConstellations mode.\n" +
                 "The constellation still has to be story-unlocked and otherwise eligible.",
                 new AcceptableValueList<string>([LCStartingConstellationSelectionPolicyCheapest, LCStartingConstellationSelectionPolicyRandom]));
-            LCStoryReleaseBehavior = GetConfigValue("4.4 - LethalConstellations Discovery", "Story release behavior", LCStoryReleaseBehaviorHiddenBacklog, "What happens when a default moon's story lock is released in LethalConstellations mode.\n" +
+            LCStoryReleaseBehavior = GetConfigValue("4.4 - LethalConstellations Discoveries", "Story release behavior", LCStoryReleaseBehaviorHiddenBacklog, "What happens when a default moon's story lock is released in LethalConstellations mode.\n" +
                 "'HiddenBacklog' keeps the constellation hidden until discovery grants it.\n" +
                 "'ImmediateDiscovery' makes the constellation discovered immediately.",
                 new AcceptableValueList<string>([LCStoryReleaseBehaviorHiddenBacklog, LCStoryReleaseBehaviorImmediateDiscovery]));
-            LethalConstellationsQuotaDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations", "Quota discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Quota Discoveries target when LethalConstellations is active.",
+            LethalConstellationsQuotaDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations Discoveries", "Quota discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Quota Discoveries target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCDiscoveryTargetModeMoonsOnly, LCDiscoveryTargetModeMoonsAndConstellations, LCDiscoveryTargetModeConstellationsOnly, LCDiscoveryTargetModeConstellationsOnlyWithMoonFallback]));
-            LethalConstellationsQuotaDiscoveryChance = GetConfigValue("4.4 - LethalConstellations", "Quota discovery constellation chance", 100, "The chance for Quota Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
-            LethalConstellationsTravelDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations", "Travel discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Travel Discoveries target when LethalConstellations is active.",
+            LethalConstellationsQuotaDiscoveryChance = GetConfigValue("4.4 - LethalConstellations Discoveries", "Quota discovery constellation chance", 100, "The chance for Quota Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
+            LethalConstellationsTravelDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations Discoveries", "Travel discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Travel Discoveries target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCDiscoveryTargetModeMoonsOnly, LCDiscoveryTargetModeMoonsAndConstellations, LCDiscoveryTargetModeConstellationsOnly, LCDiscoveryTargetModeConstellationsOnlyWithMoonFallback]));
-            LethalConstellationsTravelDiscoveryChance = GetConfigValue("4.4 - LethalConstellations", "Travel discovery constellation chance", 100, "The chance for Travel Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
-            LethalConstellationsNewDayDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations", "New day discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What New Day Discoveries target when LethalConstellations is active.",
+            LethalConstellationsTravelDiscoveryChance = GetConfigValue("4.4 - LethalConstellations Discoveries", "Travel discovery constellation chance", 100, "The chance for Travel Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
+            LethalConstellationsNewDayDiscoveryTargetMode = GetConfigValue("4.4 - LethalConstellations Discoveries", "New day discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What New Day Discoveries target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCDiscoveryTargetModeMoonsOnly, LCDiscoveryTargetModeMoonsAndConstellations, LCDiscoveryTargetModeConstellationsOnly, LCDiscoveryTargetModeConstellationsOnlyWithMoonFallback]));
-            LethalConstellationsNewDayDiscoveryChance = GetConfigValue("4.4 - LethalConstellations", "New day discovery constellation chance", 100, "The chance for New Day Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
-            LethalConstellationsOverridePrice = GetConfigValue("4.4 - LethalConstellations", "LethalConstellations override price", false, "When enabled and LethalConstellations is present, the configured anchor moon provides the base routing price for the constellation.\n" +
-                "LMU still applies the constellation's own unlocks, discounts, and sales on top of that base price. To also mirror route progression and travel discovery onto the anchor moon, enable the separate option below.");
-            LethalConstellationsMirrorAnchorMoonRoute = GetConfigValue("4.4 - LethalConstellations", "LethalConstellations mirror anchor moon route", false, "When enabled, routing to a constellation will also apply the route side effects to its anchor moon.\n" +
+            LethalConstellationsNewDayDiscoveryChance = GetConfigValue("4.4 - LethalConstellations Discoveries", "New day discovery constellation chance", 100, "The chance for New Day Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
+            LethalConstellationsOverridePrice = GetConfigValue("4.4 - LethalConstellations Discoveries", "LethalConstellations override price", false, "When enabled and LethalConstellations is present, the configured default moon provides the base routing price for the constellation.\n" +
+                "LMU still applies the constellation's own unlocks, discounts, and sales on top of that base price. To also mirror route progression and travel discovery onto the default moon, enable the separate option below.");
+            LethalConstellationsMirrorDefaultMoonRoute = GetConfigValue("4.4 - LethalConstellations Discoveries", "LethalConstellations mirror default moon route", false, "When enabled, routing to a constellation will also apply the route side effects to its default moon.\n" +
                 "This includes moon buy progression when the route was paid and travel discovery side effects even though the constellation itself remains a first-class progression target.");
-            LethalConstellationsQuotaRewardScope = GetConfigValue("4.4 - LethalConstellations", "LethalConstellations quota reward scope", LCQuotaRewardScopeAllDiscoveredConstellations, "Where quota-granted unlocks, discounts, and full discounts may target when LethalConstellations is active.",
+            LethalConstellationsQuotaRewardScope = GetConfigValue("4.4 - LethalConstellations Discoveries", "LethalConstellations quota reward scope", LCQuotaRewardScopeAllDiscoveredConstellations, "Where quota-granted unlocks, discounts, and full discounts may target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCQuotaRewardScopeAllDiscoveredConstellations, LCQuotaRewardScopeCurrentOnly]));
+
             Sales = GetConfigValue("5 - Moon Sales", "Moon Sales", false, "Each moon has a chance to go on sale for a reduced routing price.\n" +
                 "By default, Moon Sales are shuffled after every quota. Only non-free moons can go on sale.\n" +
                 "NOTE: These sales are separate from discounts received via Discount Mode.");
