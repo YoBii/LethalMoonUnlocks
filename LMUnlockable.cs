@@ -13,7 +13,8 @@ namespace LethalMoonUnlocks {
     public class LMUnlockable {
         [ES3NonSerializable]
         public ExtendedLevel ExtendedLevel { get; private set; }
-        [SerializeField] [ES3Serializable] public string Name { get; private set; }
+
+        [ES3Serializable] public string Name { get; private set; }
         [ES3NonSerializable] internal int OriginalPrice { get; private set; }
         internal bool OriginallyLocked { get {
                 if (ConfigManager.OverrideLocked) return ConfigManager.OverrideLockedListMoons.Contains(Name);
@@ -43,21 +44,21 @@ namespace LethalMoonUnlocks {
         [SerializeField] [ES3Serializable] private bool originallyLocked; 
         [SerializeField] [ES3Serializable] private bool originallyHidden;
 
-        [SerializeField] [ES3Serializable] internal bool RemainingHidden { get; set; }
-        [SerializeField] [ES3Serializable] internal bool StoryUnlock { get; private set; }
-        [SerializeField] [ES3Serializable] internal bool StoryIsUnlocked { get; set; }
-        [SerializeField] [ES3Serializable] internal int BuyCount { get; set; }
-        [SerializeField] [ES3Serializable] internal int VisitCount { get; set; }
-        [SerializeField] [ES3Serializable] internal int FreeVisitCount { get; set; }
-        [SerializeField] [ES3Serializable] internal int LandingCount { get; set; }
-        [SerializeField] [ES3Serializable] public bool Discovered { get; set; }
-        [SerializeField] [ES3Serializable] internal bool NewDiscovery { get; set; }
-        [SerializeField] [ES3Serializable] internal bool DiscoveredOnce { get; set; }
-        [SerializeField] [ES3Serializable] internal bool PermanentlyDiscovered { get; set; }
-        [SerializeField] [ES3Serializable] internal bool OnSale { get; set; }
-        [SerializeField] [ES3Serializable] internal int SalesRate { get; set; }
-        
-        [SerializeField] [ES3NonSerializable] internal int RoutePrice{ get; set; }
+        [ES3Serializable] internal bool RemainingHidden { get; set; }
+        [ES3Serializable] internal bool StoryUnlock { get; private set; }
+        [ES3Serializable] internal bool StoryIsUnlocked { get; set; }
+        [ES3Serializable] internal int BuyCount { get; set; }
+        [ES3Serializable] internal int VisitCount { get; set; }
+        [ES3Serializable] internal int FreeVisitCount { get; set; }
+        [ES3Serializable] internal int LandingCount { get; set; }
+        [ES3Serializable] public bool Discovered { get; set; }
+        [ES3Serializable] internal bool NewDiscovery { get; set; }
+        [ES3Serializable] internal bool DiscoveredOnce { get; set; }
+        [ES3Serializable] internal bool PermanentlyDiscovered { get; set; }
+        [ES3Serializable] internal bool OnSale { get; set; }
+        [ES3Serializable] internal int SalesRate { get; set; }
+
+        [ES3NonSerializable] internal int RoutePrice{ get; set; }
 
         internal LMUnlockable(ExtendedLevel extendedLevel) {
             Name = extendedLevel.NumberlessPlanetName;
@@ -87,8 +88,8 @@ namespace LethalMoonUnlocks {
             
             OriginallyHidden = dawnIsHidden;
             OriginallyLocked = dawnIsLocked;
-            isHidden = dawnIsHidden;
-            isLocked = dawnIsLocked;
+            IsHidden = dawnIsHidden;
+            IsLocked = dawnIsLocked;
             
             if (OriginallyHidden && !OriginallyLocked) RemainingHidden = true;
         }
@@ -103,7 +104,9 @@ namespace LethalMoonUnlocks {
                 VisitCount = newData.VisitCount;
                 FreeVisitCount = newData.FreeVisitCount;
                 LandingCount = newData.LandingCount;
-                Discovered = newData.Discovered;
+                if (UnlockManager.Instance == null || !UnlockManager.Instance.UseConstellationDiscovery) {
+                    Discovered = newData.Discovered;
+                }
                 NewDiscovery = newData.NewDiscovery;
                 DiscoveredOnce = newData.DiscoveredOnce;
                 PermanentlyDiscovered = newData.PermanentlyDiscovered;
@@ -113,10 +116,28 @@ namespace LethalMoonUnlocks {
             }
         }
 
+        internal void SetDiscoveryState(bool discovered, bool suppressNewDiscovery = false) {
+            Discovered = discovered;
+            if (!discovered) {
+                return;
+            }
+
+            if (suppressNewDiscovery) {
+                DiscoveredOnce = true;
+                NewDiscovery = false;
+                return;
+            }
+
+            if (!DiscoveredOnce) {
+                DiscoveredOnce = true;
+                NewDiscovery = true;
+            }
+        }
+
         internal void RestoreOriginalState() {
             RoutePrice = OriginalPrice;
-            isHidden = originallyHidden;
-            isLocked = originallyLocked;
+            IsHidden = originallyHidden;
+            IsLocked = originallyLocked;
 
             if (ExtendedLevel) {
                 ExtendedLevel.RoutePrice = OriginalPrice;
@@ -251,21 +272,21 @@ namespace LethalMoonUnlocks {
 
         public void Unlock() {
             //ExtendedLevel.IsRouteLocked = false;
-            isLocked = false;
+            IsLocked = false;
             if (RemainingHidden) {
                 //ExtendedLevel.IsRouteHidden = true;
-                isHidden = true;
+                IsHidden = true;
             } else {
                 //ExtendedLevel.IsRouteHidden = false;
-                isHidden = false;
+                IsHidden = false;
             }
         }
 
         public void LockAndHide() {
             //ExtendedLevel.IsRouteHidden = true;
             //ExtendedLevel.IsRouteLocked = true;
-            isHidden = true;
-            isLocked = true;
+            IsHidden = true;
+            IsLocked = true;
         }
 
         internal void ApplyVisibility() {
@@ -282,8 +303,8 @@ namespace LethalMoonUnlocks {
                 failNode.displayText = "Error while calculating route: UNKNOWN LOCATION";
 
                 dawnMoon.Internal_AddTag(DawnLibTags.LunarConfig);
-                if (isHidden) {
-                    if (isLocked) {
+                if (IsHidden) {
+                    if (IsLocked) {
                         predicate = new ConstantTerminalPredicate(new TerminalPurchaseResult.HiddenPurchaseResult().SetFailure(true).SetFailNode(failNode));
                         Logger.LogDebug($"{Name}: Hidden & Locked (DawnLib)");
                     } else {
@@ -291,7 +312,7 @@ namespace LethalMoonUnlocks {
                         Logger.LogDebug($"{Name}: Hidden but not locked (DawnLib)");
                     }
                 } else {
-                    if (isLocked) {
+                    if (IsLocked) {
                         predicate = ITerminalPurchasePredicate.AlwaysFail(failNode);
                         Logger.LogDebug($"{Name}: Locked but not hidden (DawnLib)");
                     } else {
@@ -304,8 +325,8 @@ namespace LethalMoonUnlocks {
 
         private void ApplyVisibilityLLL() {
             if (ExtendedLevel) {
-                if (isHidden) {
-                    if (isLocked) {
+                if (IsHidden) {
+                    if (IsLocked) {
                         ExtendedLevel.IsRouteHidden = true;
                         ExtendedLevel.IsRouteLocked = true;
                         Logger.LogDebug($"{Name}: Hidden & Locked (LLL)");
@@ -315,7 +336,7 @@ namespace LethalMoonUnlocks {
                         Logger.LogDebug($"{Name}: Hidden but not locked (LLL)");
                     }
                 } else {
-                    if (isLocked) {
+                    if (IsLocked) {
                         ExtendedLevel.IsRouteHidden = false;
                         ExtendedLevel.IsRouteLocked = true;
                         Logger.LogDebug($"{Name}: Locked but not hidden (LLL)");
@@ -456,7 +477,7 @@ namespace LethalMoonUnlocks {
             } else if (infoType.Equals(PreviewInfoType.Override)) {
                 preview = string.Format(format, empty, empty, empty, empty);
             }
-            if (isLocked) {
+            if (IsLocked) {
                 preview += "\n  * (Locked)";
             }
 
@@ -562,8 +583,6 @@ namespace LethalMoonUnlocks {
                     groupTag = customGroupsDict.Keys.First();
                 }
                 tags = AddTagToPreviewText($"[{groupTag.Trim().ToUpper()}]", tags);
-            } else if (Plugin.LethalConstellationsPresent && ConfigManager.MoonGroupMatchingMethod == "LethalConstellations" && ConfigManager.ShowTagGroups) {
-                tags = AddTagToPreviewText($"[{Plugin.LethalConstellationsExtension.GetConstellationName(this).ToUpper()}]", tags);
             } else if (ConfigManager.MoonGroupMatchingMethod == "Tag") {
                 var contentTags = ExtendedLevel.ContentTags;
                 string tagsTag = string.Empty;
@@ -621,9 +640,9 @@ namespace LethalMoonUnlocks {
             if (FreeVisitCount > VisitCount) visits = FreeVisitCount;
 
             string state = "*";
-            if (isHidden && !isLocked) state = "Hide";
-            else if (!isHidden && isLocked) state = "Lock";
-            else if (isHidden && isLocked) state = "-";
+            if (IsHidden && !IsLocked) state = "Hide";
+            else if (!IsHidden && IsLocked) state = "Lock";
+            else if (IsHidden && IsLocked) state = "-";
 
             string discovered = string.Empty;
             if (Discovered) discovered = "*";
