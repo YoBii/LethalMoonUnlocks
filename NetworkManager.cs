@@ -127,7 +127,9 @@ namespace LethalMoonUnlocks {
             }
 
             syncData = Plugin.LethalConstellationsExtension.GetSaveData();
-            syncData.DiscoveryRotationSeed = UnlockManager.Instance?.DiscoveryRotationSeed ?? 0;
+            syncData.ConstellationRotationMoons = Plugin.ConstellationManager != null
+                ? Plugin.ConstellationManager.GetAllConstellationRotations()
+                : new Dictionary<string, List<string>>();
             syncData.LocalConstellationDiscoveries = Plugin.ConstellationManager != null
                 ? Plugin.ConstellationManager.GetAllLocalMoonDiscoveries()
                 : new Dictionary<string, List<string>>();
@@ -139,9 +141,9 @@ namespace LethalMoonUnlocks {
                 return;
             }
 
-            UnlockManager.Instance.DiscoveryRotationSeed = syncData.DiscoveryRotationSeed;
             Plugin.LethalConstellationsExtension.LoadSaveData(syncData);
             Plugin.ConstellationManager?.ReplaceLocalMoonDiscoveries(syncData.LocalConstellationDiscoveries);
+            Plugin.ConstellationManager?.ReplaceAllConstellationRotations(syncData.ConstellationRotationMoons);
         }
     }
 }

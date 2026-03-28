@@ -66,7 +66,7 @@ namespace LethalMoonUnlocks {
                 if (ES3.KeyExists("LMU_LethalConstellations", currentSave)) {
                     LethalConstellationsSaveData lethalConstellationsSaveData = ES3.Load<LethalConstellationsSaveData>("LMU_LethalConstellations", currentSave);
                     dictionary.Add("LMU_LethalConstellations", lethalConstellationsSaveData);
-                    Logger.LogInfo($"Found LMU_LethalConstellations: {lethalConstellationsSaveData?.Constellations?.Count ?? 0} constellations, seed={lethalConstellationsSaveData?.DiscoveryRotationSeed ?? 0}");
+                    Logger.LogInfo($"Found LMU_LethalConstellations: {lethalConstellationsSaveData?.Constellations?.Count ?? 0} constellations, rotations={lethalConstellationsSaveData?.ConstellationRotationMoons?.Count ?? 0}, locals={lethalConstellationsSaveData?.LocalConstellationDiscoveries?.Count ?? 0}");
                 }
 
                 // BAND AID FIX for credits being wacky
@@ -155,14 +155,16 @@ namespace LethalMoonUnlocks {
             }
             if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
                 LethalConstellationsSaveData lethalConstellationsSaveData = Plugin.LethalConstellationsExtension.GetSaveData();
-                lethalConstellationsSaveData.DiscoveryRotationSeed = UnlockManager.Instance?.DiscoveryRotationSeed ?? 0;
+                lethalConstellationsSaveData.ConstellationRotationMoons = Plugin.ConstellationManager != null
+                    ? Plugin.ConstellationManager.GetAllConstellationRotations()
+                    : new Dictionary<string, List<string>>();
                 lethalConstellationsSaveData.LocalConstellationDiscoveries = Plugin.ConstellationManager != null
                     ? Plugin.ConstellationManager.GetAllLocalMoonDiscoveries()
                     : new Dictionary<string, List<string>>();
 
                 if (lethalConstellationsSaveData.HasData()) {
                     ES3.Save<LethalConstellationsSaveData>("LMU_LethalConstellations", lethalConstellationsSaveData, currentSave);
-                    Logger.LogInfo($"Saving LMU_LethalConstellations: {lethalConstellationsSaveData.Constellations.Count} constellations, seed={lethalConstellationsSaveData.DiscoveryRotationSeed}");
+                    Logger.LogInfo($"Saving LMU_LethalConstellations: {lethalConstellationsSaveData.Constellations.Count} constellations, rotations={lethalConstellationsSaveData.ConstellationRotationMoons.Count}, locals={lethalConstellationsSaveData.LocalConstellationDiscoveries.Count}");
                 } else if (ES3.KeyExists("LMU_LethalConstellations", currentSave)) {
                     ES3.DeleteKey("LMU_LethalConstellations", currentSave);
                 }
