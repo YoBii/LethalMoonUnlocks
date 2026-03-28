@@ -268,7 +268,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 && _unlockByLevelIdLookup.TryGetValue(cachedDefaultMoonLevelId, out defaultMoon)
                 && defaultMoon != null) {
                 if (!defaultMoon.StoryUnlock && (defaultMoon.OriginallyHidden || defaultMoon.OriginallyLocked)) {
-                    Logger.LogWarning($"LethalConstellationsManager: Configured default moon '{constellation.defaultMoon}' for constellation '{constellation.consName}' is intrinsically hidden or locked. Ignoring the constellation's default moon.");
+                    Logger.LogWarning($"LethalConstellationsManager: Configured default moon '{constellation.defaultMoon}' for constellation '{constellation.consName}' is hidden or locked without a story gate. Ignoring the constellation's default moon.");
                     _defaultMoonLevelLookup.Remove(constellationName);
                     defaultMoon = null;
                     return false;
@@ -284,7 +284,7 @@ namespace LethalMoonUnlocks.Compatibility {
             }
 
             if (!defaultMoon.StoryUnlock && (defaultMoon.OriginallyHidden || defaultMoon.OriginallyLocked)) {
-                Logger.LogWarning($"LethalConstellationsManager: Configured default moon '{constellation.defaultMoon}' for constellation '{constellation.consName}' is intrinsically hidden or locked. Ignoring the constellation's default moon.");
+                Logger.LogWarning($"LethalConstellationsManager: Configured default moon '{constellation.defaultMoon}' for constellation '{constellation.consName}' is hidden or locked without a story gate. Ignoring the constellation's default moon.");
                 defaultMoon = null;
                 return false;
             }

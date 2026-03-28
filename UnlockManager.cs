@@ -109,13 +109,14 @@ namespace LethalMoonUnlocks {
             }
         }
 
+        [Obsolete("Story-lock designation callbacks are obsolete. Do not subscribe to this API anymore; initialize story-gated moons as hidden+locked at startup and call TryReleaseStoryLock* when progression should release the gate.", false)]
         public delegate List<string> DesignateStoryUnlocks();
 
         /// <summary>
-        /// Occurs on lobby creation after <c>Terminal.Start</c> and optionally after being fired (user config).
-        /// <br>Allows subscribers to designate moons that should be exclusively locked behind story progression.</br>
+        /// Compatibility-only callback fired on lobby creation after <c>Terminal.Start</c>.
+        /// <br>Do not use this to designate story-gated moons anymore.</br>
         /// <br></br>
-        /// Subscribe with a method that returns a list of strings containing 'NumberlessPlanetName's of your moons.
+        /// Story-gated moons should now start hidden and locked, then call <see cref="TryReleaseStoryLock(string)"/> or <see cref="TryReleaseStoryLockShowAlert(string)"/> when progression should release them.
         /// <br></br>
         /// <br></br>
         /// <example>For example:
@@ -125,11 +126,11 @@ namespace LethalMoonUnlocks {
         /// </code>
         /// </example>
         /// <remarks>
-        /// <br></br>
-        /// When you want to release the story lock for your moon use 
+        /// This event remains available only so older integrations continue to load without missing-member failures.
         /// </remarks>
         /// <seealso cref="TryReleaseStoryLock(string)"/>
         /// </summary>
+        [Obsolete("Story-lock designation callbacks are obsolete. Do not subscribe to this API anymore; initialize story-gated moons as hidden+locked at startup and call TryReleaseStoryLock* when progression should release the gate.", false)]
         public static event DesignateStoryUnlocks OnCollectStoryLockedMoons;
 
         internal UnlockManager() {
@@ -145,7 +146,7 @@ namespace LethalMoonUnlocks {
         /// <returns>
         /// <c>true</c> if the moon was found.
         /// <br></br>
-        /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
+        /// <c>false</c> if the moon could not be found or is not currently inferred as story-gated.
         /// </returns>
         public static bool TryReleaseStoryLock (string numberlessPlanetName) {
             if (!TryReleaseStoryLockInternal(numberlessPlanetName, out _, out _)) {
@@ -166,7 +167,7 @@ namespace LethalMoonUnlocks {
         /// <returns>
         /// <c>true</c> if the moon was found.
         /// <br></br>
-        /// <c>false</c> if the moon could not be found or wasn't designated to be locked behind story progression.
+        /// <c>false</c> if the moon could not be found or is not currently inferred as story-gated.
         /// </returns>
         public static bool TryReleaseStoryLockShowAlert (string numberlessPlanetName) {
             if (!TryReleaseStoryLockInternal(numberlessPlanetName, out var unlock, out var constellationReleaseResult)) {
@@ -197,7 +198,7 @@ namespace LethalMoonUnlocks {
             }
 
             if (!unlock.StoryUnlock) {
-                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not designated as story lock!");
+                Logger.LogWarning("Received request to release story lock but the LMUnlockable associated with the level name is not currently inferred as story-gated!");
                 return false;
             }
 
@@ -314,23 +315,21 @@ namespace LethalMoonUnlocks {
         }
 
         internal void CollectStoryLockedMoons() {
-            var storyLocks = new List<string>();
-
             if (OnCollectStoryLockedMoons != null) {
                 var subscribers = OnCollectStoryLockedMoons.GetInvocationList();
 
                 foreach (DesignateStoryUnlocks subscriber in subscribers) {
                     try {
                         List<string> response = subscriber();
-                        storyLocks.AddRange(response);
-                        Logger.LogInfo($"Collected the following story locked moons: {string.Join(", ", response)}");
+                        if (response == null || response.Count == 0) {
+                            Logger.LogDebug($"Observed story-lock designation callback '{subscriber.Method.DeclaringType?.FullName}.{subscriber.Method.Name}' with no moon names returned. Ignoring callback result.");
+                            continue;
+                        }
+
+                        Logger.LogDebug($"Observed obsolete story-lock designation callback '{subscriber.Method.DeclaringType?.FullName}.{subscriber.Method.Name}' with moon names [{string.Join(", ", response)}]. Ignoring callback result.");
                     } catch (Exception ex) {
                         Logger.LogError($"Couldn't handle subscriber response while collecting story locked moons! Error: {ex.Message}");
                     }
-                }
-                foreach (var storyLock in storyLocks) {
-                    var unlock = Instance?.Unlocks.FirstOrDefault(u => u.Name == storyLock && !u.StoryUnlock);
-                    unlock?.DesignateAsStoryLocked();
                 }
             }
         }
@@ -1343,21 +1342,9 @@ namespace LethalMoonUnlocks {
 
         private void InitializeNewGame() {
             Logger.LogInfo($"New game initialization..");
-            
-            // LMU Story
-            if (ConfigManager.LMUStoryProgression) {
-                OnCollectStoryLockedMoons -= ProgressionManager.LMUStoryLocks;
-                OnCollectStoryLockedMoons += ProgressionManager.LMUStoryLocks;
-            } else {
-                OnCollectStoryLockedMoons -= ProgressionManager.LMUStoryLocks;
-            }
 
-            if (ConfigManager.GaletryStoryLock && AllLevels.Any(level => level.NumberlessPlanetName == "Galetry")) {
-                OnCollectStoryLockedMoons -= ProgressionManager.GaletryStoryLock;
-                OnCollectStoryLockedMoons += ProgressionManager.GaletryStoryLock;
-            } else {
-                OnCollectStoryLockedMoons -= ProgressionManager.GaletryStoryLock;
-            }
+            InitializeBuiltInStoryLocks();
+
             if (ConfigManager.EnableStoryProgression) {
                 CollectStoryLockedMoons();
             }
@@ -1370,6 +1357,32 @@ namespace LethalMoonUnlocks {
             if (ConfigManager.Sales) {
                 RefreshSales();
             }
+        }
+
+        private void InitializeBuiltInStoryLocks() {
+            if (!ConfigManager.EnableStoryProgression) {
+                return;
+            }
+
+            if (ConfigManager.LMUStoryProgression) {
+                ForceStoryLockAtStartup("Artifice");
+                ForceStoryLockAtStartup("Embrion");
+            }
+
+            if (ConfigManager.GaletryStoryLock && AllLevels.Any(level => level.NumberlessPlanetName == "Galetry")) {
+                ForceStoryLockAtStartup("Galetry");
+            }
+        }
+
+        private void ForceStoryLockAtStartup(string numberlessPlanetName) {
+            var unlock = Unlocks.FirstOrDefault(candidate => candidate.Name == numberlessPlanetName);
+            if (unlock == null) {
+                Logger.LogWarning($"{numberlessPlanetName}: Unable to force startup story lock because the moon was not found.");
+                return;
+            }
+
+            unlock.ForceStoryLockAtStartup();
+            Logger.LogInfo($"{unlock.Name}: Forced built-in story lock startup state (hidden + locked).");
         }
 
         private void ShuffleDiscoverable(bool suppressNewDiscovery = false) {

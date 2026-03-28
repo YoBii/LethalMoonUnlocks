@@ -67,6 +67,7 @@ namespace LethalMoonUnlocks {
             OriginalPrice = extendedLevel.RoutePrice;
             OriginallyHidden = extendedLevel.IsRouteHidden;
             OriginallyLocked = extendedLevel.IsRouteLocked;
+            RefreshStoryUnlockFromStartupState();
         }
 
         internal void OverrideDefaultsDawnLib(DawnMoonInfo dawnMoon) {
@@ -90,6 +91,7 @@ namespace LethalMoonUnlocks {
             OriginallyLocked = dawnIsLocked;
             IsHidden = dawnIsHidden;
             IsLocked = dawnIsLocked;
+            RefreshStoryUnlockFromStartupState();
             
             if (OriginallyHidden && !OriginallyLocked) RemainingHidden = true;
         }
@@ -98,7 +100,6 @@ namespace LethalMoonUnlocks {
             if (Name != newData.Name) {
                 Logger.LogError("Name mismatch during override LMUnlockable data!");
             } else {
-                StoryUnlock = newData.StoryUnlock;
                 StoryIsUnlocked = newData.StoryIsUnlocked;
                 BuyCount = newData.BuyCount;
                 VisitCount = newData.VisitCount;
@@ -113,6 +114,7 @@ namespace LethalMoonUnlocks {
                 OnSale = newData.OnSale;
                 SalesRate = newData.SalesRate;
                 RoutePrice = newData.RoutePrice;
+                RefreshStoryUnlockFromStartupState();
             }
         }
 
@@ -138,6 +140,7 @@ namespace LethalMoonUnlocks {
             RoutePrice = OriginalPrice;
             IsHidden = originallyHidden;
             IsLocked = originallyLocked;
+            RefreshStoryUnlockFromStartupState();
 
             if (ExtendedLevel) {
                 ExtendedLevel.RoutePrice = OriginalPrice;
@@ -153,10 +156,17 @@ namespace LethalMoonUnlocks {
             }
         }
 
-        internal void DesignateAsStoryLocked() {
-            StoryUnlock = true;
+        internal void ForceStoryLockAtStartup() {
             OriginallyHidden = true;
             OriginallyLocked = true;
+            IsHidden = true;
+            IsLocked = true;
+            RemainingHidden = false;
+            RefreshStoryUnlockFromStartupState();
+        }
+
+        internal void RefreshStoryUnlockFromStartupState() {
+            StoryUnlock = OriginallyHidden && OriginallyLocked;
         }
 
         internal void IterateState() {
@@ -227,7 +237,7 @@ namespace LethalMoonUnlocks {
                 ApplyPriceDawnLib();
             }
 
-            // special case: story locked moons
+            // special case: story-gated moons inferred from startup hidden + locked state
             if (StoryUnlock) {
                 if (StoryIsUnlocked) {
                     if (!ConfigManager.DiscoveryMode) {
