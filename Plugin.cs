@@ -36,6 +36,7 @@ namespace LethalMoonUnlocks
         internal static bool DawnLibPresent = false; 
         internal static LethalConstellationsExtension LethalConstellationsExtension { get; private set; }
         internal static LethalConstellationsManager ConstellationManager { get; private set; }
+        internal static ConstellationUnlockConditionsConfig ConstellationUnlockConditions { get; private set; }
         internal NetworkManager NetworkManager { get; private set; }
         internal UnlockManager UnlockManager { get; private set; }
         internal ProgressionManager ProgressionManager { get; private set; }
@@ -139,10 +140,12 @@ namespace LethalMoonUnlocks
                 Logger.LogInfo("DawnLib found! Enabling compatibility..");
                 DawnLibPresent = true;
                 _harmony.PatchAll(typeof(DawnLibMoonCataloguePatch));
+                _harmony.PatchAll(typeof(DawnLibSaveDataPatch));
             }
 
             // Refresh config
             ConfigManager.RefreshConfig();
+            ConstellationUnlockConditions?.RefreshDefinitions();
             
             // Patch Terminal scrolling
             if (ConfigManager.TerminalScrollAmount > 0) {
@@ -175,11 +178,13 @@ namespace LethalMoonUnlocks
                 extension.SetManager(manager);
                 LethalConstellationsExtension = extension;
                 ConstellationManager = manager;
+                ConstellationUnlockConditions = new ConstellationUnlockConditionsConfig();
                 return true;
             } catch (Exception ex) {
                 Logger.LogError($"Failed to load LethalConstellations compatibility due to {ex}");
                 LethalConstellationsExtension = null;
                 ConstellationManager = null;
+                ConstellationUnlockConditions = null;
                 return false;
             }
         }

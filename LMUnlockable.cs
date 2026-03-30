@@ -93,6 +93,8 @@ namespace LethalMoonUnlocks {
             IsLocked = dawnIsLocked;
             RefreshStoryUnlockFromStartupState();
             
+            Logger.LogDebug($"DawnMoon: Name: {dawnMoon.GetNumberlessPlanetName()}, Hidden: {IsHidden}, Locked = {IsLocked}");
+            
             if (OriginallyHidden && !OriginallyLocked) RemainingHidden = true;
         }
 
@@ -650,9 +652,9 @@ namespace LethalMoonUnlocks {
             if (FreeVisitCount > VisitCount) visits = FreeVisitCount;
 
             string state = "*";
-            if (IsHidden && !IsLocked) state = "Hide";
-            else if (!IsHidden && IsLocked) state = "Lock";
-            else if (IsHidden && IsLocked) state = "-";
+            if (IsHidden && !IsLocked) state = "Hidden";
+            else if (!IsHidden && IsLocked) state = "Locked";
+            else if (IsHidden && IsLocked) state = "H/L";
 
             string discovered = string.Empty;
             if (Discovered) discovered = "*";
@@ -664,13 +666,13 @@ namespace LethalMoonUnlocks {
             if (SalesRate > 0) sale = SalesRate.ToString() + "%";
 
             string originalState = "*";
-            if (OriginallyHidden && !OriginallyLocked) originalState = "Hide";
-            else if (!OriginallyHidden && OriginallyLocked) originalState = "Lock";
-            else if (OriginallyHidden && OriginallyLocked) originalState = "-";
+            if (OriginallyHidden && !OriginallyLocked) originalState = "Hidden";
+            else if (!OriginallyHidden && OriginallyLocked) originalState = "Locked";
+            else if (OriginallyHidden && OriginallyLocked) originalState = "H/L";
 
             string storyLock = "-";
             if (StoryUnlock && !StoryIsUnlocked) storyLock = "Locked";
-            else if (StoryUnlock && StoryIsUnlocked) storyLock = "Released";
+            else if (StoryUnlock && StoryIsUnlocked) storyLock = "Unlocked";
 
             return UnlockManager.FormatLogRow(Name, RoutePrice, BuyCount, visits, state, discovered, sale, OriginalPrice, originalState, storyLock);
         }

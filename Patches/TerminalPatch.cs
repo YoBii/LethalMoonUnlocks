@@ -2,7 +2,10 @@
 using LethalLevelLoader;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using Dawn;
+using Dawn.Utils;
 
 namespace LethalMoonUnlocks.Patches {
     [HarmonyPatch(typeof(Terminal))]
@@ -48,17 +51,6 @@ namespace LethalMoonUnlocks.Patches {
             }
         }
         
-        [HarmonyPatch("AttemptLoadCreatureFileNode")]
-        [HarmonyPrefix]
-        private static void AttemptLoadCreatureFileNodePrefix(TerminalNode node) {
-            Logger.LogDebug($"Loading bestiary node! Name: {node.creatureName}, FileID: {node.creatureFileID}");
-            if (node.creatureName == "Old birds" && UnlockManager.Instance.Terminal.newlyScannedEnemyIDs.Contains(
-                                                     node.creatureFileID)) {
-                UnlockManager.TryReleaseStoryLockShowAlert("Embrion");
-            }
-        }
-
-
         [HarmonyPatch("LoadNewNodeIfAffordable")]
         [HarmonyPostfix]
         private static void TerminalLoadNewNodeIfAffordablePostfix() {
@@ -78,5 +70,27 @@ namespace LethalMoonUnlocks.Patches {
             buyMoon = string.Empty;
             buyCredits = 0;
         }
+        
+        [HarmonyPatch("AttemptLoadCreatureFileNode")]
+        [HarmonyPrefix]
+        private static void AttemptLoadCreatureFileNodePrefix(TerminalNode node) {
+            Logger.LogDebug($"Loading bestiary node! Name: {node.creatureName}, FileID: {node.creatureFileID}");
+            if (node.creatureName == "Old birds" && UnlockManager.Instance.Terminal.newlyScannedEnemyIDs.Contains(
+                                                     node.creatureFileID)) {
+                UnlockManager.TryReleaseStoryLockShowAlert("Embrion");
+            }
+        }
+
+        [HarmonyPatch("AttemptLoadStoryLogFileNode")]
+        [HarmonyPrefix]
+        private static void AttemptLoadStoryLogFileNodePrefix(TerminalNode node) {
+            if (LethalContent.StoryLogs.Values.FirstOrDefault(log =>
+                    log.StoryLogTerminalNode.storyLogFileID == node.storyLogFileID) is { } dawnStoryLogInfo) {
+                Logger.LogInfo($"Loading story log file node! " +
+                                $"Name='{dawnStoryLogInfo.StoryLogTerminalNode.name}', " +
+                                $"FileID='{dawnStoryLogInfo.StoryLogTerminalNode.storyLogFileID}'");
+            }
+        }
+
     }
 }

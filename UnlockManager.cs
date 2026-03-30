@@ -1,5 +1,4 @@
 ﻿using Dawn;
-using Dawn.Utils;
 using HarmonyLib;
 using LethalLevelLoader;
 using LethalMoonUnlocks.Compatibility;
@@ -19,11 +18,11 @@ namespace LethalMoonUnlocks {
         internal Terminal Terminal { get; set; }
         internal List<ExtendedLevel> AllLevels { get; private set; } = PatchedContent.ExtendedLevels;
         public List<LMUnlockable> Unlocks { get; set; } = new List<LMUnlockable>();
-        internal int QuotaCount { get; set; } = 0;
-        internal int DayCount { get; set; } = 0;
-        internal int QuotaUnlocksCount { get; set; } = 0;
-        internal int QuotaDiscountsCount { get; set; } = 0;
-        internal int QuotaFullDiscountsCount { get; set; } = 0;
+        internal int QuotaCount { get; set; }
+        internal int DayCount { get; set; }
+        internal int QuotaUnlocksCount { get; set; }
+        internal int QuotaDiscountsCount { get; set; }
+        internal int QuotaFullDiscountsCount { get; set; }
         private const string DiscoveryTargetModeMoonsOnly = "MoonsOnly";
         private const string DiscoveryTargetModeMoonsAndConstellations = "MoonsAndConstellations";
         private const string DiscoveryTargetModeConstellationsOnly = "ConstellationsOnly";
@@ -243,6 +242,7 @@ namespace LethalMoonUnlocks {
         internal void InitializeUnlocks() {
             if (AllLevels == null || AllLevels.Count == 0) {
                 Logger.LogFatal($"Unable to find levels!");
+                return;
             }
             Logger.LogInfo("Initializing LMUnlockables from Extended levels..");
             foreach (var level in AllLevels) {
@@ -349,7 +349,7 @@ namespace LethalMoonUnlocks {
             if (Plugin.LethalConstellationsPresent) {
                 Plugin.LethalConstellationsExtension.ApplyUnlocks();
             }
-            LogUnlockables(false);
+            LogUnlockables();
         }
 
         public void BuyMoon(string moon) {
@@ -404,7 +404,7 @@ namespace LethalMoonUnlocks {
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 2);
         }
 
-        internal void LogUnlockables(bool debug = true) {
+        internal void LogUnlockables(bool debug = false) {
             void LogLine(string message) {
                 if (debug) {
                     Logger.LogDebug(message);
@@ -435,7 +435,7 @@ namespace LethalMoonUnlocks {
                     constellationUnlocks.Add(unlock);
                 }
 
-                string currentConstellationName = LethalConstellations.PluginCore.Collections.CurrentConstellation;
+                string currentConstellationName = Plugin.ConstellationManager?.GetCurrentConstellationName() ?? string.Empty;
 
                 foreach (var constellation in groupedUnlocks) {
                     string groupHeader = $"| Constellation: {constellation.Key}";
@@ -462,7 +462,11 @@ namespace LethalMoonUnlocks {
                         LogLine(unlock.ToString());
                     }
                     LogLine(separator);
-                    Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation discovery is active. If this happens past round initialization something is broken: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
+                    if (groupedUnlocks.Count == 0) {
+                        Logger.LogDebug($"Skipping unmatched LethalConstellations warning while grouping is still unavailable during unlock initialization ({unmatchedUnlocks.Count} moon(s)).");
+                    } else {
+                        Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation discovery is active. If this happens past round initialization something is broken: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
+                    }
                 }
 
                 return;
@@ -491,7 +495,11 @@ namespace LethalMoonUnlocks {
             bool loadSuccess = LoadAndImportSavaData();
             if (!loadSuccess) {
                 InitializeNewGame();
-            } else if (UseConstellationDiscovery) {
+            }
+
+            TryEvaluateConstellationUnlockConditions();
+
+            if (loadSuccess && UseConstellationDiscovery) {
                 Plugin.ConstellationManager.ApplyCurrentConstellationVisibility();
             }
             
@@ -513,6 +521,7 @@ namespace LethalMoonUnlocks {
             QuotaCount++;
             Logger.LogInfo($"New quota! Completed quota count: {QuotaCount}");
             ConfigManager.RefreshConfig();
+            TryEvaluateConstellationUnlockConditions();
             if (ConfigManager.DiscoveryMode) {
                 // Remove [NEW] discovery tags
                 Unlocks.Where(unlock => unlock.NewDiscovery).Do(unlock => { unlock.NewDiscovery = false; });
@@ -678,6 +687,7 @@ namespace LethalMoonUnlocks {
                 Logger.LogInfo($"Visiting moon {unlock.Name}!");
                 unlock.VisitMoon();
             }
+            TryEvaluateConstellationUnlockConditions();
             IterateUnlocks();
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
         }
@@ -705,6 +715,14 @@ namespace LethalMoonUnlocks {
         internal void OnDisconnect() {
             ProgressionManager.Instance?.Reset();
             Reset();
+        }
+
+        private bool TryEvaluateConstellationUnlockConditions() {
+            if (!Plugin.LethalConstellationsPresent || Plugin.ConstellationManager == null) {
+                return false;
+            }
+
+            return Plugin.ConstellationManager.EvaluateCustomUnlockConditions();
         }
 
         private List<LMUnlockable> GetTriggerMoonDiscoveryCandidates() {
@@ -811,7 +829,7 @@ namespace LethalMoonUnlocks {
 
             if (UseConstellationDiscovery) {
                 if (!permanent) {
-                    Plugin.ConstellationManager.AddLocalMoonDiscoveries(LethalConstellations.PluginCore.Collections.CurrentConstellation, discoveries);
+                    Plugin.ConstellationManager.AddLocalMoonDiscoveriesForCurrentConstellation(discoveries);
                 }
                 Plugin.ConstellationManager.ApplyCurrentConstellationVisibility();
             }
@@ -823,7 +841,8 @@ namespace LethalMoonUnlocks {
             }
 
             string triggerName = GetDiscoveryTriggerName(triggerKey);
-            NotificationHelper.SendChatMessage($"{triggerName} granted:\n<color=white>{constellationName}</color>");
+            string constellationWord = Plugin.ConstellationManager.GetConstellationWord();
+            NotificationHelper.SendChatMessage($"{triggerName} granted {constellationWord.ToLowerInvariant()}:\n<color=red>{constellationName}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
                 Header = $"{triggerName}!",
                 Text = $"Received coordinates for constellation: {constellationName}",
@@ -905,7 +924,7 @@ namespace LethalMoonUnlocks {
             }
             ApplyMoonDiscoveries(quotaDiscoveries, ConfigManager.QuotaDiscoveryPermanent);
             NotificationHelper.SendChatMessage($"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted:\n<color=white>{string.Join(", ", quotaDiscoveries.Select(ndd => ndd.Name))}</color>");
-            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted!", Text = $"Received coordinates for:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
             Logger.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
             return true;
         }
@@ -948,12 +967,12 @@ namespace LethalMoonUnlocks {
                 return false;
             }
             ApplyMoonDiscoveries(discoveryGroup, ConfigManager.QuotaDiscoveryPermanent);
-            string message_groupname = string.Empty;
+            string messageGroupname = string.Empty;
             if (group.Name != string.Empty) {
-                message_groupname = $" in <color=red>{group.Name}</color>";
+                messageGroupname = $" in <color=red>{group.Name}</color>";
             }
-            NotificationHelper.SendChatMessage($"{discoveryGroup.Count.SinglePluralWord("Discovery")} granted{message_groupname}:\n<color=white>{string.Join(", ", discoveryGroup.Select(qd => qd.Name))}</color>");
-            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {quotaDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Received coordinates:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
+            NotificationHelper.SendChatMessage($"{discoveryGroup.Count.SinglePluralWord("Discovery")} granted{messageGroupname}:\n<color=white>{string.Join(", ", discoveryGroup.Select(qd => qd.Name))}</color>");
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaDiscoveries.Count.SinglePluralWord("Discovery")} granted!", Text = $"Received coordinates for:\n{string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaDiscovery", ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup" });
             Logger.LogInfo($"New Quota Discoveries: {string.Join(", ", quotaDiscoveries.Select(unlock => unlock.Name))}");
             return true;
         }
@@ -1097,7 +1116,7 @@ namespace LethalMoonUnlocks {
                 discount.BuyCount++;
             }
             QuotaDiscountsCount++;
-            if (quotaDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Discount granted:\n<color=green>{quotaDiscounts.FirstOrDefault().Name}</color>");
+            if (quotaDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Discount granted:\n<color=green>{quotaDiscounts.First().Name}</color>");
             else if (quotaDiscounts.Count > 1) NotificationHelper.SendChatMessage($"Discounts granted:\n<color=green>{string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned discounts for:\n{string.Join(", ", quotaDiscounts.Select(discount => discount.Name + " " + (100 - (int)(Plugin.GetDiscountRate(discount.BuyCount) * 100)) + "%"))}", Key = "LMU_NewQuotaDiscount" });
             Logger.LogInfo($"New Quota Discounts: {string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}");
@@ -1172,7 +1191,7 @@ namespace LethalMoonUnlocks {
                 fullDiscount.FreeVisitCount = 1;
             }
             QuotaFullDiscountsCount++;
-            if (quotaFullDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Full discount granted:\n<color=green>{quotaFullDiscounts.FirstOrDefault().Name}</color>");
+            if (quotaFullDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Full discount granted:\n<color=green>{quotaFullDiscounts.First().Name}</color>");
             else if (quotaFullDiscounts.Count > 1) NotificationHelper.SendChatMessage($"Full discounts granted:\n<color=green>{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $" Full {quotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned full discounts for:\n{string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}", Key = "LMU_NewQuotaFullDiscount" });
             Logger.LogInfo($"New Quota Full Discounts: {string.Join(", ", quotaFullDiscounts.Select(unlock => unlock.Name))}");
@@ -1201,7 +1220,7 @@ namespace LethalMoonUnlocks {
             }
             ApplyMoonDiscoveries(newDayDiscoveries, ConfigManager.NewDayDiscoveryPermanent);
             if (newDayDiscoveries.Count == 1) {
-                NotificationHelper.SendChatMessage($"Autopilot discovered moon suitable for landing {ndDiscoveryGroupName}:\n<color=white>{newDayDiscoveries.FirstOrDefault().Name}</color>");
+                NotificationHelper.SendChatMessage($"Autopilot discovered moon suitable for landing {ndDiscoveryGroupName}:\n<color=white>{newDayDiscoveries.First().Name}</color>");
                 Logger.LogInfo($"New Day Discoveries: [ {string.Join(", ", newDayDiscoveries.Select(discovery => discovery.Name))} ]");
             }
             if (newDayDiscoveries.Count > 1) {
@@ -1240,18 +1259,17 @@ namespace LethalMoonUnlocks {
             if (travelDiscoveries.Count > 1) {
                 NotificationHelper.SendChatMessage($"Discovered new moons on route{tdMessageGroupName}:\n<color=white>{string.Join(", ", travelDiscoveries.Select(td => td.Name))}</color>");
             } else if (travelDiscoveries.Count == 1) {
-                NotificationHelper.SendChatMessage($"Discovered new moon on route{tdMessageGroupName}:\n<color=white>{travelDiscoveries.FirstOrDefault().Name}</color>");
+                NotificationHelper.SendChatMessage($"Discovered new moon on route{tdMessageGroupName}:\n<color=white>{travelDiscoveries.First().Name}</color>");
             }
             Logger.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
                 $"Moon catalog updated!", Key = "LMU_TravelDiscovery" });
-            Logger.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(unlock => unlock.Name))}");
+            Logger.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(u => u.Name))}");
             return true;
         }
 
         private LMGroup MatchMoonGroup(LMUnlockable matchingUnlock, List<LMUnlockable> unlocksToMatch, bool fallback) {
             Logger.LogDebug($"Matching moon {matchingUnlock.Name}: Matching against = [ {string.Join(", ", unlocksToMatch.Select(unlock => unlock.Name))} ]");
-            if (matchingUnlock == null) return new LMGroup() { Members = unlocksToMatch };
             switch (ConfigManager.MoonGroupMatchingMethod) {
                 case "Price":
                     List<LMUnlockable> priceMatches = new List<LMUnlockable>();
@@ -1473,25 +1491,40 @@ namespace LethalMoonUnlocks {
         }
 
         private void RerouteShipToFreeMoon() {
-            Logger.LogInfo($"After shuffling check if we have to reroute to a discovered free moon..");
+            Logger.LogInfo($"After shuffling check if we have to reroute to a discovered safe destination..");
             if (Unlocks.Any(unlock => (unlock.Discovered || unlock.PermanentlyDiscovered ) && unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName) || LevelManager.CurrentExtendedLevel.NumberlessPlanetName == "Gordion") {
                 Logger.LogInfo($"Current moon is discovered. Not rerouting ship.");
             } else {
-                var currentDiscoveredFreeMoons = UseConstellationDiscovery
-                    ? Plugin.ConstellationManager.GetCurrentVisibleUnlocks()
+                ExtendedLevel rerouteDestination;
+                if (UseConstellationDiscovery) {
+                    var currentDiscoveredFreeMoons = Plugin.ConstellationManager.GetCurrentVisibleUnlocks()
                         .Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered) && unlock.RoutePrice == 0)
-                        .ToList()
-                    : DynamicFreeMoons.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered)).ToList();
-                if (currentDiscoveredFreeMoons.Count < 1) {
-                    Logger.LogWarning("Can't find any free and discovered moon! You probably want at least one free moon available at all times.. Abort auto routing ship!");
-                    return;
+                        .ToList();
+                    if (currentDiscoveredFreeMoons.Count > 0) {
+                        rerouteDestination = currentDiscoveredFreeMoons[RandomHelper.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
+                    } else if (Plugin.ConstellationManager.TryGetCurrentDefaultMoon(out var defaultMoon)
+                        && defaultMoon?.ExtendedLevel
+                        && (defaultMoon.Discovered || defaultMoon.PermanentlyDiscovered)) {
+                        rerouteDestination = defaultMoon.ExtendedLevel;
+                        Logger.LogInfo($"No free discovered moon is available in the current constellation. Falling back to default moon '{defaultMoon.Name}'.");
+                    } else {
+                        Logger.LogWarning("Can't find any free discovered moon in the current constellation, and no discovered default moon fallback is available. Abort auto routing ship!");
+                        return;
+                    }
+                } else {
+                    var currentDiscoveredFreeMoons = DynamicFreeMoons.Where(unlock => !unlock.OriginallyLocked && !unlock.OriginallyHidden && (unlock.Discovered || unlock.PermanentlyDiscovered)).ToList();
+                    if (currentDiscoveredFreeMoons.Count < 1) {
+                        Logger.LogWarning("Can't find any free and discovered moon! You probably want at least one free moon available at all times.. Abort auto routing ship!");
+                        return;
+                    }
+
+                    rerouteDestination = currentDiscoveredFreeMoons[RandomHelper.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
                 }
-                var randomDiscoveredFreeMoon = currentDiscoveredFreeMoons[RandomHelper.Range(0, currentDiscoveredFreeMoons.Count)].ExtendedLevel;
-                Logger.LogInfo($"Current moon is not discovered! Rerouting ship to {randomDiscoveredFreeMoon.NumberlessPlanetName}..");
+                Logger.LogInfo($"Current moon is not discovered! Rerouting ship to {rerouteDestination.NumberlessPlanetName}..");
                 if (DayCount > 0) {
                     NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Dangerous conditions!", Text = $"Conditions too dangerous to stay in orbit! Auto routing ship to a safe moon..", Key = "LMU_RerouteFree" });
                 }
-                DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(randomDiscoveredFreeMoon.SelectableLevel.levelID, Terminal.groupCredits); }, 3.5f);
+                DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(rerouteDestination.SelectableLevel.levelID, Terminal.groupCredits); }, 3.5f);
             }
         }
 

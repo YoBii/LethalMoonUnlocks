@@ -110,7 +110,7 @@ namespace LethalMoonUnlocks {
             if (UnlockManager.Instance.Unlocks.Count != 0) {
                 ES3.Save<List<LMUnlockable>>("LMU_Unlockables", UnlockManager.Instance.Unlocks, currentSave);
                 Logger.LogInfo($"Saving LMU_Unlockables..");
-                UnlockManager.Instance.LogUnlockables();
+                UnlockManager.Instance.LogUnlockables(true);
             } else if (ES3.KeyExists("LMU_Unlockables", currentSave)) {
                 ES3.DeleteKey("LMU_Unlockables", currentSave);
             }

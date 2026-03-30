@@ -20,6 +20,7 @@ namespace LethalMoonUnlocks.Compatibility {
         private readonly Dictionary<string, int> _defaultMoonLevelLookup = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HashSet<int>> _rotationLookup = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HashSet<int>> _localDiscoveryLookup = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _invalidVisitedMoonRuleWarnings = new(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, List<string>> _pendingRotationLoad;
         private Dictionary<string, List<string>> _pendingLocalDiscoveryLoad;
 
@@ -55,6 +56,7 @@ namespace LethalMoonUnlocks.Compatibility {
             _defaultMoonLevelLookup.Clear();
             _rotationLookup.Clear();
             _localDiscoveryLookup.Clear();
+            _invalidVisitedMoonRuleWarnings.Clear();
             _pendingRotationLoad = null;
             _pendingLocalDiscoveryLoad = null;
             _bootstrapped = false;
@@ -72,6 +74,7 @@ namespace LethalMoonUnlocks.Compatibility {
             _moonToConstellationLookup.Clear();
             _constellationMoonLevelLookup.Clear();
             _defaultMoonLevelLookup.Clear();
+            Plugin.ConstellationUnlockConditions?.RefreshDefinitions(saveChanges: logProblems);
 
             if (Collections.ConstellationStuff.Count == 0) {
                 if (logProblems) {
@@ -173,10 +176,9 @@ namespace LethalMoonUnlocks.Compatibility {
             ApplyWhitelist();
 
             if (_hasLoadedPersistedState || HasDiscoveredConstellations()) {
-                if (string.IsNullOrWhiteSpace(Collections.CurrentConstellation)) {
-                    Logger.LogError("LethalConstellationsManager: No current constellation exists while discovered constellation progression is active. This should not happen at runtime.");
-                } else if (!_constellationLookup.ContainsKey(Collections.CurrentConstellation)) {
-                    Logger.LogError($"LethalConstellationsManager: Current constellation '{Collections.CurrentConstellation}' no longer exists while discovered constellation progression is loaded.");
+                if (!TryEnsureCurrentConstellation()) {
+                    Logger.LogError("LethalConstellationsManager: Failed to recover a current constellation when constellation discovery progression data is available.");
+                    return false;
                 }
 
                 EnsureRotationsForDiscoveredConstellations();
@@ -216,17 +218,18 @@ namespace LethalMoonUnlocks.Compatibility {
                     continue;
                 }
 
-                if (immediateDiscovery) {
-                    if (!DiscoverConstellation(constellation, constellationState, $"story release of constellation '{constellation.consName}' via moon '{moonName}'")) {
-                        continue;
-                    }
-                } else {
-                    constellationState.StoryIsUnlocked = true;
-                    SyncConstellationStateFromDefaultMoon(constellation, constellationState, defaultMoon, allowDefaultMoonNewDiscovery: false);
+                if (TryApplyConstellationStoryRelease(
+                        constellation,
+                        constellationState,
+                        defaultMoon,
+                        $"story release of constellation '{constellation.consName}' via moon '{moonName}'",
+                        out bool appliedImmediateDiscovery)) {
+                    result.AffectedConstellations.Add(constellation.consName);
+                    Logger.LogInfo($"LethalConstellationsManager: Released story lock for constellation '{constellation.consName}' via moon '{moonName}' ({(appliedImmediateDiscovery ? "immediate discovery" : "hidden backlog")}).");
+                    continue;
                 }
 
-                result.AffectedConstellations.Add(constellation.consName);
-                Logger.LogInfo($"LethalConstellationsManager: Released story lock for constellation '{constellation.consName}' via moon '{moonName}' ({(immediateDiscovery ? "immediate discovery" : "hidden backlog")}).");
+                Logger.LogInfo($"LethalConstellationsManager: Released moon-side story lock for constellation '{constellation.consName}' via moon '{moonName}', but additional custom unlock conditions are still required.");
             }
 
             if (result.AffectedConstellations.Any(name => string.Equals(name, Collections.CurrentConstellation, StringComparison.OrdinalIgnoreCase))) {
@@ -234,6 +237,38 @@ namespace LethalMoonUnlocks.Compatibility {
             }
 
             return result;
+        }
+
+        internal bool EvaluateCustomUnlockConditions() {
+            if (Plugin.ConstellationUnlockConditions == null || Collections.ConstellationStuff.Count == 0) {
+                return false;
+            }
+
+            Plugin.ConstellationUnlockConditions.RefreshDefinitions(saveChanges: false);
+            EnsureIndexed();
+
+            bool anyChanged = false;
+            foreach (var constellation in _constellationLookup.Values) {
+                if (constellation == null || string.IsNullOrWhiteSpace(constellation.consName)) {
+                    continue;
+                }
+
+                var constellationState = _extension.GetOrCreateConstellationState(constellation.consName);
+                if (constellationState == null) {
+                    continue;
+                }
+
+                if (TryUnlockCustomCondition(constellation, constellationState)) {
+                    anyChanged = true;
+                    continue;
+                }
+
+                if (TryGetDefaultMoon(constellation.consName, out var defaultMoon)) {
+                    SyncConstellationStateFromDefaultMoon(constellation, constellationState, defaultMoon);
+                }
+            }
+
+            return anyChanged;
         }
 
         internal bool TryGetConstellation(string constellationName, out ClassMapper constellation) {
@@ -291,6 +326,20 @@ namespace LethalMoonUnlocks.Compatibility {
 
             _defaultMoonLevelLookup[constellationName] = defaultMoonLevelId;
             return true;
+        }
+
+        internal bool TryGetCurrentDefaultMoon(out LMUnlockable defaultMoon) {
+            defaultMoon = null;
+            return !string.IsNullOrWhiteSpace(Collections.CurrentConstellation)
+                && TryGetDefaultMoon(Collections.CurrentConstellation, out defaultMoon);
+        }
+
+        internal string GetCurrentConstellationName() {
+            return Collections.CurrentConstellation ?? string.Empty;
+        }
+
+        internal string GetConstellationWord() {
+            return LethalConstellations.ConfigManager.Configuration.ConstellationWord.Value;
         }
 
         internal bool IsMoonInConstellation(LMUnlockable unlock, string constellationName) {
@@ -465,6 +514,11 @@ namespace LethalMoonUnlocks.Compatibility {
 
             if (!Bootstrap()) {
                 Logger.LogError("LethalConstellationsManager: Unable to apply moon visibility because initialization failed.");
+                return false;
+            }
+
+            if (!TryEnsureCurrentConstellation()) {
+                Logger.LogError("LethalConstellationsManager: Failed applying visibility status! No current constellation is available. This should not happen at runtime.");
                 return false;
             }
 
@@ -661,6 +715,10 @@ namespace LethalMoonUnlocks.Compatibility {
                     localDiscoveries.Add(levelId);
                 }
             }
+        }
+
+        internal void AddLocalMoonDiscoveriesForCurrentConstellation(IEnumerable<LMUnlockable> moons) {
+            AddLocalMoonDiscoveries(Collections.CurrentConstellation, moons);
         }
 
         internal void SetLocalMoonDiscoveries(string constellationName, IEnumerable<string> moonNames) {
@@ -1111,6 +1169,61 @@ namespace LethalMoonUnlocks.Compatibility {
                 .FirstOrDefault();
         }
 
+        private bool TryEnsureCurrentConstellation() {
+            string currentConstellationName = Collections.CurrentConstellation;
+            if (!string.IsNullOrWhiteSpace(currentConstellationName) && _constellationLookup.TryGetValue(currentConstellationName, out var currentConstellation) && currentConstellation != null) {
+                if (TryGetConstellationState(currentConstellation.consName, out var currentState)
+                    && IsConstellationAvailable(currentState)
+                    && TryGetDefaultMoon(currentConstellation.consName, out _)) {
+                    Collections.CurrentConstellationCM = currentConstellation;
+                    return true;
+                }
+
+                Logger.LogError($"LethalConstellationsManager: Current constellation '{currentConstellationName}' is no longer available.");
+            } else if (string.IsNullOrWhiteSpace(currentConstellationName)) {
+                Logger.LogError("LethalConstellationsManager: No current constellation exists even though constellation discovery progression data is available. This should not happen at runtime.");
+            } else {
+                Logger.LogError($"LethalConstellationsManager: Current constellation '{currentConstellationName}' no longer exists even though constellation discovery progression data is available.");
+            }
+
+            if (!TryResolveRecoveryConstellation(out var recoveryConstellation)) {
+                Collections.CurrentConstellationCM = null;
+                return false;
+            }
+
+            Logger.LogWarning($"LethalConstellationsManager: Recovering missing current constellation with '{recoveryConstellation.consName}'.");
+            Collections.CurrentConstellation = recoveryConstellation.consName;
+            Collections.CurrentConstellationCM = recoveryConstellation;
+            return true;
+        }
+
+        private bool TryResolveRecoveryConstellation(out ClassMapper recoveryConstellation) {
+            recoveryConstellation = _constellationLookup.Values
+                .Select(constellation => CreateRecoveryCandidate(constellation))
+                .Where(candidate => candidate != null)
+                .OrderBy(candidate => candidate.EffectivePrice)
+                .ThenBy(candidate => candidate.Constellation.consName, StringComparer.OrdinalIgnoreCase)
+                .Select(candidate => candidate.Constellation)
+                .FirstOrDefault();
+
+            return recoveryConstellation != null;
+        }
+
+        private RecoveryConstellationCandidate CreateRecoveryCandidate(ClassMapper constellation) {
+            if (constellation == null || !TryGetConstellationState(constellation.consName, out var state) || !IsConstellationAvailable(state)) {
+                return null;
+            }
+
+            if (!TryGetDefaultMoon(constellation.consName, out var defaultMoon)) {
+                return null;
+            }
+
+            var target = CreateEconomyTarget(constellation, state);
+            return target == null
+                ? null
+                : new RecoveryConstellationCandidate(constellation, target.EffectivePrice);
+        }
+
         private void EnsureCurrentConstellationIsValid(ClassMapper bootstrapConstellation) {
             if (bootstrapConstellation == null) {
                 return;
@@ -1197,6 +1310,8 @@ namespace LethalMoonUnlocks.Compatibility {
                 return;
             }
 
+            string constellationWord = LethalConstellations.ConfigManager.Configuration.ConstellationWord.Value;
+            NotificationHelper.SendChatMessage($"Autopilot discovered new {constellationWord.ToLowerInvariant()}:\n<color=red>{constellationName}</color>");
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
                 Header = "New Discovery!",
                 Text = $"{LethalConstellations.ConfigManager.Configuration.ConstellationWord.Value} <color=yellow>{constellationName}</color> available for routing.",
@@ -1222,17 +1337,187 @@ namespace LethalMoonUnlocks.Compatibility {
             ApplyConstellationState(constellation, constellationState);
         }
 
+        private bool TryUnlockCustomCondition(ClassMapper constellation, LMConstellationUnlockable constellationState) {
+            if (constellation == null || constellationState == null) {
+                return false;
+            }
+
+            if (!TryGetActiveCustomUnlockRule(constellation.consName, out var ruleDefinition)) {
+                return false;
+            }
+
+            if (!TryGetDefaultMoon(constellation.consName, out var defaultMoon)) {
+                Logger.LogError($"LethalConstellationsManager: Unable to resolve the configured default moon for constellation '{constellation.consName}' while evaluating custom unlock conditions.");
+                return false;
+            }
+
+            bool customConditionJustUnlocked = false;
+            if (!constellationState.CustomConditionUnlocked) {
+                if (!AreCustomUnlockConditionsSatisfied(constellation.consName, ruleDefinition)) {
+                    return false;
+                }
+
+                constellationState.CustomConditionUnlocked = true;
+                customConditionJustUnlocked = true;
+            }
+
+            bool needsStoryReleaseApplication = !constellationState.StoryIsUnlocked
+                || (IsImmediateDiscoveryStoryReleaseBehavior() && !constellationState.Discovered);
+            if (!needsStoryReleaseApplication) {
+                return customConditionJustUnlocked;
+            }
+
+            if (TryApplyConstellationStoryRelease(
+                    constellation,
+                    constellationState,
+                    defaultMoon,
+                    $"custom unlock conditions for constellation '{constellation.consName}'",
+                    out bool appliedImmediateDiscovery)) {
+                if (customConditionJustUnlocked) {
+                    Logger.LogInfo($"LethalConstellationsManager: Custom unlock conditions satisfied for constellation '{constellation.consName}', releasing constellation story lock ({(appliedImmediateDiscovery ? "immediate discovery" : "hidden backlog")}).");
+                } else {
+                    Logger.LogInfo($"LethalConstellationsManager: Applied pending constellation story release for previously satisfied custom unlock conditions on '{constellation.consName}' ({(appliedImmediateDiscovery ? "immediate discovery" : "hidden backlog")}).");
+                }
+            } else if (customConditionJustUnlocked) {
+                Logger.LogInfo($"LethalConstellationsManager: Custom unlock conditions satisfied for constellation '{constellation.consName}', but its default moon story lock is still closed.");
+            }
+
+            return true;
+        }
+
+        private bool TryGetActiveCustomUnlockRule(string constellationName, out ConstellationUnlockRuleDefinition ruleDefinition) {
+            ruleDefinition = null;
+            return Plugin.ConstellationUnlockConditions != null
+                && Plugin.ConstellationUnlockConditions.TryGetRuleDefinition(constellationName, out ruleDefinition)
+                && ruleDefinition != null
+                && ruleDefinition.IsEnabled;
+        }
+
+        private bool AreCustomUnlockConditionsSatisfied(string constellationName, ConstellationUnlockRuleDefinition ruleDefinition) {
+            if (ruleDefinition == null || !ruleDefinition.IsEnabled) {
+                return false;
+            }
+
+            var activeConditionResults = new List<bool>();
+            if (ruleDefinition.RequiredQuotaCount > 0) {
+                activeConditionResults.Add(UnlockManager.Instance != null && UnlockManager.Instance.QuotaCount >= ruleDefinition.RequiredQuotaCount);
+            }
+
+            if (ruleDefinition.RequiredVisitedMoons.Count > 0) {
+                activeConditionResults.Add(HaveVisitedAllMoons(constellationName, ruleDefinition.RequiredVisitedMoons));
+            }
+
+            if (ruleDefinition.RequiredUniqueMoonVisits > 0) {
+                activeConditionResults.Add(CountUniqueVisitedMoons() >= ruleDefinition.RequiredUniqueMoonVisits);
+            }
+
+            if (activeConditionResults.Count == 0) {
+                return false;
+            }
+
+            return ruleDefinition.MatchMode == ConstellationUnlockMatchMode.All
+                ? activeConditionResults.All(result => result)
+                : activeConditionResults.Any(result => result);
+        }
+
+        private static bool IsDefaultMoonStoryGateOpen(LMUnlockable defaultMoon) {
+            return defaultMoon != null && (!defaultMoon.StoryUnlock || defaultMoon.StoryIsUnlocked);
+        }
+
+        private bool TryApplyConstellationStoryRelease(ClassMapper constellation, LMConstellationUnlockable constellationState, LMUnlockable defaultMoon, string reason, out bool appliedImmediateDiscovery) {
+            appliedImmediateDiscovery = false;
+            if (constellation == null || constellationState == null || defaultMoon == null) {
+                return false;
+            }
+
+            if (!IsConstellationStoryGateOpen(constellation.consName, constellationState, defaultMoon, out _)) {
+                SyncConstellationStateFromDefaultMoon(constellation, constellationState, defaultMoon, allowDefaultMoonNewDiscovery: false);
+                return false;
+            }
+
+            if (IsImmediateDiscoveryStoryReleaseBehavior()) {
+                appliedImmediateDiscovery = true;
+                return DiscoverConstellation(constellation, constellationState, reason);
+            }
+
+            constellationState.StoryIsUnlocked = true;
+            SyncConstellationStateFromDefaultMoon(constellation, constellationState, defaultMoon, allowDefaultMoonNewDiscovery: false);
+            return true;
+        }
+
+        private bool TryGetCustomConditionGateState(string constellationName, LMConstellationUnlockable constellationState, out bool customGateOpen, out bool ignoreDefaultMoonStoryLock) {
+            customGateOpen = true;
+            ignoreDefaultMoonStoryLock = false;
+            if (constellationState == null) {
+                return false;
+            }
+
+            bool hasPersistedCustomGate = constellationState.CustomConditionUnlocked;
+            if (!TryGetActiveCustomUnlockRule(constellationName, out var ruleDefinition)) {
+                customGateOpen = hasPersistedCustomGate;
+                return hasPersistedCustomGate;
+            }
+
+            customGateOpen = constellationState.CustomConditionUnlocked;
+            ignoreDefaultMoonStoryLock = ruleDefinition.IgnoreDefaultMoonStoryLock;
+            return true;
+        }
+
+        private bool IsConstellationStoryGateOpen(string constellationName, LMConstellationUnlockable constellationState, LMUnlockable defaultMoon, out bool ignoreDefaultMoonStoryLock) {
+            bool baseGateOpen = IsDefaultMoonStoryGateOpen(defaultMoon);
+            if (!TryGetCustomConditionGateState(constellationName, constellationState, out bool customGateOpen, out ignoreDefaultMoonStoryLock)) {
+                return baseGateOpen;
+            }
+
+            return ignoreDefaultMoonStoryLock
+                ? customGateOpen
+                : baseGateOpen && customGateOpen;
+        }
+
+        private bool HaveVisitedAllMoons(string constellationName, IReadOnlyList<string> moonNames) {
+            return moonNames != null
+                && moonNames.Count > 0
+                && moonNames.All(moonName => HasVisitedMoon(constellationName, moonName));
+        }
+
+        private bool HasVisitedMoon(string constellationName, string moonName) {
+            if (!_moonNameToLevelIdLookup.ContainsKey(moonName)) {
+                string warningKey = $"{constellationName}|{moonName}";
+                if (_invalidVisitedMoonRuleWarnings.Add(warningKey)) {
+                    Logger.LogWarning($"LethalConstellationsManager: Custom unlock condition for constellation '{constellationName}' references unknown moon '{moonName}'.");
+                }
+
+                return false;
+            }
+
+            return UnlockManager.Instance?.Unlocks.Any(unlock =>
+                string.Equals(unlock.Name, moonName, StringComparison.OrdinalIgnoreCase)
+                && unlock.VisitCount > 0) == true;
+        }
+
+        private static int CountUniqueVisitedMoons() {
+            if (UnlockManager.Instance?.Unlocks == null) {
+                return 0;
+            }
+
+            return UnlockManager.Instance.Unlocks.Count(unlock => unlock.VisitCount > 0);
+        }
+
         private void SyncConstellationStateFromDefaultMoon(ClassMapper constellation, LMConstellationUnlockable constellationState, LMUnlockable defaultMoon, bool allowDefaultMoonNewDiscovery = false) {
             if (constellation == null || constellationState == null || defaultMoon == null) {
                 return;
             }
 
-            bool defaultMoonReleased = !defaultMoon.StoryUnlock || defaultMoon.StoryIsUnlocked;
+            bool effectiveStoryGateOpen = IsConstellationStoryGateOpen(constellation.consName, constellationState, defaultMoon, out bool ignoreDefaultMoonStoryLock);
             bool constellationDiscovered = constellationState.Discovered;
-            constellationState.StoryIsUnlocked = defaultMoonReleased || constellationDiscovered;
+            constellationState.StoryIsUnlocked = effectiveStoryGateOpen || constellationDiscovered;
 
             ApplyConstellationState(constellation, constellationState);
-            SyncDefaultMoonAvailability(constellationState, defaultMoon, allowDefaultMoonNewDiscovery);
+            SyncDefaultMoonAvailability(
+                constellationState,
+                defaultMoon,
+                allowDefaultMoonNewDiscovery,
+                releaseDefaultMoonStoryLock: defaultMoon.StoryUnlock && (!ignoreDefaultMoonStoryLock || defaultMoon.StoryIsUnlocked));
         }
 
         private void ApplyConstellationState(ClassMapper constellation, LMConstellationUnlockable constellationState) {
@@ -1298,7 +1583,7 @@ namespace LethalMoonUnlocks.Compatibility {
             return state?.OriginalPrice ?? 0;
         }
 
-        private void SyncDefaultMoonAvailability(LMConstellationUnlockable constellationState, LMUnlockable defaultMoon, bool allowDefaultMoonNewDiscovery) {
+        private void SyncDefaultMoonAvailability(LMConstellationUnlockable constellationState, LMUnlockable defaultMoon, bool allowDefaultMoonNewDiscovery, bool releaseDefaultMoonStoryLock = true) {
             if (constellationState == null || defaultMoon == null) {
                 return;
             }
@@ -1307,7 +1592,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 return;
             }
 
-            if (defaultMoon.StoryUnlock) {
+            if (releaseDefaultMoonStoryLock && defaultMoon.StoryUnlock) {
                 defaultMoon.StoryIsUnlocked = true;
             }
 
@@ -1321,6 +1606,16 @@ namespace LethalMoonUnlocks.Compatibility {
                 }
             }
 
+        }
+
+        private sealed class RecoveryConstellationCandidate {
+            internal RecoveryConstellationCandidate(ClassMapper constellation, int effectivePrice) {
+                Constellation = constellation;
+                EffectivePrice = effectivePrice;
+            }
+
+            internal ClassMapper Constellation { get; }
+            internal int EffectivePrice { get; }
         }
 
         private bool TryGetConstellationState(string constellationName, out LMConstellationUnlockable constellationState) {

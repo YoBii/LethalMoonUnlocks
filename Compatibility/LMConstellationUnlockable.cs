@@ -11,6 +11,7 @@ namespace LethalMoonUnlocks.Compatibility {
         [ES3Serializable] internal string Name { get; set; }
 
         [ES3Serializable] internal bool StoryIsUnlocked { get; set; }
+        [ES3Serializable] internal bool CustomConditionUnlocked { get; set; }
         [ES3Serializable] internal bool Discovered { get; set; }
         [ES3Serializable] internal bool DiscoveredOnce { get; set; }
         [ES3Serializable] internal bool NewDiscovery { get; set; }
@@ -54,6 +55,7 @@ namespace LethalMoonUnlocks.Compatibility {
 
             Name = other.Name;
             StoryIsUnlocked = other.StoryIsUnlocked;
+            CustomConditionUnlocked = other.CustomConditionUnlocked;
             Discovered = other.Discovered;
             DiscoveredOnce = other.DiscoveredOnce;
             NewDiscovery = other.NewDiscovery;
@@ -75,6 +77,7 @@ namespace LethalMoonUnlocks.Compatibility {
 
         internal bool HasData() {
             return StoryIsUnlocked
+                || CustomConditionUnlocked
                 || Discovered
                 || DiscoveredOnce
                 || NewDiscovery
@@ -170,7 +173,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 return string.Empty;
             }
 
-            string tags = "Info: ";
+            string tags = "Info:";
             if (NewDiscovery && ConfigManager.DiscoveryMode && ConfigManager.ShowTagNewDiscovery) {
                 tags = AddTag("[NEW]", tags);
             }
