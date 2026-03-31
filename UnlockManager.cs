@@ -305,10 +305,41 @@ namespace LethalMoonUnlocks {
 
         internal void ImportUnlockableData(List<LMUnlockable> newData) {
             Logger.LogInfo("Importing LMU_Unlockable data..");
+            if (newData == null) {
+                Logger.LogWarning("Received null LMU_Unlockable data list. Skipping import.");
+                return;
+            }
+
             foreach (LMUnlockable importUnlock in newData) {
+                if (importUnlock == null) {
+                    Logger.LogWarning("Received null LMUnlockable entry during import. Skipping entry.");
+                    continue;
+                }
+
                 foreach (LMUnlockable unlock in Unlocks) {
                     if (unlock.Name == importUnlock.Name) {
                         unlock.OverrideData(importUnlock);
+                    }
+                }
+            }
+        }
+
+        internal void ImportUnlockableSyncData(List<LMUnlockableSyncData> newData) {
+            Logger.LogInfo("Importing LMU unlock sync data..");
+            if (newData == null) {
+                Logger.LogWarning("Received null LMU unlock sync data list. Skipping import.");
+                return;
+            }
+
+            foreach (LMUnlockableSyncData importUnlock in newData) {
+                if (importUnlock == null) {
+                    Logger.LogWarning("Received null LMUnlockable sync entry during import. Skipping entry.");
+                    continue;
+                }
+
+                foreach (LMUnlockable unlock in Unlocks) {
+                    if (string.Equals(unlock.Name, importUnlock.name, StringComparison.OrdinalIgnoreCase)) {
+                        unlock.ApplySyncData(importUnlock);
                     }
                 }
             }
@@ -715,6 +746,41 @@ namespace LethalMoonUnlocks {
         internal void OnDisconnect() {
             ProgressionManager.Instance?.Reset();
             Reset();
+        }
+
+        internal bool HandleRecordedTerminalRead(TerminalReadKind readKind, string entryName) {
+            string normalizedName = string.IsNullOrWhiteSpace(entryName) ? string.Empty : entryName.Trim();
+            if (normalizedName.Length == 0) {
+                Logger.LogDebug($"Skipping recorded terminal-read handling for blank {readKind} entry name.");
+                return false;
+            }
+
+            bool anyChanged = false;
+            LMUnlockable releasedUnlock = null;
+            LethalConstellationsManager.StoryReleaseResult constellationReleaseResult = null;
+
+            if (readKind == TerminalReadKind.Bestiary
+                && ConfigManager.LMUStoryProgression
+                && ProgressionManager.Instance?.HasReadBestiaryEntry("Old birds") == true) {
+                anyChanged |= TryReleaseStoryLockInternal("Embrion", out releasedUnlock, out constellationReleaseResult);
+            }
+
+            anyChanged |= TryEvaluateConstellationUnlockConditions();
+            if (!anyChanged) {
+                Logger.LogDebug($"No dependent progression changes after recorded {readKind} entry '{normalizedName}'.");
+                return false;
+            }
+
+            IterateUnlocks();
+            NetworkManager.Instance?.ServerSendUnlockables(Unlocks);
+
+            if (releasedUnlock != null) {
+                NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Location data detected!\nQueued for processing.", Key = "LMU_StoryLockReleasedGeneric" });
+                SendStoryReleaseAlert(releasedUnlock, constellationReleaseResult);
+                NetworkManager.Instance?.ServerSendAlertQueueEvent();
+            }
+
+            return true;
         }
 
         private bool TryEvaluateConstellationUnlockConditions() {
@@ -1645,7 +1711,7 @@ namespace LethalMoonUnlocks {
                 }
                 if (savedata.ContainsKey("LMU_Progression")) {
                     ProgressionManager.Instance?.LoadSaveData((ProgressionSaveData)savedata["LMU_Progression"]);
-                    Logger.LogInfo($"Loading ProgressionManager state: PaintingsSold={ProgressionManager.Instance?.PaintingsSold}.");
+                    Logger.LogInfo($"Loading ProgressionManager state: PaintingsSold={ProgressionManager.Instance?.PaintingsSold}, BestiaryReads={ProgressionManager.Instance?.ReadBestiaryEntries.Count ?? 0}, StoryLogReads={ProgressionManager.Instance?.ReadStoryLogs.Count ?? 0}.");
                 }
                 if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
                     if (savedata.ContainsKey("LMU_LethalConstellations")) {

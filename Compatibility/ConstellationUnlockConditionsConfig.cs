@@ -77,6 +77,10 @@ namespace LethalMoonUnlocks.Compatibility {
             int requiredUniqueMoonVisits = BindValue(section, "RequiredUniqueMoonVisits", 0,
                 "Unlock when at least this many different moons have been visited. Set to 0 to disable this condition.",
                 new AcceptableValueRange<int>(0, 1000));
+            string requiredBestiaryEntries = BindValue(section, "RequiredBestiaryEntries", string.Empty,
+                "Requires DawnLib. Unlock when every bestiary entry in this comma-separated list has been read at least once. Leave empty to disable this condition. Without DawnLib this condition will never pass.");
+            string requiredStoryLogs = BindValue(section, "RequiredStoryLogs", string.Empty,
+                "Requires DawnLib. Unlock when every story log in this comma-separated list has been read at least once. Leave empty to disable this condition. Without DawnLib this condition will never pass.");
             bool ignoreDefaultMoonStoryLock = BindValue(section, "IgnoreDefaultMoonStoryLock", false,
                 "When enabled, the constellation may unlock even if its default moon is still story-locked by another source.");
 
@@ -85,8 +89,10 @@ namespace LethalMoonUnlocks.Compatibility {
                 enabled,
                 ParseMatchMode(matchModeValue),
                 requiredQuotaCount,
-                ParseRequiredVisitedMoons(requiredVisitedMoons),
+                ParseCommaSeparatedList(requiredVisitedMoons),
                 requiredUniqueMoonVisits,
+                ParseCommaSeparatedList(requiredBestiaryEntries),
+                ParseCommaSeparatedList(requiredStoryLogs),
                 ignoreDefaultMoonStoryLock);
         }
 
@@ -106,7 +112,7 @@ namespace LethalMoonUnlocks.Compatibility {
             return ConstellationUnlockMatchMode.Any;
         }
 
-        private static string[] ParseRequiredVisitedMoons(string value) {
+        private static string[] ParseCommaSeparatedList(string value) {
             if (string.IsNullOrWhiteSpace(value)) {
                 return Array.Empty<string>();
             }
@@ -138,11 +144,15 @@ namespace LethalMoonUnlocks.Compatibility {
         internal int RequiredQuotaCount { get; }
         internal IReadOnlyList<string> RequiredVisitedMoons { get; }
         internal int RequiredUniqueMoonVisits { get; }
+        internal IReadOnlyList<string> RequiredBestiaryEntries { get; }
+        internal IReadOnlyList<string> RequiredStoryLogs { get; }
         internal bool IgnoreDefaultMoonStoryLock { get; }
         internal bool HasActiveConditions =>
             RequiredQuotaCount > 0
             || RequiredVisitedMoons.Count > 0
-            || RequiredUniqueMoonVisits > 0;
+            || RequiredUniqueMoonVisits > 0
+            || RequiredBestiaryEntries.Count > 0
+            || RequiredStoryLogs.Count > 0;
         internal bool IsEnabled => Enabled && HasActiveConditions;
 
         internal ConstellationUnlockRuleDefinition(
@@ -152,6 +162,8 @@ namespace LethalMoonUnlocks.Compatibility {
             int requiredQuotaCount,
             IReadOnlyList<string> requiredVisitedMoons,
             int requiredUniqueMoonVisits,
+            IReadOnlyList<string> requiredBestiaryEntries,
+            IReadOnlyList<string> requiredStoryLogs,
             bool ignoreDefaultMoonStoryLock) {
             ConstellationName = constellationName ?? string.Empty;
             Enabled = enabled;
@@ -159,6 +171,8 @@ namespace LethalMoonUnlocks.Compatibility {
             RequiredQuotaCount = requiredQuotaCount;
             RequiredVisitedMoons = requiredVisitedMoons?.ToArray() ?? Array.Empty<string>();
             RequiredUniqueMoonVisits = requiredUniqueMoonVisits;
+            RequiredBestiaryEntries = requiredBestiaryEntries?.ToArray() ?? Array.Empty<string>();
+            RequiredStoryLogs = requiredStoryLogs?.ToArray() ?? Array.Empty<string>();
             IgnoreDefaultMoonStoryLock = ignoreDefaultMoonStoryLock;
         }
     }

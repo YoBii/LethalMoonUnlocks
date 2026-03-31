@@ -69,6 +69,46 @@ namespace LethalMoonUnlocks.Compatibility {
             SalesRate = other.SalesRate;
         }
 
+        internal LMConstellationUnlockableSyncData BuildSyncData() {
+            return new LMConstellationUnlockableSyncData {
+                name = Name,
+                storyIsUnlocked = StoryIsUnlocked,
+                customConditionUnlocked = CustomConditionUnlocked,
+                discovered = Discovered,
+                discoveredOnce = DiscoveredOnce,
+                newDiscovery = NewDiscovery,
+                buyCount = BuyCount,
+                visitCount = VisitCount,
+                freeVisitCount = FreeVisitCount,
+                routePrice = RoutePrice,
+                originalPrice = OriginalPrice,
+                hasOriginalPriceSnapshot = HasOriginalPriceSnapshot,
+                onSale = OnSale,
+                salesRate = SalesRate
+            };
+        }
+
+        internal void ApplySyncData(LMConstellationUnlockableSyncData syncData) {
+            if (syncData == null) {
+                return;
+            }
+
+            Name = syncData.name;
+            StoryIsUnlocked = syncData.storyIsUnlocked;
+            CustomConditionUnlocked = syncData.customConditionUnlocked;
+            Discovered = syncData.discovered;
+            DiscoveredOnce = syncData.discoveredOnce;
+            NewDiscovery = syncData.newDiscovery;
+            BuyCount = syncData.buyCount;
+            VisitCount = syncData.visitCount;
+            FreeVisitCount = syncData.freeVisitCount;
+            RoutePrice = syncData.routePrice;
+            OriginalPrice = syncData.originalPrice;
+            HasOriginalPriceSnapshot = syncData.hasOriginalPriceSnapshot;
+            OnSale = syncData.onSale;
+            SalesRate = syncData.salesRate;
+        }
+
         internal LMConstellationUnlockable Clone() {
             var copy = new LMConstellationUnlockable();
             copy.OverrideData(this);

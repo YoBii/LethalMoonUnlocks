@@ -61,7 +61,7 @@ namespace LethalMoonUnlocks {
                 if (ES3.KeyExists("LMU_Progression", currentSave)) {
                     ProgressionSaveData progressionSaveData = ES3.Load<ProgressionSaveData>("LMU_Progression", currentSave);
                     dictionary.Add("LMU_Progression", progressionSaveData);
-                    Logger.LogInfo($"Found LMU_Progression: PaintingsSold={progressionSaveData.PaintingsSold}");
+                    Logger.LogInfo($"Found LMU_Progression: PaintingsSold={progressionSaveData.PaintingsSold}, BestiaryReads={progressionSaveData.ReadBestiaryEntries?.Count ?? 0}, StoryLogReads={progressionSaveData.ReadStoryLogs?.Count ?? 0}");
                 }
                 if (ES3.KeyExists("LMU_LethalConstellations", currentSave)) {
                     LethalConstellationsSaveData lethalConstellationsSaveData = ES3.Load<LethalConstellationsSaveData>("LMU_LethalConstellations", currentSave);

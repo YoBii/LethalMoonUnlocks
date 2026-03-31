@@ -120,6 +120,58 @@ namespace LethalMoonUnlocks {
             }
         }
 
+        internal LMUnlockableSyncData BuildSyncData() {
+            return new LMUnlockableSyncData {
+                name = Name,
+                routePrice = RoutePrice,
+                originalPrice = OriginalPrice,
+                originallyLocked = originallyLocked,
+                originallyHidden = originallyHidden,
+                remainingHidden = RemainingHidden,
+                storyUnlock = StoryUnlock,
+                storyIsUnlocked = StoryIsUnlocked,
+                buyCount = BuyCount,
+                visitCount = VisitCount,
+                freeVisitCount = FreeVisitCount,
+                landingCount = LandingCount,
+                discovered = Discovered,
+                newDiscovery = NewDiscovery,
+                discoveredOnce = DiscoveredOnce,
+                permanentlyDiscovered = PermanentlyDiscovered,
+                onSale = OnSale,
+                salesRate = SalesRate
+            };
+        }
+
+        internal void ApplySyncData(LMUnlockableSyncData syncData) {
+            if (syncData == null) {
+                return;
+            }
+
+            if (!string.Equals(Name, syncData.name, StringComparison.OrdinalIgnoreCase)) {
+                Logger.LogError("Name mismatch during LMUnlockable sync data import!");
+                return;
+            }
+
+            OriginalPrice = syncData.originalPrice;
+            originallyLocked = syncData.originallyLocked;
+            originallyHidden = syncData.originallyHidden;
+            RemainingHidden = syncData.remainingHidden;
+            StoryUnlock = syncData.storyUnlock;
+            StoryIsUnlocked = syncData.storyIsUnlocked;
+            BuyCount = syncData.buyCount;
+            VisitCount = syncData.visitCount;
+            FreeVisitCount = syncData.freeVisitCount;
+            LandingCount = syncData.landingCount;
+            Discovered = syncData.discovered;
+            NewDiscovery = syncData.newDiscovery;
+            DiscoveredOnce = syncData.discoveredOnce;
+            PermanentlyDiscovered = syncData.permanentlyDiscovered;
+            OnSale = syncData.onSale;
+            SalesRate = syncData.salesRate;
+            RoutePrice = syncData.routePrice;
+        }
+
         internal void SetDiscoveryState(bool discovered, bool suppressNewDiscovery = false) {
             Discovered = discovered;
             if (!discovered) {

@@ -5,15 +5,15 @@ using LethalMoonUnlocks.Compatibility;
 namespace LethalMoonUnlocks {
     [Serializable]
     internal sealed class UnlockSyncData {
-        public List<LMUnlockable> Unlockables { get; set; } = new();
-        public LethalConstellationsSaveData LethalConstellationsSaveData { get; set; } = new();
+        public List<LMUnlockableSyncData> Unlockables = new();
+        public LethalConstellationsSyncData LethalConstellationsSyncData = new();
 
         internal UnlockSyncData() {
         }
 
-        internal UnlockSyncData(List<LMUnlockable> unlockables, LethalConstellationsSaveData lethalConstellationsSaveData) {
-            Unlockables = unlockables ?? new List<LMUnlockable>();
-            LethalConstellationsSaveData = lethalConstellationsSaveData?.Copy() ?? new LethalConstellationsSaveData();
+        internal UnlockSyncData(List<LMUnlockableSyncData> unlockables, LethalConstellationsSyncData lethalConstellationsSyncData) {
+            Unlockables = unlockables ?? new List<LMUnlockableSyncData>();
+            LethalConstellationsSyncData = lethalConstellationsSyncData ?? new LethalConstellationsSyncData();
         }
     }
 }

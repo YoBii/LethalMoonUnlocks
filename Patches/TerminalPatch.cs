@@ -1,11 +1,7 @@
 ﻿using HarmonyLib;
 using LethalLevelLoader;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Dawn;
-using Dawn.Utils;
 
 namespace LethalMoonUnlocks.Patches {
     [HarmonyPatch(typeof(Terminal))]
@@ -74,22 +70,74 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPatch("AttemptLoadCreatureFileNode")]
         [HarmonyPrefix]
         private static void AttemptLoadCreatureFileNodePrefix(TerminalNode node) {
-            Logger.LogDebug($"Loading bestiary node! Name: {node.creatureName}, FileID: {node.creatureFileID}");
-            if (node.creatureName == "Old birds" && UnlockManager.Instance.Terminal.newlyScannedEnemyIDs.Contains(
-                                                     node.creatureFileID)) {
-                UnlockManager.TryReleaseStoryLockShowAlert("Embrion");
-            }
+            string entryName = ResolveBestiaryEntryName(node);
+            Logger.LogDebug($"Loading bestiary node! Name: {entryName}, FileID: {node?.creatureFileID ?? -1}");
+            ReportTerminalRead(TerminalReadKind.Bestiary, entryName);
         }
 
         [HarmonyPatch("AttemptLoadStoryLogFileNode")]
         [HarmonyPrefix]
         private static void AttemptLoadStoryLogFileNodePrefix(TerminalNode node) {
-            if (LethalContent.StoryLogs.Values.FirstOrDefault(log =>
-                    log.StoryLogTerminalNode.storyLogFileID == node.storyLogFileID) is { } dawnStoryLogInfo) {
-                Logger.LogInfo($"Loading story log file node! " +
-                                $"Name='{dawnStoryLogInfo.StoryLogTerminalNode.name}', " +
-                                $"FileID='{dawnStoryLogInfo.StoryLogTerminalNode.storyLogFileID}'");
+            if (!Plugin.DawnLibPresent) {
+                Logger.LogDebug($"Skipping story log terminal-read handling because DawnLib is not present. FileID='{node?.storyLogFileID ?? -1}'");
+                return;
             }
+
+            string entryName = ResolveStoryLogEntryName(node);
+            Logger.LogInfo($"Loading story log file node! Name='{entryName}', FileID='{node?.storyLogFileID ?? -1}'");
+            ReportTerminalRead(TerminalReadKind.StoryLog, entryName);
+        }
+
+        private static void ReportTerminalRead(TerminalReadKind readKind, string entryName) {
+            string normalizedName = NormalizeEntryName(entryName);
+            if (normalizedName.Length == 0) {
+                Logger.LogDebug($"Skipping {readKind} terminal-read report with blank entry name.");
+                return;
+            }
+
+            if (ProgressionManager.Instance == null) {
+                Logger.LogWarning($"Skipping {readKind} terminal-read report for '{normalizedName}' because ProgressionManager is unavailable.");
+                return;
+            }
+
+            if (NetworkManager.Instance.IsServer()) {
+                bool added = readKind switch {
+                    TerminalReadKind.Bestiary => ProgressionManager.Instance.RecordBestiaryRead(normalizedName),
+                    TerminalReadKind.StoryLog => ProgressionManager.Instance.RecordStoryLogRead(normalizedName),
+                    _ => false
+                };
+
+                if (!added) {
+                    return;
+                }
+
+                UnlockManager.Instance?.HandleRecordedTerminalRead(readKind, normalizedName);
+                return;
+            }
+
+            NetworkManager.Instance.ClientReportTerminalRead(new TerminalReadSyncData(readKind, normalizedName));
+        }
+
+        private static string ResolveBestiaryEntryName(TerminalNode node) {
+            return NormalizeEntryName(node?.creatureName);
+        }
+
+        private static string ResolveStoryLogEntryName(TerminalNode node) {
+            if (node == null || !Plugin.DawnLibPresent) {
+                return string.Empty;
+            }
+
+            if (Dawn.LethalContent.StoryLogs.Values.FirstOrDefault(log =>
+                    log?.StoryLogTerminalNode != null && log.StoryLogTerminalNode.storyLogFileID == node.storyLogFileID) is { } dawnStoryLogInfo) {
+                return NormalizeEntryName(dawnStoryLogInfo.StoryLogTerminalNode.name);
+            }
+
+            Logger.LogDebug($"Could not resolve story log metadata for file ID {node.storyLogFileID}. Falling back to terminal node name.");
+            return NormalizeEntryName(node.name);
+        }
+
+        private static string NormalizeEntryName(string entryName) {
+            return string.IsNullOrWhiteSpace(entryName) ? string.Empty : entryName.Trim();
         }
 
     }

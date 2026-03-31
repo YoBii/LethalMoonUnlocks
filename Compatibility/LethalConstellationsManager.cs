@@ -21,6 +21,7 @@ namespace LethalMoonUnlocks.Compatibility {
         private readonly Dictionary<string, HashSet<int>> _rotationLookup = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HashSet<int>> _localDiscoveryLookup = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _invalidVisitedMoonRuleWarnings = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _terminalReadConditionDawnWarnings = new(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, List<string>> _pendingRotationLoad;
         private Dictionary<string, List<string>> _pendingLocalDiscoveryLoad;
 
@@ -57,6 +58,7 @@ namespace LethalMoonUnlocks.Compatibility {
             _rotationLookup.Clear();
             _localDiscoveryLookup.Clear();
             _invalidVisitedMoonRuleWarnings.Clear();
+            _terminalReadConditionDawnWarnings.Clear();
             _pendingRotationLoad = null;
             _pendingLocalDiscoveryLoad = null;
             _bootstrapped = false;
@@ -1411,6 +1413,14 @@ namespace LethalMoonUnlocks.Compatibility {
                 activeConditionResults.Add(CountUniqueVisitedMoons() >= ruleDefinition.RequiredUniqueMoonVisits);
             }
 
+            if (ruleDefinition.RequiredBestiaryEntries.Count > 0) {
+                activeConditionResults.Add(HaveReadRequiredBestiaryEntries(constellationName, ruleDefinition.RequiredBestiaryEntries));
+            }
+
+            if (ruleDefinition.RequiredStoryLogs.Count > 0) {
+                activeConditionResults.Add(HaveReadRequiredStoryLogs(constellationName, ruleDefinition.RequiredStoryLogs));
+            }
+
             if (activeConditionResults.Count == 0) {
                 return false;
             }
@@ -1418,6 +1428,35 @@ namespace LethalMoonUnlocks.Compatibility {
             return ruleDefinition.MatchMode == ConstellationUnlockMatchMode.All
                 ? activeConditionResults.All(result => result)
                 : activeConditionResults.Any(result => result);
+        }
+
+        private bool HaveReadRequiredBestiaryEntries(string constellationName, IReadOnlyList<string> requiredEntries) {
+            if (!Plugin.DawnLibPresent) {
+                WarnTerminalReadConditionRequiresDawnLib(constellationName, "RequiredBestiaryEntries");
+                return false;
+            }
+
+            return ProgressionManager.Instance != null
+                && requiredEntries != null
+                && requiredEntries.All(ProgressionManager.Instance.HasReadBestiaryEntry);
+        }
+
+        private bool HaveReadRequiredStoryLogs(string constellationName, IReadOnlyList<string> requiredEntries) {
+            if (!Plugin.DawnLibPresent) {
+                WarnTerminalReadConditionRequiresDawnLib(constellationName, "RequiredStoryLogs");
+                return false;
+            }
+
+            return ProgressionManager.Instance != null
+                && requiredEntries != null
+                && requiredEntries.All(ProgressionManager.Instance.HasReadStoryLog);
+        }
+
+        private void WarnTerminalReadConditionRequiresDawnLib(string constellationName, string conditionName) {
+            string warningKey = $"{constellationName}|{conditionName}";
+            if (_terminalReadConditionDawnWarnings.Add(warningKey)) {
+                Logger.LogWarning($"LethalConstellationsManager: '{conditionName}' for constellation '{constellationName}' requires DawnLib. The condition will remain locked without DawnLib present.");
+            }
         }
 
         private static bool IsDefaultMoonStoryGateOpen(LMUnlockable defaultMoon) {
