@@ -1321,6 +1321,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 Key = "LMU_ConstellationDiscovered",
                 ExceptWhenKey = "LMU_NewQuotaDiscoveryGroup"
             });
+            NetworkManager.Instance.ServerSendAlertQueueEvent();
         }
 
         private void ApplySilentStartupProgression(ClassMapper constellation, LMConstellationUnlockable constellationState) {
