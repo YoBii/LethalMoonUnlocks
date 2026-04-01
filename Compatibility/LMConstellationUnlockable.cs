@@ -213,7 +213,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 return string.Empty;
             }
 
-            string tags = "Info:";
+            string tags = string.Empty;
             if (NewDiscovery && ConfigManager.DiscoveryMode && ConfigManager.ShowTagNewDiscovery) {
                 tags = AddTag("[NEW]", tags);
             }
@@ -236,7 +236,7 @@ namespace LethalMoonUnlocks.Compatibility {
                 tags = AddTag($"[SALE {SalesRate}%]", tags);
             }
 
-            return string.IsNullOrEmpty(tags) ? string.Empty : $"\n{tags}";
+            return string.IsNullOrEmpty(tags) ? string.Empty : $"\nInfo: {tags}";
         }
 
         private static string AddTag(string tag, string tags) {
