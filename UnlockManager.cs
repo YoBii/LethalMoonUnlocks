@@ -1088,7 +1088,7 @@ namespace LethalMoonUnlocks {
             QuotaDiscountsCount++;
             if (quotaDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Discount granted:\n<color=green>{quotaDiscounts.First().Name}</color>");
             else if (quotaDiscounts.Count > 1) NotificationHelper.SendChatMessage($"Discounts granted:\n<color=green>{string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}</color>");
-            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned discounts for:\n{string.Join(", ", quotaDiscounts.Select(discount => discount.Name + " " + (100 - (int)(Plugin.GetDiscountRate(discount.BuyCount) * 100)) + "%"))}", Key = "LMU_NewQuotaDiscount" });
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"{quotaDiscounts.Count.SinglePluralWord("Discount")} granted!", Text = $"You earned discounts for:\n{string.Join(", ", quotaDiscounts.Select(discount => discount.Name + " " + Plugin.GetDiscountPercentOff(discount.BuyCount) + "%"))}", Key = "LMU_NewQuotaDiscount" });
             Logger.LogInfo($"New Quota Discounts: {string.Join(", ", quotaDiscounts.Select(unlock => unlock.Name))}");
         }
 

@@ -228,8 +228,8 @@ namespace LethalMoonUnlocks.Compatibility {
             } else if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
                 tags = AddTag("[UNLOCKED]", tags);
             } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
-                tags = AddTag(discountRate != 100 ? $"[DISCOUNT {discountRate}%]" : "[FULL DISCOUNT]", tags);
+                int discountPercentOff = Plugin.GetDiscountPercentOff(BuyCount);
+                tags = AddTag(discountPercentOff != 100 ? $"[DISCOUNT {discountPercentOff}%]" : "[FULL DISCOUNT]", tags);
             }
 
             if (OnSale && SalesRate > 0 && RoutePrice > 0 && ConfigManager.Sales && ConfigManager.ShowTagSale) {

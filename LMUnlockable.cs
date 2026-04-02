@@ -577,9 +577,9 @@ namespace LethalMoonUnlocks {
             } else if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
                 tags = AddTagToPreviewText("[UNLOCKED]", tags);
             } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
-                if (discountRate != 100) {
-                    tags = AddTagToPreviewText($"[DISCOUNT {discountRate}%]", tags);
+                int discountPercentOff = Plugin.GetDiscountPercentOff(BuyCount);
+                if (discountPercentOff != 100) {
+                    tags = AddTagToPreviewText($"[DISCOUNT {discountPercentOff}%]", tags);
                 } else {
                     tags = AddTagToPreviewText($"[FULL DISCOUNT]", tags);
                 }
@@ -621,9 +621,9 @@ namespace LethalMoonUnlocks {
             } else if (ConfigManager.UnlockMode && !ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
                 tags = AddTagToPreviewText("[UNLOCKED]", tags);
             } else if (ConfigManager.DiscountMode && BuyCount > 0 && ConfigManager.ShowTagUnlockDiscount) {
-                int discountRate = 100 - (int)(Plugin.GetDiscountRate(BuyCount) * 100);
-                if (discountRate != 100) {
-                    tags = AddTagToPreviewText($"[DISCOUNT {discountRate}%]", tags);
+                int discountPercentOff = Plugin.GetDiscountPercentOff(BuyCount);
+                if (discountPercentOff != 100) {
+                    tags = AddTagToPreviewText($"[DISCOUNT {discountPercentOff}%]", tags);
                 } else {
                     tags = AddTagToPreviewText($"[FULL DISCOUNT]", tags);
                 }

@@ -189,17 +189,19 @@ namespace LethalMoonUnlocks
             }
         }
 
-        internal static float GetDiscountRate(int discount_number) {
-            List<int> discountRates = new List<int>();
-            foreach (var discount in ConfigManager.Discounts) {
-                discountRates.Add(100 - Mathf.Clamp(discount, 0, 100));
+        internal static int GetDiscountPercentOff(int discountNumber) {
+            List<int> configuredDiscounts = ConfigManager.Discounts;
+            if (configuredDiscounts.Count == 0) {
+                return 0;
             }
-            if (discount_number > discountRates.Count) {
-                discount_number = discountRates.Count;
-            }    
-            float rate = discountRates[discount_number - 1] / 100f;
-            return rate;
 
+            discountNumber = Mathf.Clamp(discountNumber, 1, configuredDiscounts.Count);
+            return Mathf.Clamp(configuredDiscounts[discountNumber - 1], 0, 100);
+        }
+
+        internal static float GetDiscountRate(int discount_number) {
+            int discountPercentOff = GetDiscountPercentOff(discount_number);
+            return (100 - discountPercentOff) / 100f;
         }
     }
 }
