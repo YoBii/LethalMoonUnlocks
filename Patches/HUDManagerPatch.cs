@@ -1,7 +1,6 @@
 ﻿using HarmonyLib;
 using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
-using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,7 +16,7 @@ namespace LethalMoonUnlocks.Patches {
                 return false;
             }
             if (!string.IsNullOrEmpty(bodyText) && headerText == "Route Discovered!" && bodyText.StartsWith("Location: ")) {
-                if (ConfigManager.DiscoveryMode) {
+                if (ConfigManager.DiscoveryMode && ConfigManager.MoonStoryReleaseBehavior == StoryReleaseBehavior.HiddenBacklog) {
                     JLLCompatibility.ReplaceJLLAlertDiscovery(bodyText);
                 }
                 else {

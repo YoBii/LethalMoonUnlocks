@@ -202,6 +202,9 @@ namespace LethalMoonUnlocks {
             }
 
             unlock.StoryIsUnlocked = true;
+            if (ConfigManager.DiscoveryMode && IsImmediateMoonStoryReleaseBehavior()) {
+                unlock.SetDiscoveryState(true);
+            }
             if (Plugin.LethalConstellationsPresent && LethalConstellationsManager.Instance != null) {
                 constellationReleaseResult = LethalConstellationsManager.Instance.ReleaseStoryLockForMoon(numberlessPlanetName);
             }
@@ -231,12 +234,16 @@ namespace LethalMoonUnlocks {
                 return;
             }
 
-            if (!ConfigManager.DiscoveryMode) {
+            if (!ConfigManager.DiscoveryMode || IsImmediateMoonStoryReleaseBehavior()) {
                 NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = $"Success! New moon discovered:\n{unlock.ExtendedLevel.SelectableLevel.PlanetName}.", Key = "LMU_StoryLockReleasedGeneric" });
                 return;
             }
 
             NetworkManager.Instance?.ServerSendAlertMessage(new Notification { Header = "Autopilot", Text = "Destination unreachable! Status: UNKNOWN. Writing location data to backlog...", IsWarning = true, Key = "LMU_StoryLockReleasedGeneric" });
+        }
+
+        private static bool IsImmediateMoonStoryReleaseBehavior() {
+            return ConfigManager.MoonStoryReleaseBehavior == StoryReleaseBehavior.ImmediateDiscovery;
         }
 
         internal void InitializeUnlocks() {
@@ -592,7 +599,7 @@ namespace LethalMoonUnlocks {
             IterateUnlocks();
 
             // QUOTA UNLOCK
-            if (!ConfigManager.DiscountMode && ConfigManager.QuotaUnlocks && (UseConstellationEconomy || PaidMoons.Count > 0)) {
+            if (!ConfigManager.DiscountMode && ConfigManager.QuotaUnlocks && HasQuotaRewardMoonCandidates()) {
                 if (RandomHelper.Chance(ConfigManager.QuotaUnlockChance) && (ConfigManager.QuotaUnlockMaxCount < 1 || QuotaUnlocksCount < ConfigManager.QuotaUnlockMaxCount)) {
                     Logger.LogInfo($"Quota unlock triggered! (Chance: {ConfigManager.QuotaUnlockChance}%)");
                     QuotaUnlock();
@@ -601,12 +608,12 @@ namespace LethalMoonUnlocks {
             // DISCOUNT MODE
             if (ConfigManager.DiscountMode) {
                 // QUOTA DISCOUNT
-                if (ConfigManager.QuotaDiscounts && (UseConstellationEconomy || PaidMoons.Count > 0) && RandomHelper.Chance(ConfigManager.QuotaDiscountChance) && (ConfigManager.QuotaDiscountMaxCount < 1 || QuotaDiscountsCount < ConfigManager.QuotaDiscountMaxCount)) {
+                if (ConfigManager.QuotaDiscounts && HasQuotaRewardMoonCandidates() && RandomHelper.Chance(ConfigManager.QuotaDiscountChance) && (ConfigManager.QuotaDiscountMaxCount < 1 || QuotaDiscountsCount < ConfigManager.QuotaDiscountMaxCount)) {
                     Logger.LogInfo($"Quota Discount triggered! (Chance: {ConfigManager.QuotaDiscountChance}%)");
                     QuotaDiscount();
                 }
                 // QUOTA FULL DISCOUNT
-                if (ConfigManager.QuotaFullDiscounts && (UseConstellationEconomy || PaidMoons.Count > 0) && RandomHelper.Chance(ConfigManager.QuotaFullDiscountChance) && (ConfigManager.QuotaFullDiscountMaxCount < 1 || QuotaFullDiscountsCount < ConfigManager.QuotaFullDiscountMaxCount)) {
+                if (ConfigManager.QuotaFullDiscounts && HasQuotaRewardMoonCandidates() && RandomHelper.Chance(ConfigManager.QuotaFullDiscountChance) && (ConfigManager.QuotaFullDiscountMaxCount < 1 || QuotaFullDiscountsCount < ConfigManager.QuotaFullDiscountMaxCount)) {
                     Logger.LogInfo($"Quota Full Discount triggered! (Chance: {ConfigManager.QuotaFullDiscountChance}%)");
                     QuotaFullDiscount();
                 }
@@ -826,35 +833,16 @@ namespace LethalMoonUnlocks {
             };
         }
 
-        private List<LethalConstellationsManager.ConstellationEconomyTarget> GetConstellationQuotaRewardCandidates() {
-            if (!UseConstellationEconomy || Plugin.ConstellationManager == null) {
-                return new List<LethalConstellationsManager.ConstellationEconomyTarget>();
+        private List<LMUnlockable> GetQuotaRewardMoonCandidates() {
+            if (UseConstellationDiscovery && Plugin.ConstellationManager != null) {
+                return Plugin.ConstellationManager.GetQuotaRewardMoonTargets();
             }
 
-            return Plugin.ConstellationManager.GetQuotaRewardTargets();
+            return PaidMoons;
         }
 
-        private static List<LethalConstellationsManager.ConstellationEconomyTarget> SelectRewardTargetsWeighted(List<LethalConstellationsManager.ConstellationEconomyTarget> candidates, float bias, int amount) {
-            if (candidates == null || candidates.Count == 0) {
-                return new List<LethalConstellationsManager.ConstellationEconomyTarget>();
-            }
-
-            const double scale = 1000d;
-            var weights = new Dictionary<LethalConstellationsManager.ConstellationEconomyTarget, int>();
-            var prices = candidates.ToDictionary(candidate => candidate, candidate => Math.Clamp(
-                ConfigManager.CheapMoonBiasIgnorePriceChanges ? candidate.EffectiveOriginalPrice : candidate.EffectivePrice,
-                1,
-                int.MaxValue));
-            double averagePrice = prices.Values.Average();
-
-            foreach (var candidate in candidates) {
-                double relativeCheapness = averagePrice / prices[candidate];
-                long result = Math.Clamp((long)Math.Round(Math.Pow(relativeCheapness, bias) * scale), 1, int.MaxValue / (candidates.Count + 1));
-                weights[candidate] = (int)result;
-            }
-
-            Logger.LogDebug($"Cheap moon bias: Assigned the following constellation weights: [ {string.Join(", ", weights.Select(weight => weight.Key.Name + ":" + weight.Value))} ]");
-            return RandomHelper.SelectWeighted(weights, amount);
+        private bool HasQuotaRewardMoonCandidates() {
+            return GetQuotaRewardMoonCandidates().Any(unlock => unlock.RoutePrice > 0);
         }
 
         private bool HasDiscoveryTargets(string targetMode, List<LMUnlockable> moonCandidates) {
@@ -1044,48 +1032,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void QuotaUnlock() {
-            if (UseConstellationEconomy) {
-                var constellationQuotaUnlocks = GetConstellationQuotaRewardCandidates().Where(constellation => constellation.EffectivePrice > 0).ToList();
-                if (ConfigManager.QuotaUnlockMaxPrice > 0) {
-                    constellationQuotaUnlocks = constellationQuotaUnlocks.Where(constellation => constellation.EffectivePrice <= ConfigManager.QuotaUnlockMaxPrice).ToList();
-                }
-                if (ConfigManager.CheapMoonBiasQuotaUnlock) {
-                    constellationQuotaUnlocks = SelectRewardTargetsWeighted(constellationQuotaUnlocks, ConfigManager.CheapMoonBiasQuotaUnlockValue, ConfigManager.QuotaUnlockCount);
-                } else {
-                    constellationQuotaUnlocks = RandomHelper.Select(constellationQuotaUnlocks, ConfigManager.QuotaUnlockCount);
-                }
-                if (constellationQuotaUnlocks.Count == 0) {
-                    Logger.LogInfo("No constellations for Quota Unlock available!");
-                    return;
-                }
-
-                foreach (var unlock in constellationQuotaUnlocks.Select(target => target.State)) {
-                    unlock.AdvanceBuyProgression();
-                    unlock.FreeVisitCount = 1;
-                    unlock.IterateState();
-                }
-
-                var unlockedMoonNames = constellationQuotaUnlocks
-                    .Select(target => target.DefaultMoon?.Name ?? target.Name)
-                    .ToList();
-
-                QuotaUnlocksCount++;
-                if (constellationQuotaUnlocks.Count > 1) {
-                    NotificationHelper.SendChatMessage($"New moons unlocked:\n<color=green>{string.Join(", ", unlockedMoonNames)}</color>");
-                } else {
-                    NotificationHelper.SendChatMessage($"New moon unlocked:\n<color=green>{unlockedMoonNames.First()}</color>");
-                }
-                NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
-                    Header = $"{constellationQuotaUnlocks.Count.SinglePluralWord("Unlock")} granted!",
-                    Text = $"You earned unlocks for:\n{string.Join(", ", unlockedMoonNames)}",
-                    Key = "LMU_NewQuotaUnlock"
-                });
-                Logger.LogInfo($"New Quota Unlocks: {string.Join(", ", unlockedMoonNames)}");
-                Plugin.ConstellationManager.ApplyConstellationState();
-                return;
-            }
-
-            List<LMUnlockable> quotaUnlocks = PaidMoons;
+            List<LMUnlockable> quotaUnlocks = GetQuotaRewardMoonCandidates().Where(unlock => unlock.RoutePrice > 0).ToList();
             if (ConfigManager.DiscoveryMode) {
                 quotaUnlocks = quotaUnlocks.Where(IsGloballyDiscovered).ToList();
             }
@@ -1104,6 +1051,7 @@ namespace LethalMoonUnlocks {
             foreach (var unlock in quotaUnlocks) {
                 unlock.BuyCount++;
                 unlock.FreeVisitCount = 1;
+                unlock.IterateState();
             }
             QuotaUnlocksCount++;
             if (quotaUnlocks.Count > 1) {
@@ -1116,52 +1064,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void QuotaDiscount() {
-            if (UseConstellationEconomy) {
-                var constellationQuotaDiscounts = GetConstellationQuotaRewardCandidates().Where(constellation => constellation.EffectivePrice > 0).ToList();
-                if (ConfigManager.QuotaDiscountMaxPrice > 0) {
-                    constellationQuotaDiscounts = constellationQuotaDiscounts.Where(constellation => constellation.EffectivePrice <= ConfigManager.QuotaDiscountMaxPrice).ToList();
-                }
-
-                if (ConfigManager.CheapMoonBiasQuotaDiscount) {
-                    constellationQuotaDiscounts = SelectRewardTargetsWeighted(constellationQuotaDiscounts, ConfigManager.CheapMoonBiasQuotaDiscountValue, ConfigManager.QuotaDiscountCount);
-                } else {
-                    constellationQuotaDiscounts = RandomHelper.Select(constellationQuotaDiscounts, ConfigManager.QuotaDiscountCount);
-                }
-                if (constellationQuotaDiscounts.Count == 0) {
-                    Logger.LogInfo("No constellations for Quota Discount available!");
-                    return;
-                }
-
-                foreach (var discount in constellationQuotaDiscounts.Select(target => target.State)) {
-                    discount.AdvanceBuyProgression();
-                    discount.IterateState();
-                }
-
-                var discountedMoonNames = constellationQuotaDiscounts
-                    .Select(target => target.DefaultMoon?.Name ?? target.Name)
-                    .ToList();
-
-                var discountedMoonDescriptions = constellationQuotaDiscounts
-                    .Select(target => $"{target.DefaultMoon?.Name ?? target.Name} {100 - (int)(Plugin.GetDiscountRate(target.State.BuyCount) * 100)}%")
-                    .ToList();
-
-                QuotaDiscountsCount++;
-                if (constellationQuotaDiscounts.Count == 1) {
-                    NotificationHelper.SendChatMessage($"Discount granted:\n<color=green>{discountedMoonNames.First()}</color>");
-                } else {
-                    NotificationHelper.SendChatMessage($"Discounts granted:\n<color=green>{string.Join(", ", discountedMoonNames)}</color>");
-                }
-                NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
-                    Header = $"{constellationQuotaDiscounts.Count.SinglePluralWord("Discount")} granted!",
-                    Text = $"You earned discounts for:\n{string.Join(", ", discountedMoonDescriptions)}",
-                    Key = "LMU_NewQuotaDiscount"
-                });
-                Logger.LogInfo($"New Quota Discounts: {string.Join(", ", discountedMoonDescriptions)}");
-                Plugin.ConstellationManager.ApplyConstellationState();
-                return;
-            }
-
-            var quotaDiscounts = PaidMoons;
+            var quotaDiscounts = GetQuotaRewardMoonCandidates().Where(unlock => unlock.RoutePrice > 0).ToList();
             if (ConfigManager.DiscoveryMode) {
                 quotaDiscounts = quotaDiscounts.Where(IsGloballyDiscovered).ToList();
             }
@@ -1180,6 +1083,7 @@ namespace LethalMoonUnlocks {
             }
             foreach (var discount in quotaDiscounts) {
                 discount.BuyCount++;
+                discount.IterateState();
             }
             QuotaDiscountsCount++;
             if (quotaDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Discount granted:\n<color=green>{quotaDiscounts.First().Name}</color>");
@@ -1189,51 +1093,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void QuotaFullDiscount() {
-            if (UseConstellationEconomy) {
-                var constellationQuotaFullDiscounts = GetConstellationQuotaRewardCandidates().Where(constellation => constellation.EffectivePrice > 0).ToList();
-                if (ConfigManager.QuotaFullDiscountMaxPrice > 0) {
-                    constellationQuotaFullDiscounts = constellationQuotaFullDiscounts.Where(constellation => constellation.EffectivePrice <= ConfigManager.QuotaFullDiscountMaxPrice).ToList();
-                }
-                if (ConfigManager.Discounts[ConfigManager.Discounts.Count - 1] < 100) {
-                    constellationQuotaFullDiscounts = constellationQuotaFullDiscounts.Where(unlock => unlock.State.BuyCount < ConfigManager.DiscountsCount).ToList();
-                }
-                if (ConfigManager.CheapMoonBiasQuotaFullDiscount) {
-                    constellationQuotaFullDiscounts = SelectRewardTargetsWeighted(constellationQuotaFullDiscounts, ConfigManager.CheapMoonBiasQuotaFullDiscountValue, ConfigManager.QuotaFullDiscountCount);
-                } else {
-                    constellationQuotaFullDiscounts = RandomHelper.Select(constellationQuotaFullDiscounts, ConfigManager.QuotaFullDiscountCount);
-                }
-                if (constellationQuotaFullDiscounts.Count == 0) {
-                    Logger.LogInfo("No constellations for Quota Full Discount available!");
-                    return;
-                }
-
-                foreach (var fullDiscount in constellationQuotaFullDiscounts.Select(target => target.State)) {
-                    fullDiscount.BuyCount = ConfigManager.DiscountsCount;
-                    fullDiscount.FreeVisitCount = 1;
-                    fullDiscount.IterateState();
-                }
-
-                var fullyDiscountedMoonNames = constellationQuotaFullDiscounts
-                    .Select(target => target.DefaultMoon?.Name ?? target.Name)
-                    .ToList();
-
-                QuotaFullDiscountsCount++;
-                if (constellationQuotaFullDiscounts.Count == 1) {
-                    NotificationHelper.SendChatMessage($"Full discount granted:\n<color=green>{fullyDiscountedMoonNames.First()}</color>");
-                } else {
-                    NotificationHelper.SendChatMessage($"Full discounts granted:\n<color=green>{string.Join(", ", fullyDiscountedMoonNames)}</color>");
-                }
-                NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
-                    Header = $" Full {constellationQuotaFullDiscounts.Count.SinglePluralWord("Discount")} granted!",
-                    Text = $"You earned full discounts for:\n{string.Join(", ", fullyDiscountedMoonNames)}",
-                    Key = "LMU_NewQuotaFullDiscount"
-                });
-                Logger.LogInfo($"New Quota Full Discounts: {string.Join(", ", fullyDiscountedMoonNames)}");
-                Plugin.ConstellationManager.ApplyConstellationState();
-                return;
-            }
-
-            List<LMUnlockable> quotaFullDiscounts = PaidMoons;
+            List<LMUnlockable> quotaFullDiscounts = GetQuotaRewardMoonCandidates().Where(unlock => unlock.RoutePrice > 0).ToList();
             if (ConfigManager.DiscoveryMode) {
                 quotaFullDiscounts = quotaFullDiscounts.Where(IsGloballyDiscovered).ToList();
             }
@@ -1255,6 +1115,7 @@ namespace LethalMoonUnlocks {
             foreach (var fullDiscount in quotaFullDiscounts) {
                 fullDiscount.BuyCount = ConfigManager.DiscountsCount;
                 fullDiscount.FreeVisitCount = 1;
+                fullDiscount.IterateState();
             }
             QuotaFullDiscountsCount++;
             if (quotaFullDiscounts.Count == 1) NotificationHelper.SendChatMessage($"Full discount granted:\n<color=green>{quotaFullDiscounts.First().Name}</color>");

@@ -7,6 +7,11 @@ using System.Collections.Generic;
 using LethalLevelLoader;
 
 namespace LethalMoonUnlocks {
+    internal enum StoryReleaseBehavior {
+        HiddenBacklog,
+        ImmediateDiscovery
+    }
+
     public class ConfigManager {
         private static ConfigFile _configFile;
 
@@ -94,7 +99,7 @@ namespace LethalMoonUnlocks {
             }
         }
         internal static string LCStartingConstellationSelectionPolicy { get; private set; }
-        internal static string LCStoryReleaseBehavior { get; private set; }
+        internal static StoryReleaseBehavior LCStoryReleaseBehavior { get; private set; }
         internal static string LethalConstellationsQuotaDiscoveryTargetMode { get; private set; }
         internal static int LethalConstellationsQuotaDiscoveryChance { get; private set; }
         internal static string LethalConstellationsTravelDiscoveryTargetMode { get; private set; }
@@ -103,8 +108,6 @@ namespace LethalMoonUnlocks {
         internal static int LethalConstellationsNewDayDiscoveryChance { get; private set; }
         private const string LCStartingConstellationSelectionPolicyCheapest = "Cheapest";
         private const string LCStartingConstellationSelectionPolicyRandom = "Random";
-        private const string LCStoryReleaseBehaviorHiddenBacklog = "HiddenBacklog";
-        private const string LCStoryReleaseBehaviorImmediateDiscovery = "ImmediateDiscovery";
         private const string LCDiscoveryTargetModeMoonsOnly = "MoonsOnly";
         private const string LCDiscoveryTargetModeMoonsAndConstellations = "MoonsAndConstellations";
         private const string LCDiscoveryTargetModeConstellationsOnly = "ConstellationsOnly";
@@ -175,6 +178,7 @@ namespace LethalMoonUnlocks {
         internal static bool AutoRerouteToCompany { get; set; }
         internal static bool GroupCreditsSavingBandAid { get; private set; }
         internal static bool EnableStoryProgression { get; private set; }
+        internal static StoryReleaseBehavior MoonStoryReleaseBehavior { get; private set; }
         internal static bool LMUStoryProgression { get; private set; }
         internal static bool GaletryStoryLock { get; private set; }
         internal static int GaletryStoryLockPaintingsAmount { get; private set; }
@@ -428,11 +432,10 @@ namespace LethalMoonUnlocks {
             LCStartingConstellationSelectionPolicy = BindValue("4.4 - LethalConstellations Discoveries", "Starting constellation selection policy", LCStartingConstellationSelectionPolicyCheapest, "How LMU chooses the first discovered constellation in LethalConstellations mode.\n" +
                 "The constellation still has to be story-unlocked and otherwise eligible.",
                 new AcceptableValueList<string>([LCStartingConstellationSelectionPolicyCheapest, LCStartingConstellationSelectionPolicyRandom]));
-            LCStoryReleaseBehavior = BindValue("4.4 - LethalConstellations Discoveries", "Story release behavior", LCStoryReleaseBehaviorHiddenBacklog, "What happens when a constellation story release is triggered in LethalConstellations mode.\n" +
+            LCStoryReleaseBehavior = BindValue("4.4 - LethalConstellations Discoveries", "Story release behavior", StoryReleaseBehavior.HiddenBacklog, $"What happens when a constellation story release is triggered in LethalConstellations mode.\n" +
                 "This applies both to default-moon story releases and satisfied custom unlock conditions.\n" +
-                "'HiddenBacklog' keeps the constellation hidden until discovery grants it.\n" +
-                "'ImmediateDiscovery' makes the constellation discovered immediately.",
-                new AcceptableValueList<string>([LCStoryReleaseBehaviorHiddenBacklog, LCStoryReleaseBehaviorImmediateDiscovery]));
+                $"'{nameof(StoryReleaseBehavior.HiddenBacklog)}' keeps the constellation hidden until discovery grants it.\n" +
+                $"'{nameof(StoryReleaseBehavior.ImmediateDiscovery)}' makes the constellation discovered immediately.");
             LethalConstellationsQuotaDiscoveryTargetMode = BindValue("4.4 - LethalConstellations Discoveries", "Quota discovery target mode", LCDiscoveryTargetModeMoonsOnly, "What Quota Discoveries target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCDiscoveryTargetModeMoonsOnly, LCDiscoveryTargetModeMoonsAndConstellations, LCDiscoveryTargetModeConstellationsOnly, LCDiscoveryTargetModeConstellationsOnlyWithMoonFallback]));
             LethalConstellationsQuotaDiscoveryChance = BindValue("4.4 - LethalConstellations Discoveries", "Quota discovery constellation chance", 100, "The chance for Quota Discoveries to (also) discover a constellation in LethalConstellations mode.", new AcceptableValueRange<int>(0, 100));
@@ -541,6 +544,9 @@ namespace LethalMoonUnlocks {
                 "Moon names must be separated by commas and must be exact matches. You can print the moon names to console/log by using the option in 'Advanced Settings'.");
 
             EnableStoryProgression = BindValue("6.6 - Story Progression", "Enable Story Progression", true, "Story progression allows locking moons behind various conditions. This can be employed by other mods like Wesley's moons (JLL).\nDisabling this settings will globally ignore any requests to lock moons behind story progressions inlcuding LMU's own Vanilla Story progression.");
+            MoonStoryReleaseBehavior = BindValue("6.6 - Story Progression", "Moon story release behavior", StoryReleaseBehavior.HiddenBacklog, $"What happens when a regular moon story release is triggered while Discovery Mode is enabled.\n" +
+                $"'{nameof(StoryReleaseBehavior.HiddenBacklog)}' keeps the moon hidden until discovery grants it.\n" +
+                $"'{nameof(StoryReleaseBehavior.ImmediateDiscovery)}' makes the moon discovered immediately.");
             LMUStoryProgression = BindValue("6.6 - Story Progression", "Vanilla Story Progression", false, "Enable to lock the two hidden vanilla moons behind story progression. To release the lock for Artifice you have to land three times on Adamance, for Embrion you have to scan an old bird. After completing these tasks the moons will be available (for discovery). They will not be hidden.");
             GaletryStoryLock = BindValue("6.6 - Story Progression", "Restrict access to Galetry", false, "When enabled and Wesley's moons is installed Galetry is not available from the start. To gain access you will need to sell a specified number of paintings to the company.");
             GaletryStoryLockPaintingsAmount = BindValue("6.6 - Story Progression", "Galetry number of paintings", 3, "The number of sold paintings required to gain access to Galetry.");

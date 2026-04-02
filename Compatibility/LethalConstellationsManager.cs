@@ -7,7 +7,6 @@ using System.Linq;
 namespace LethalMoonUnlocks.Compatibility {
     internal sealed class LethalConstellationsManager {
         private const string StartingConstellationPolicyRandom = "Random";
-        private const string StoryReleaseBehaviorImmediateDiscovery = "ImmediateDiscovery";
 
         internal static LethalConstellationsManager Instance { get; private set; }
 
@@ -373,30 +372,21 @@ namespace LethalMoonUnlocks.Compatibility {
             return TryGetConstellationEconomyTarget(Collections.CurrentConstellation, out target);
         }
 
-        internal List<ConstellationEconomyTarget> GetQuotaRewardTargets() {
+        internal List<LMUnlockable> GetQuotaRewardMoonTargets() {
             EnsureIndexed();
 
-            var targets = new List<ConstellationEconomyTarget>();
+            if (UnlockManager.Instance == null || !UnlockManager.Instance.UseConstellationDiscovery) {
+                return new List<LMUnlockable>();
+            }
+
             if (string.Equals(ConfigManager.LethalConstellationsQuotaRewardScope, "CurrentConstellationOnly", StringComparison.OrdinalIgnoreCase)) {
-                if (TryGetCurrentConstellationEconomyTarget(out var currentTarget) && IsConstellationAvailable(currentTarget.State)) {
-                    targets.Add(currentTarget);
-                }
-
-                return targets;
+                return GetCurrentVisibleUnlocks();
             }
 
-            foreach (var constellation in _constellationLookup.Values) {
-                if (!TryGetConstellationState(constellation.consName, out var state) || !IsConstellationAvailable(state)) {
-                    continue;
-                }
-
-                var target = CreateEconomyTarget(constellation, state);
-                if (target != null) {
-                    targets.Add(target);
-                }
-            }
-
-            return targets;
+            var visibleMoonIds = GetAllVisibleMoonIds();
+            return UnlockManager.Instance.Unlocks
+                .Where(unlock => TryGetLevelId(unlock, out var levelId) && visibleMoonIds.Contains(levelId))
+                .ToList();
         }
 
         internal void RefreshConstellationSales() {
@@ -455,7 +445,7 @@ namespace LethalMoonUnlocks.Compatibility {
         }
 
         internal bool IsImmediateDiscoveryStoryReleaseBehavior() {
-            return string.Equals(ConfigManager.LCStoryReleaseBehavior, StoryReleaseBehaviorImmediateDiscovery, StringComparison.OrdinalIgnoreCase);
+            return ConfigManager.LCStoryReleaseBehavior == StoryReleaseBehavior.ImmediateDiscovery;
         }
 
         internal List<LMUnlockable> GetVisibleConstellationUnlocks(string constellationName) {
