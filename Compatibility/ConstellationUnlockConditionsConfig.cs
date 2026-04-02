@@ -14,9 +14,9 @@ namespace LethalMoonUnlocks.Compatibility {
         private readonly Dictionary<string, ConstellationUnlockRuleDefinition> _ruleDefinitions = new(StringComparer.OrdinalIgnoreCase);
 
         internal ConstellationUnlockConditionsConfig() {
-            _configPath = Path.Combine(Paths.ConfigPath, $"{PluginMetadata.PLUGIN_GUID}.constellations.generated.cfg");
+            _configPath = Path.Combine(Paths.ConfigPath, $"{PluginMetadata.PLUGIN_NAME} - Constellations.cfg");
             EnsureConfigFileExists();
-            _configFile = new ConfigFile(_configPath, false);
+            _configFile = new ConfigFile(_configPath,false);
             RefreshDefinitions();
         }
 
