@@ -11,16 +11,18 @@ using TerminalStuff.StoreTweaks;
 
 namespace LethalMoonUnlocks.Compatibility {
     internal static class TerminalStuffCompatibility {
-        internal static void OnUpdateMoonsDisplayed(List<MoonInfo> moons) {
-            var levelField = AccessTools.Field(typeof(MoonInfo), "Level");
+        private static readonly FieldInfo LevelField = AccessTools.Field(typeof(MoonInfo), "Level");
+        private static readonly FieldInfo PurchaseNodeField = AccessTools.Field(typeof(MoonInfo), "PurchaseNode");
+        private static readonly PropertyInfo DisplayPriceProperty = AccessTools.Property(typeof(MoonInfo), "DisplayPrice");
 
+        internal static void OnUpdateMoonsDisplayed(List<MoonInfo> moons) {
             foreach (var moon in moons) {
                 if (!ConfigManager.DisplayTerminalTags) {
                     moon.AdditionalInfo = string.Empty;
                     continue;
                 }
                 try {
-                    var level = (SelectableLevel)levelField.GetValue(moon);
+                    var level = (SelectableLevel)LevelField.GetValue(moon);
                     var unlock =
                         UnlockManager.Instance.Unlocks.FirstOrDefault(x => x.ExtendedLevel.SelectableLevel == level);
                     if (unlock != null) {
@@ -41,30 +43,80 @@ namespace LethalMoonUnlocks.Compatibility {
         }
 
         private static int _groupCredits;
+        private static bool _shouldHandleDirectMoonsPlusPurchase;
+        private static int _selectedMoonDisplayPrice;
         [HarmonyPatch(typeof(MoonInfo), "SelectThisMoon")]
         [HarmonyPrefix]
         private static void SelectThisMoonPrefix(MoonInfo __instance) {
             _groupCredits = UnlockManager.Instance.Terminal.groupCredits;
+            _selectedMoonDisplayPrice = 0;
+            _shouldHandleDirectMoonsPlusPurchase = false;
+
+            if (__instance == null || UnlockManager.Instance?.Terminal == null || StartOfRound.Instance == null) {
+                return;
+            }
+
+            var level = (SelectableLevel)LevelField?.GetValue(__instance);
+            if (level == null) {
+                return;
+            }
+
+            int displayPrice = GetDisplayPrice(__instance);
+            bool usesVanillaPurchaseNode = MoonsPlusConfig.UseVanillaPurchaseNodes.Value
+                && PurchaseNodeField?.GetValue(__instance) is TerminalNode;
+
+            _selectedMoonDisplayPrice = displayPrice;
+            _shouldHandleDirectMoonsPlusPurchase =
+                !StartOfRound.Instance.travellingToNewLevel
+                && StartOfRound.Instance.inShipPhase
+                && StartOfRound.Instance.currentLevel != level
+                && displayPrice <= _groupCredits
+                && !usesVanillaPurchaseNode;
         }
         
         [HarmonyPatch(typeof(MoonInfo), "SelectThisMoon")]
         [HarmonyPostfix]
         private static void SelectThisMoonPostfix(MoonInfo __instance) {
-            if (_groupCredits > UnlockManager.Instance.Terminal.groupCredits) {
-                var pricePaid = _groupCredits - UnlockManager.Instance.Terminal.groupCredits;
-                var levelField = AccessTools.Field(typeof(MoonInfo), "Level");
-                var level = (SelectableLevel) levelField.GetValue(__instance);
-                
-                Logger.LogInfo($"Route to {level.PlanetName} was paid ({pricePaid} credits) (routed via MoonsPlus).");
+            if (!_shouldHandleDirectMoonsPlusPurchase) {
+                return;
+            }
 
-                if (UnlockManager.Instance.Unlocks.FirstOrDefault(x => x.ExtendedLevel.SelectableLevel == level) is
-                    { } unlock) {
-                    if (NetworkManager.Instance.IsServer()) {
-                        UnlockManager.Instance.BuyMoon(unlock.Name);
-                    } else {
-                        NetworkManager.Instance.ClientBuyMoon(unlock.Name);
-                    }
-                }
+            var level = (SelectableLevel) LevelField.GetValue(__instance);
+            if (level == null) {
+                Logger.LogWarning("TerminalStuffCompatibility: Failed to resolve selected moon level after MoonsPlus route.");
+                return;
+            }
+
+            if (UnlockManager.Instance.Unlocks.FirstOrDefault(x => x.ExtendedLevel.SelectableLevel == level) is not { } unlock) {
+                Logger.LogWarning($"TerminalStuffCompatibility: Failed to resolve LMUnlockable for MoonsPlus route '{level.PlanetName}'.");
+                return;
+            }
+
+            if (_selectedMoonDisplayPrice <= 0) {
+                Logger.LogInfo($"Route to {unlock.ExtendedLevel.SelectableLevel.PlanetName} was free (routed via MoonsPlus).");
+                return;
+            }
+
+            Logger.LogInfo($"Route to {unlock.ExtendedLevel.SelectableLevel.PlanetName} was paid ({_selectedMoonDisplayPrice} credits) (routed via MoonsPlus).");
+
+            if (NetworkManager.Instance.IsServer()) {
+                UnlockManager.Instance.BuyMoon(unlock.Name);
+            } else {
+                NetworkManager.Instance.ClientBuyMoon(unlock.Name);
+            }
+        }
+
+        private static int GetDisplayPrice(MoonInfo moonInfo) {
+            if (moonInfo == null || DisplayPriceProperty == null) {
+                return 0;
+            }
+
+            try {
+                object rawValue = DisplayPriceProperty.GetValue(moonInfo);
+                return rawValue is int displayPrice ? displayPrice : 0;
+            } catch (Exception ex) {
+                Logger.LogWarning($"TerminalStuffCompatibility: Failed to resolve DisplayPrice for MoonsPlus route. {ex.Message}");
+                return 0;
             }
         }
     }
