@@ -305,6 +305,7 @@ Make sure you don't lock yourself out!
 
 <details>
 	<summary>LethalConstellations Discovery Configuration</summary>
+
 - Whitelist, acceptable starting constellations as well as a policy on which to choose: random or cheapest.
 - Whether to only make a constellation available for discovery once the progression lock on its default moon has been cleared or discover it immediately.
 - Quota, travel, and new day discovery triggers can be configured to target moons, constellations, or both.
@@ -466,7 +467,7 @@ Each constellation section currently supports:
 - `MatchMode` (`Any` vs `All`)
 - `IgnoreDefaultMoonStoryLock`
 
-These rules act as a progression gate on discovering their respective constellation and essentially work exactly like a moon that would be locked behin story progression. You can even combine both. 
+These rules act as a progression gate on discovering their respective constellation and essentially work exactly like a moon that would be locked behind story progression. You can even combine both. 
 
 - other mods can still call `UnlockManager.TryReleaseStoryLock*` to unlock the story related progression gate.
 - constellation unlock conditions are another progression gate.
