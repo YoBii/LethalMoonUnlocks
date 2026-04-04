@@ -370,17 +370,12 @@ namespace LethalMoonUnlocks {
                 if (IsHidden) {
                     if (IsLocked) {
                         predicate = new ConstantTerminalPredicate(new TerminalPurchaseResult.HiddenPurchaseResult().SetFailure(true).SetFailNode(failNode));
-                        Logger.LogDebug($"{Name}: Hidden & Locked (DawnLib)");
                     } else {
                         predicate = new ConstantTerminalPredicate(new TerminalPurchaseResult.HiddenPurchaseResult().SetFailure(false));
-                        Logger.LogDebug($"{Name}: Hidden but not locked (DawnLib)");
                     }
                 } else {
                     if (IsLocked) {
                         predicate = ITerminalPurchasePredicate.AlwaysFail(failNode);
-                        Logger.LogDebug($"{Name}: Locked but not hidden (DawnLib)");
-                    } else {
-                        Logger.LogDebug($"{Name}: Not locked or hidden (DawnLib)");
                     }
                 }
                 dawnMoon.DawnPurchaseInfo.PurchasePredicate = predicate;
@@ -393,21 +388,17 @@ namespace LethalMoonUnlocks {
                     if (IsLocked) {
                         ExtendedLevel.IsRouteHidden = true;
                         ExtendedLevel.IsRouteLocked = true;
-                        Logger.LogDebug($"{Name}: Hidden & Locked (LLL)");
                     } else {
                         ExtendedLevel.IsRouteHidden = true;
                         ExtendedLevel.IsRouteLocked = false;
-                        Logger.LogDebug($"{Name}: Hidden but not locked (LLL)");
                     }
                 } else {
                     if (IsLocked) {
                         ExtendedLevel.IsRouteHidden = false;
                         ExtendedLevel.IsRouteLocked = true;
-                        Logger.LogDebug($"{Name}: Locked but not hidden (LLL)");
                     } else {
                         ExtendedLevel.IsRouteHidden = false;
                         ExtendedLevel.IsRouteLocked = false;
-                        Logger.LogDebug($"{Name}: Not locked or hidden (LLL)");
                     }
                 }
             }
