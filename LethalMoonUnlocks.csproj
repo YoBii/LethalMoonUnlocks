@@ -4,7 +4,7 @@
         <AssemblyName>LethalMoonUnlocks</AssemblyName>
         <Product>LethalMoonUnlocks</Product>
         <Description>Permanently unlock moons and more</Description>
-        <Version>2.4.1</Version>
+        <Version>2.4.2</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
 
