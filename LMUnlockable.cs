@@ -285,6 +285,10 @@ namespace LethalMoonUnlocks {
             }
         }
 
+        internal void RefreshCalculatedPrice() {
+            RoutePrice = CalculatePrice();
+        }
+
         internal void ApplyState() {
             ApplyPriceLLL();
             if (Plugin.DawnLibPresent) {

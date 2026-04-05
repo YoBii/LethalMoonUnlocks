@@ -28,6 +28,7 @@ namespace LethalMoonUnlocks.Patches {
             }
 
             foreach (var unlock in UnlockManager.Instance.Unlocks) {
+                unlock.RefreshCalculatedPrice();
                 unlock.ApplyState();
                 unlock.ApplyVisibility();
             }
