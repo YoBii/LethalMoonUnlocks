@@ -401,6 +401,31 @@ namespace LethalMoonUnlocks {
             ApplyMoonRouteProgression(unlock, wasPaid: true, allowTravelDiscovery: true, broadcastState: true);
         }
 
+        internal void ApplyLocalClientMoonPurchasePreview(string moon) {
+            if (string.IsNullOrWhiteSpace(moon)) {
+                return;
+            }
+
+            var unlock = Unlocks.FirstOrDefault(candidate => string.Equals(candidate.Name, moon, StringComparison.OrdinalIgnoreCase));
+            if (unlock == null) {
+                Logger.LogWarning($"Couldn't find moon '{moon}' for local client route progression preview.");
+                return;
+            }
+
+            if (ConfigManager.DiscountMode) {
+                if (unlock.BuyCount < ConfigManager.DiscountsCount) {
+                    unlock.BuyCount++;
+                }
+            } else {
+                unlock.BuyCount++;
+            }
+
+            unlock.RefreshCalculatedPrice();
+            unlock.ApplyState();
+            unlock.ApplyVisibility();
+            Logger.LogInfo($"{unlock.Name}: Applied local client route progression preview. Buy count is now {unlock.BuyCount}, price is now {unlock.RoutePrice}.");
+        }
+
         internal void ApplyMoonRouteProgression(LMUnlockable unlock, bool wasPaid, bool allowTravelDiscovery, bool broadcastState) {
             if (unlock == null) {
                 return;

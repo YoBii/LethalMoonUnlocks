@@ -64,6 +64,7 @@ namespace LethalMoonUnlocks {
         }
         public void ClientBuyMoon(string moon) {
             if (IsServer()) return;
+            UnlockManager.Instance?.ApplyLocalClientMoonPurchasePreview(moon);
             Logger.LogInfo($"Sending buy message to host..");
             _buyMoonMessage.SendServer(moon);
         }
