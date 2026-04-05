@@ -480,7 +480,9 @@ namespace LethalMoonUnlocks {
             string separator = FormatLogRow(new string('-', 20), new string('-', 6), new string('-', 7), new string('-', 7), new string('-', 8), new string('-', 11), new string('-', 5), new string('-', 12), new string('-', 12), new string('-', 11));
             LogLine("| LMUnlockable state table");
 
-            if (UseConstellationDiscovery) {
+            if (Plugin.LethalConstellationsPresent
+                && Plugin.LethalConstellationsExtension != null
+                && Plugin.ConstellationManager != null) {
                 var groupedUnlocks = new Dictionary<string, List<LMUnlockable>>();
                 var unmatchedUnlocks = new List<LMUnlockable>();
 
@@ -498,41 +500,39 @@ namespace LethalMoonUnlocks {
                     constellationUnlocks.Add(unlock);
                 }
 
-                string currentConstellationName = Plugin.ConstellationManager?.GetCurrentConstellationName() ?? string.Empty;
+                if (groupedUnlocks.Count > 0) {
+                    string currentConstellationName = Plugin.ConstellationManager.GetCurrentConstellationName() ?? string.Empty;
 
-                foreach (var constellation in groupedUnlocks) {
-                    string groupHeader = $"| Constellation: {constellation.Key}";
-                    if (!string.IsNullOrWhiteSpace(currentConstellationName)
-                        && string.Equals(currentConstellationName, constellation.Key, StringComparison.OrdinalIgnoreCase)) {
-                        groupHeader += " (Current)";
+                    foreach (var constellation in groupedUnlocks) {
+                        string groupHeader = $"| Constellation: {constellation.Key}";
+                        if (!string.IsNullOrWhiteSpace(currentConstellationName)
+                            && string.Equals(currentConstellationName, constellation.Key, StringComparison.OrdinalIgnoreCase)) {
+                            groupHeader += " (Current)";
+                        }
+                        LogLine(groupHeader);
+                        LogLine(separator);
+                        LogLine(header);
+                        LogLine(separator);
+                        foreach (var unlock in constellation.Value) {
+                            LogLine(unlock.ToString());
+                        }
+                        LogLine(separator);
                     }
-                    LogLine(groupHeader);
-                    LogLine(separator);
-                    LogLine(header);
-                    LogLine(separator);
-                    foreach (var unlock in constellation.Value) {
-                        LogLine(unlock.ToString());
+
+                    if (unmatchedUnlocks.Count > 0) {
+                        LogLine("| Moons without Constellation");
+                        LogLine(separator);
+                        LogLine(header);
+                        LogLine(separator);
+                        foreach (var unlock in unmatchedUnlocks) {
+                            LogLine(unlock.ToString());
+                        }
+                        LogLine(separator);
+                        Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation grouping is active. If this happens past round initialization something is broken: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
                     }
-                    LogLine(separator);
+
+                    return;
                 }
-
-                if (unmatchedUnlocks.Count > 0) {
-                    LogLine("| Moons without Constellation");
-                    LogLine(separator);
-                    LogLine(header);
-                    LogLine(separator);
-                    foreach (var unlock in unmatchedUnlocks) {
-                        LogLine(unlock.ToString());
-                    }
-                    LogLine(separator);
-                    if (groupedUnlocks.Count == 0) {
-                        Logger.LogDebug($"Skipping unmatched LethalConstellations warning while grouping is still unavailable during unlock initialization ({unmatchedUnlocks.Count} moon(s)).");
-                    } else {
-                        Logger.LogWarning($"Found {unmatchedUnlocks.Count} moon(s) without a LethalConstellations group while constellation discovery is active. If this happens past round initialization something is broken: {string.Join(", ", unmatchedUnlocks.Select(unlock => unlock.Name))}");
-                    }
-                }
-
-                return;
             }
 
             LogLine(header);
