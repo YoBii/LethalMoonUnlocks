@@ -241,7 +241,9 @@ namespace LethalMoonUnlocks {
 
         internal static void RefreshConfig() {
             Logger.LogInfo("Refreshing config..");
-            _configFile?.Reload();
+            if (_configFile != null && File.Exists(_configFile.ConfigFilePath)) {
+                _configFile.Reload();
+            }
             RefreshValues();
             MoonGroupMatchingCustomDict = ParseCustomMoonGroups();
         }
