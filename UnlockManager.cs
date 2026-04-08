@@ -1615,10 +1615,6 @@ namespace LethalMoonUnlocks {
                         Logger.LogInfo("No saved LethalConstellations progression found. Reinitialized constellation definitions.");
                     }
                 }
-                if (savedata.ContainsKey("GroupCredits") && ConfigManager.GroupCreditsSavingBandAid) {
-                    Terminal.groupCredits = (int)savedata["GroupCredits"];
-                    Logger.LogInfo($"BAND-AID: Restored group credits ({Terminal.groupCredits}) from save file..");
-                }
                 Logger.LogInfo($"Finished loading LMU save data.");
                 return true;
             } else if (savedata != null &&  savedata.ContainsKey("LMU_UnlockedMoons")) {

@@ -69,13 +69,6 @@ namespace LethalMoonUnlocks {
                     Logger.LogInfo($"Found LMU_LethalConstellations: {lethalConstellationsSaveData?.Constellations?.Count ?? 0} constellations, rotations={lethalConstellationsSaveData?.ConstellationRotationMoons?.Count ?? 0}, locals={lethalConstellationsSaveData?.LocalConstellationDiscoveries?.Count ?? 0}");
                 }
 
-                // BAND AID FIX for credits being wacky
-                if (ConfigManager.GroupCreditsSavingBandAid) {
-                    if (ES3.KeyExists("GroupCredits", currentSave)) {
-                        dictionary.Add("GroupCredits", ES3.Load<int>("GroupCredits", currentSave));
-                    }
-                }
-
                 return dictionary;
             } else {
                 // Old and deprecated keys
@@ -169,14 +162,6 @@ namespace LethalMoonUnlocks {
                     ES3.DeleteKey("LMU_LethalConstellations", currentSave);
                 }
             }
-
-            // BAND AID FIX for group credits being wacky
-            if (ConfigManager.GroupCreditsSavingBandAid) {
-                int groupCredits = UnlockManager.Instance.Terminal.groupCredits;
-                Logger.LogInfo($"BAND-AID: Saving group credits ({groupCredits})..");
-                ES3.Save<int>("GroupCredits", groupCredits, currentSave);
-            }
-
             // Delete deprecated fields in existing savefiles
             if (ES3.KeyExists("LMU_UnlockedMoons", currentSave)) {
                 Logger.LogInfo($"Deleting deprecated save field: LMU_UnlockedMoons");

@@ -467,8 +467,10 @@ namespace LethalMoonUnlocks {
 
             BindValue("6 - Advanced Settings", "I have read this", "false", "This section contains advanced configuration options for various features of the mod. Incorrectly tweaking these might cause unexpected behaviour!\n" +
                 "This setting has no effect.");
-            GroupCreditsSavingBandAid= BindValue("6 - Advanced Settings", "Group credits saving fix", true, "When LMU saves data it will also save the credits balance.\n" +
-                "This prevents the 'free moon exploit'. This band aid should not cause any issues but I don't think I should need to do this in the first place..");
+            GroupCreditsSavingBandAid= BindValue("6 - Advanced Settings", "Group credits saving fix", false, "Legacy compatibility switch. Despite the old name, this no longer saves credits separately.\n" +
+                "When enabled, LMU will save its own progression even when you're quitting mid round (save-scumming).\n" +
+                "Keep disabled to align LMU progression with the game's regular behavior where it only saves when a new day begins.\n" +
+                "Enable if your setup needs to for consistency. For example maybe another mod restores some mid-round state like the current moon you're orbiting.");
             AdvancedPrintMoonNames = BindValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
                 "You can also grab moons names from the LMU table that is periodically printed to logs even when this is not enabled.");
             AutoRerouteToCompany = BindValue("6 - Advanced Settings", "Auto reroute to company", true, "When enabled automatically reroutes the ship to the company on deadline day.");
