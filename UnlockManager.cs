@@ -1028,7 +1028,7 @@ namespace LethalMoonUnlocks {
                 }
             }
             if (group.Members.Count <= discoveryGroup.Count) {
-                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Loyalty reward!", Text = $"The company facilitates your missions. Route to: <color=red>{group.Name}</color> established.", Key = "LMU_NewQuotaDiscoveryGroup" });
+                NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"NOTICE", Text = $"Keep the company happy! Route to <color=red>{group.Name}</color> established.", Key = "LMU_NewQuotaDiscoveryGroup" });
             }
             if (discoveryGroup.Count < 1 && ConfigManager.QuotaDiscoveryCheapestGroupFallback) {
                 Logger.LogInfo($"Couldn't match any moons for cheapest group. Fallback to all moons..");
@@ -1214,7 +1214,7 @@ namespace LethalMoonUnlocks {
                 NotificationHelper.SendChatMessage($"Discovered new moon on route{tdMessageGroupName}:\n<color=white>{travelDiscoveries.First().Name}</color>");
             }
             Logger.LogInfo($"Travel Discovery: [ {string.Join(", ", travelDiscoveries.Select(discovery => discovery.Name))} ]");
-            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"New {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
+            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Travel {travelDiscoveries.Count.SinglePluralWord("Discovery")}!", Text = $"Autopilot discovered new {travelDiscoveries.Count.SinglePluralWord("moon")} during travel{tdMessageGroupName}.\n" +
                 $"Moon catalog updated!", Key = "LMU_TravelDiscovery" });
             Logger.LogInfo($"Travel Discoveries: {string.Join(", ", travelDiscoveries.Select(u => u.Name))}");
             return true;

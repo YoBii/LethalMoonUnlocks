@@ -9,15 +9,15 @@ namespace LethalMoonUnlocks.Compatibility {
 
             string locationName = text.Replace("Location: ", string.Empty);
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
-                Header = locationName,
-                Text = "New location! Adding to moons catalog...",
+                Header = "New Coordinates!",
+                Text = $"Establishing route to {locationName}...",
                 IsWarning = false,
                 UseSave = false,
                 Key = "LMU_JLL_Discovery_1"
             });
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
-                Header = locationName,
-                Text = "Error: Route unavailable!\nAdding to backlog...",
+                Header = "Route unavailable!",
+                Text = $"Adding {locationName} to backlog...",
                 IsWarning = true,
                 UseSave = false,
                 Key = "LMU_JLL_Discovery_2"
@@ -32,8 +32,8 @@ namespace LethalMoonUnlocks.Compatibility {
 
             string locationName = text.Replace("Location: ", string.Empty);
             NetworkManager.Instance.ServerSendAlertMessage(new Notification() {
-                Header = locationName,
-                Text = "New location! Adding to moons catalog...",
+                Header = "New Coordinates!",
+                Text = $"Adding {locationName} to moons catalog...",
                 IsWarning = false,
                 UseSave = false,
                 Key = "LMU_JLL_1"
