@@ -86,7 +86,7 @@ namespace LethalMoonUnlocks.Patches {
             }
 
             foreach (var plugin in Chainloader.PluginInfos.Values.Where(plugin => plugin != null)) {
-                string pluginAssemblyName = plugin?.GetType()?.Assembly?.GetName()?.Name;
+                string pluginAssemblyName = plugin?.Instance.GetType()?.Assembly?.GetName()?.Name;
                 if (string.Equals(pluginAssemblyName, callerAssemblyName, StringComparison.OrdinalIgnoreCase)) {
                     return plugin.Metadata.GUID;
                 }
