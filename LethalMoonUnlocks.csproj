@@ -55,7 +55,7 @@
 		<PackageReference Include="LethalCompany.GameLibs.Steam" Version="67.0.0-ngd.0" Publicize="true" />
 		<PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" />
 		<PackageReference Include="TeamXiaolan.DawnLib" Version="0.8.*" PrivateAssets="all" Publicize="true" />
-		<PackageReference Include="TeamXiaolan.DawnLib.DuskMod" Version="0.6.*" PrivateAssets="all" Publicize="true" />
+		<PackageReference Include="TeamXiaolan.DawnLib.DuskMod" Version="0.8.*" PrivateAssets="all" Publicize="true" />
 		<!-- <PackageReference Include="IAmBatby.LethalLevelLoader" Version="1.4.*" /> -->
     </ItemGroup>
 

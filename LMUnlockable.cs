@@ -5,6 +5,7 @@ using LethalMoonUnlocks.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dusk;
 using UnityEngine;
 
 namespace LethalMoonUnlocks {
@@ -368,9 +369,17 @@ namespace LethalMoonUnlocks {
             if (LethalContent.Moons.Values.FirstOrDefault(x => x.Level.levelID == ExtendedLevel.SelectableLevel.levelID) is {} dawnMoon) {
                 ITerminalPurchasePredicate predicate = ITerminalPurchasePredicate.AlwaysSuccess();
                 TerminalNode failNode = ScriptableObject.CreateInstance<TerminalNode>();
-                failNode.displayText = "Error while calculating route: UNKNOWN LOCATION";
+                failNode.displayText = "Error calculating route: UNKNOWN LOCATION";
 
                 dawnMoon.Internal_AddTag(DawnLibTags.LunarConfig);
+
+                // for dawn's progressive predicates don't replace, just set state
+                if (dawnMoon.DawnPurchaseInfo.PurchasePredicate is ProgressivePredicate progressivePredicate) {
+                    progressivePredicate.ProgressiveStates.IsHidden = IsHidden;
+                    progressivePredicate.ProgressiveStates.IsUnlocked = !IsLocked;
+                    return;
+                }
+                    
                 if (IsHidden) {
                     if (IsLocked) {
                         predicate = new ConstantTerminalPredicate(new TerminalPurchaseResult.HiddenPurchaseResult().SetFailure(true).SetFailNode(failNode));
