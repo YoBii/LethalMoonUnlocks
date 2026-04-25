@@ -209,6 +209,7 @@ namespace LethalMoonUnlocks {
         internal static bool PreferLQRisk { get; private set; }
         internal static bool MalfunctionsNavigation { get; private set; }
         internal static bool AlertMessageQueueing { get; private set; }
+        internal static HashSet<string> AlertMessageQueueExcludedPlugins { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public static bool LethalConstellationsOverridePrice { get; private set; }
         internal static bool LethalConstellationsMirrorDefaultMoonRoute { get; private set; }
         internal static string LethalConstellationsQuotaRewardScope { get; private set; }
@@ -533,6 +534,9 @@ namespace LethalMoonUnlocks {
             TerminalShowRiskWeather = BindValue("6.3 - Terminal", "Terminal show weather in risk preview", false, "Also show the weather when using `preview difficulty`");
 
             AlertMessageQueueing = BindValue("6.4 - Compatibility", "Avoid alert messages overlapping", true, "When enabled, LethalMoonUnlocks will intercept all alert messages (yellow/red pop-up) and add them to a queue. This avoids alert messages from other mods and Vanilla from overlapping or not showing at all. Disable if you experience issues.");
+            AlertMessageQueueExcludedPlugins = ParseCommaList(BindValue("6.4 - Compatibility", "Alert queue excluded plugins", "giosuel.Imperium, mrgrm7.LethalCasino", "Comma-separated list of BepInEx plugin GUIDs that should bypass LMU's alert queue when they attempt to show alerts.\n" +
+                "Used to prevent spammy mods from congesting the queue. You probably don't have to change this."))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
             PreferLQRisk = BindValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalog instead of the default risk levels.");
             MalfunctionsNavigation = BindValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
             PreferGaletry = BindValue("6.4 - Compatibility", "Prefer Galetry over Gordion", true, "When enabled and Galetry (from Wesley's moons journey) is available and routable, LMU will auto reroute the ship to Galetry instead of Gordion (the company).");
