@@ -240,6 +240,54 @@ namespace LethalMoonUnlocks.Compatibility {
             return result;
         }
 
+        internal int RestoreStoryUnlockedConstellations(IEnumerable<string> constellationNames, bool restoreImmediateDiscovery) {
+            if (constellationNames == null || Collections.ConstellationStuff.Count == 0) {
+                return 0;
+            }
+
+            EnsureIndexed();
+
+            int restoredCount = 0;
+            foreach (string constellationName in constellationNames
+                         .Where(name => !string.IsNullOrWhiteSpace(name))
+                         .Distinct(StringComparer.OrdinalIgnoreCase)) {
+                if (!_constellationLookup.TryGetValue(constellationName, out var constellation)) {
+                    Logger.LogWarning($"LethalConstellationsManager: Unable to restore fired-reset story state for missing constellation '{constellationName}'.");
+                    continue;
+                }
+
+                LMConstellationUnlockable constellationState = _extension.GetOrCreateConstellationState(constellation.consName);
+                if (constellationState == null) {
+                    Logger.LogWarning($"LethalConstellationsManager: Unable to restore fired-reset story state for constellation '{constellation.consName}' because no state object could be created.");
+                    continue;
+                }
+
+                if (ConfigManager.DiscoveryMode && restoreImmediateDiscovery) {
+                    if (!ForceDiscoverConstellation(constellation, constellationState, $"restored fired-reset story state for constellation '{constellation.consName}'")) {
+                        continue;
+                    }
+                } else {
+                    constellationState.StoryIsUnlocked = true;
+                    constellationState.Discovered = false;
+                    constellationState.DiscoveredOnce = false;
+                    constellationState.NewDiscovery = false;
+                }
+
+                restoredCount++;
+            }
+
+            if (restoredCount < 1) {
+                return 0;
+            }
+
+            ApplyConstellationState();
+            if (ConfigManager.DiscoveryMode && UnlockManager.Instance != null && UnlockManager.Instance.UseConstellationDiscovery) {
+                ApplyCurrentConstellationVisibility(suppressNewDiscovery: true);
+            }
+
+            return restoredCount;
+        }
+
         internal bool EvaluateCustomUnlockConditions() {
             if (Plugin.ConstellationUnlockConditions == null || Collections.ConstellationStuff.Count == 0) {
                 return false;

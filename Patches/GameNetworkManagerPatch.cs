@@ -41,7 +41,7 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPostfix]
         private static void ResetSavedGameValuesPatch() {
             Logger.LogInfo($"You are fired!");
-            if (NetworkManager.Instance.IsServer() && ConfigManager.ResetWhenFired) {
+            if (NetworkManager.Instance.IsServer() && ConfigManager.ResetWhenFired != ResetWhenFiredBehavior.Nothing) {
                 UnlockManager.Instance.OnResetGame();
             }
         }

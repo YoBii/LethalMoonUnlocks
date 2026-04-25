@@ -7,6 +7,12 @@ using System.Collections.Generic;
 using LethalLevelLoader;
 
 namespace LethalMoonUnlocks {
+    internal enum ResetWhenFiredBehavior {
+        All,
+        AllButStoryProgression,
+        Nothing
+    }
+
     internal enum StoryReleaseBehavior {
         HiddenBacklog,
         ImmediateDiscovery
@@ -15,7 +21,7 @@ namespace LethalMoonUnlocks {
     public class ConfigManager {
         private static ConfigFile _configFile;
 
-        internal static bool ResetWhenFired { get; private set; }
+        internal static ResetWhenFiredBehavior ResetWhenFired { get; private set; }
         internal static bool DisplayTerminalTags { get; private set; }
         internal static bool ShowTagInOrbit { get; private set; }
         internal static bool ShowTagNewDiscovery { get; private set; }
@@ -284,9 +290,10 @@ namespace LethalMoonUnlocks {
             return customGroups;
         }
         private static void RefreshValues() {
-            ResetWhenFired = BindValue("1 - General settings", "Reset when fired", true, "Reset your progress when being fired. Unlocks, Discounts, and permanently discovered moons will all be wiped.\n" +
-                "Unlocks, Discounts, Permanently Discovered moons, ..  all of it will persist unless you create a new save.\n" +
-                "The only exception to this option is the base selection of moons in Discovery Mode.");
+            ResetWhenFired = BindValue("1 - General settings", "Reset when fired", ResetWhenFiredBehavior.All, "Controls what LMU resets when the crew gets fired.\n" +
+                $"'{nameof(ResetWhenFiredBehavior.All)}' wipes all LMU progression.\n" +
+                $"'{nameof(ResetWhenFiredBehavior.AllButStoryProgression)}' wipes all LMU progression except unlocked story locks.\n" +
+                $"'{nameof(ResetWhenFiredBehavior.Nothing)}' keeps LMU progression (per save).");
             ChatMessages = BindValue("1 - General settings", "Show chat messages", true, "When enabled, LethalMoonUnlocks will send messages to the in-game chat whenever something relevant happens.");
             ShowAlerts = BindValue("1 - General settings", "Show alert messages", false, "When enabled, LethalMoonUnlocks will display alert messages whenever something relevant happens.");
 

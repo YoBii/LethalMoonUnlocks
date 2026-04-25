@@ -10,6 +10,15 @@ using UnityEngine;
 
 namespace LethalMoonUnlocks {
     public class UnlockManager {
+        private sealed class FiredResetPreservedState {
+            internal HashSet<string> StoryUnlockedMoons { get; } = new(StringComparer.OrdinalIgnoreCase);
+            internal HashSet<string> StoryUnlockedConstellations { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+            internal bool HasData() {
+                return StoryUnlockedMoons.Count > 0
+                    || StoryUnlockedConstellations.Count > 0;
+            }
+        }
 
         public static UnlockManager Instance { get; private set; }
         internal static string LogFormatString { get; } = "| {0, -20} | {1, 6} | {2, 7} | {3, 7} | {4, 8} | {5, 11} | {6, 5} | {7, 12} | {8, 12} | {9, 11} |";
@@ -761,18 +770,19 @@ namespace LethalMoonUnlocks {
             }
         }
         internal void OnResetGame() {
-            if (ConfigManager.ResetWhenFired) {
-                Logger.LogInfo($"Resetting all progress on getting fired!");
-                ProgressionManager.Instance?.Reset();
-                Reset();
-                InitializeUnlocks();
-                DelayHelper.Instance.ExecuteAfterDelay(() => {
-                    InitializeNewGame();
-                    IterateUnlocks();
+            switch (ConfigManager.ResetWhenFired) {
+                case ResetWhenFiredBehavior.All:
+                    Logger.LogInfo("Resetting all progress on getting fired!");
+                    ScheduleFiredReset();
+                    break;
+                case ResetWhenFiredBehavior.AllButStoryProgression:
+                    Logger.LogInfo("Resetting all progress except story progression on getting fired!");
+                    ScheduleFiredReset(CaptureFiredResetPreservedState());
+                    break;
+                case ResetWhenFiredBehavior.Nothing:
+                default:
                     NetworkManager.Instance.ServerSendUnlockables(Unlocks);
-                }, 8.0f);
-            } else {
-                NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+                    break;
             }
         }
         internal void OnDisconnect() {
@@ -1515,6 +1525,79 @@ namespace LethalMoonUnlocks {
             }
 
             return Unlocks.All(unlock => !unlock.Discovered);
+        }
+
+        private void ScheduleFiredReset(FiredResetPreservedState preservedState = null) {
+            ProgressionManager.Instance?.Reset();
+            Reset();
+            InitializeUnlocks();
+            DelayHelper.Instance.ExecuteAfterDelay(() => {
+                InitializeNewGame();
+                RestoreFiredResetPreservedState(preservedState);
+                IterateUnlocks();
+                NetworkManager.Instance.ServerSendUnlockables(Unlocks);
+            }, 8.0f);
+        }
+
+        private FiredResetPreservedState CaptureFiredResetPreservedState() {
+            var preservedState = new FiredResetPreservedState();
+
+            foreach (var unlock in Unlocks.Where(unlock =>
+                         unlock != null
+                         && unlock.StoryUnlock
+                         && unlock.StoryIsUnlocked
+                         && !string.IsNullOrWhiteSpace(unlock.Name))) {
+                preservedState.StoryUnlockedMoons.Add(unlock.Name);
+            }
+
+            if (Plugin.LethalConstellationsPresent && Plugin.LethalConstellationsExtension != null) {
+                foreach (var constellation in Plugin.LethalConstellationsExtension.ConstellationStates.Where(constellation =>
+                             !string.IsNullOrWhiteSpace(constellation.Key)
+                             && constellation.Value?.StoryIsUnlocked == true)) {
+                    preservedState.StoryUnlockedConstellations.Add(constellation.Key);
+                }
+            }
+
+            Logger.LogInfo($"Captured before fired story state: StoryMoons={preservedState.StoryUnlockedMoons.Count}, StoryConstellations={preservedState.StoryUnlockedConstellations.Count}.");
+            return preservedState;
+        }
+
+        private void RestoreFiredResetPreservedState(FiredResetPreservedState preservedState) {
+            if (preservedState == null || !preservedState.HasData()) {
+                return;
+            }
+
+            int restoredStoryMoons = 0;
+            bool restoreImmediateMoonDiscovery = ConfigManager.DiscoveryMode && IsImmediateMoonStoryReleaseBehavior();
+            foreach (string moonName in preservedState.StoryUnlockedMoons) {
+                var unlock = Unlocks.FirstOrDefault(candidate => string.Equals(candidate.Name, moonName, StringComparison.OrdinalIgnoreCase));
+                if (unlock == null) {
+                    Logger.LogWarning($"Unable to restore before fired story state for missing moon '{moonName}'.");
+                    continue;
+                }
+
+                if (!unlock.StoryUnlock) {
+                    Logger.LogDebug($"{moonName}: Skipping before fired story restore because the moon appears to not be story locked.");
+                    continue;
+                }
+
+                unlock.StoryIsUnlocked = true;
+                if (restoreImmediateMoonDiscovery) {
+                    unlock.SetDiscoveryState(true, suppressNewDiscovery: true);
+                }
+                restoredStoryMoons++;
+            }
+
+            int restoredConstellations = 0;
+            bool restoreImmediateConstellationDiscovery = ConfigManager.DiscoveryMode
+                && Plugin.ConstellationManager?.IsImmediateDiscoveryStoryReleaseBehavior() == true;
+            if (preservedState.StoryUnlockedConstellations.Count > 0 && Plugin.LethalConstellationsPresent && Plugin.ConstellationManager != null) {
+                restoredConstellations = Plugin.ConstellationManager.RestoreStoryUnlockedConstellations(
+                    preservedState.StoryUnlockedConstellations,
+                    restoreImmediateConstellationDiscovery);
+            }
+
+            Logger.LogInfo($"Restored before fired story state: StoryMoons={restoredStoryMoons}, StoryConstellations={restoredConstellations}.");
         }
 
         private bool IsGloballyDiscovered(LMUnlockable unlock) {
