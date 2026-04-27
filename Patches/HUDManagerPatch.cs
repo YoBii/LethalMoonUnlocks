@@ -4,7 +4,7 @@ using LethalMoonUnlocks.Compatibility;
 using LethalMoonUnlocks.Util;
 using System;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Reflection;
 
 namespace LethalMoonUnlocks.Patches {
@@ -85,10 +85,21 @@ namespace LethalMoonUnlocks.Patches {
                 return null;
             }
 
-            foreach (var plugin in Chainloader.PluginInfos.Values.Where(plugin => plugin != null)) {
-                string pluginAssemblyName = plugin?.Instance.GetType()?.Assembly?.GetName()?.Name;
+            foreach (var plugin in Chainloader.PluginInfos.Values) {
+                if (plugin == null) {
+                    continue;
+                }
+
+                string pluginAssemblyName = plugin.Instance?.GetType()?.Assembly?.GetName()?.Name;
                 if (string.Equals(pluginAssemblyName, callerAssemblyName, StringComparison.OrdinalIgnoreCase)) {
-                    return plugin.Metadata.GUID;
+                    return plugin.Metadata?.GUID;
+                }
+
+                string pluginLocationAssemblyName = string.IsNullOrWhiteSpace(plugin.Location)
+                    ? string.Empty
+                    : Path.GetFileNameWithoutExtension(plugin.Location);
+                if (string.Equals(pluginLocationAssemblyName, callerAssemblyName, StringComparison.OrdinalIgnoreCase)) {
+                    return plugin.Metadata?.GUID;
                 }
             }
             
