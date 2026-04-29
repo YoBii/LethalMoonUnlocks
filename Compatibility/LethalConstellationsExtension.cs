@@ -304,7 +304,6 @@ namespace LethalMoonUnlocks.Compatibility {
         }
         
         internal void Reset() {
-            Collections.ConstellationStuff?.Clear();
             _pendingConstellationRoutePrices.Clear();
             _pendingSaveData = null;
             _constellationManager.Reset();
