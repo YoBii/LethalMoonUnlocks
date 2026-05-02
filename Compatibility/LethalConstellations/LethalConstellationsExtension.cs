@@ -20,8 +20,45 @@ namespace LethalMoonUnlocks.Compatibility {
 
         internal IReadOnlyDictionary<string, LMConstellationUnlockable> ConstellationStates => _constellationSaveData.Constellations;
 
+        internal int PruneDuplicateConstellations() {
+            if (Collections.ConstellationStuff.Count < 2) {
+                return 0;
+            }
+
+            HashSet<string> seenConstellations = new(System.StringComparer.OrdinalIgnoreCase);
+            List<string> removedConstellations = new List<string>();
+            int removedCount = 0;
+
+            for (int i = Collections.ConstellationStuff.Count - 1; i >= 0; i--) {
+                ClassMapper constellation = Collections.ConstellationStuff[i];
+                if (string.IsNullOrWhiteSpace(constellation.consName)) {
+                    continue;
+                }
+
+                if (seenConstellations.Add(constellation.consName)) {
+                    continue;
+                }
+
+                Collections.ConstellationStuff.RemoveAt(i);
+                removedCount++;
+                removedConstellations?.Add(constellation.consName);
+            }
+
+            if (removedCount > 0) {
+                string removedNames = string.Join(", ", removedConstellations
+                    .Distinct(System.StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, System.StringComparer.OrdinalIgnoreCase));
+                Logger.LogWarning($"LethalConstellationsExtension: Removed {removedCount} duplicate constellations. Keeping newest definitions for: {removedNames}");
+            }
+
+            return removedCount;
+        }
+
         public void ApplyUnlocks() {
             TryApplyPendingSaveData();
+            if (PruneDuplicateConstellations() > 0) {
+                _constellationManager.ReindexDefinitions(false);
+            }
 
             if (!HasConstellationDefinitions()) {
                 Logger.LogWarning("LethalConstellationsExtension: Constellation definitions are unavailable. Skipping unlock application.");

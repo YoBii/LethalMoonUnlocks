@@ -14,15 +14,6 @@ namespace LethalMoonUnlocks.Patches {
             return AccessTools.Method(type, "MainMenuText");
         }
 
-        private static List<ClassMapper> GetVisibleConstellations() {
-            Plugin.LethalConstellationsExtension?.TryApplyPendingSaveData();
-            Plugin.ConstellationManager?.ApplyConstellationState();
-            if (Collections.ConstellationStuff.Count == 0) {
-                return new List<ClassMapper>();
-            }
-            return Collections.ConstellationStuff.FindAll(x => !x.isHidden);
-        }
-
         [HarmonyPatch]
         private static class TravelToNewConstellationPatch {
             private static MethodBase TargetMethod() {

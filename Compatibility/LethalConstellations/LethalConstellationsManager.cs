@@ -69,6 +69,11 @@ namespace LethalMoonUnlocks.Compatibility {
         }
 
         internal void RefreshDefinitions(bool logProblems) {
+            _extension.PruneDuplicateConstellations();
+            ReindexDefinitions(logProblems);
+        }
+
+        internal void ReindexDefinitions(bool logProblems) {
             _constellationLookup.Clear();
             _moonNameToLevelIdLookup.Clear();
             _unlockByLevelIdLookup.Clear();
