@@ -434,25 +434,21 @@ The bias can be enabled and tweaked individually for every mechanic that randoml
 
 ### Compatibility
 <details>
-  <summary><strong>Learn more</strong></summary>
-
-#### LethalConstellations
-LethalMoonUnlocks is compatible with LethalConstellations!  
-
+  <summary><strong>LethalConstellations</strong></summary>
 Most mechanics that work on moons also work for constellations. 
 That means constellation can also be unlocked and have discounts as well as sales. 
 
 In Discovery Mode each constellation has its own discovery state. That means only discovered constellations are available for routing. Once discovered constellations stay discovered permanently. 
 
 Moon discovery state is local to each constellation. That means each constellation will have the following combination of moons discovered:
-- its default moon which is always discovered
-- moons that are discovered as part of the current rotation (which shuffles when enabled)
+- default moon is always discovered
+- moons that are discovered as part of the current rotation (can shuffle daily or per quota when enabled)
 - moons that are discovered via other means like new day discoveries or travel discoveries
 - permanent discoveries
 
 The LethalConstellations terminal menu will have additional info about how many moons are discovered within each constellation and also shows LMU tags when enabled.
 
-#### LethalConstellations custom unlock conditions
+#### Custom unlock conditions for constellations
 LMU will also generate a separate constellation config:
 
 `com.xmods.lethalmoonunlocks.constellations.generated.cfg`
@@ -474,8 +470,10 @@ These rules act as a progression gate on discovering their respective constellat
 - by default both gates must be open before LMU can make the constellation available.
 - once that happens, `Story release behavior` decides whether the constellation is immediately discovered or added to the hidden backlog of constellations that can be discovered.
 - with `IgnoreDefaultMoonStoryLock` the story progression gate can be ignored to where the unlock conditions alone are all that matters. 
+</details>
 
-#### Wesley's Moons / JLL story progression (Story Locks)
+<details>
+  <summary><strong>Wesley's Moons / JLL story progression (Story Locks)</strong></summary>
 LMU respects the story progression of mods such as Wesley's Moons. Any mod using JLL to unlock moons are implicitly compatible LMU.   
 
 When a moon is both hidden and locked in its default state, it is considered to be potentially gated behind story progression. 
@@ -490,7 +488,8 @@ Spoilers in the configuration file.
 
 > `UnlockManager.OnCollectStoryLockedMoons` still exists for compatibility reasons, but was depreacted as it is no longer required.
 
-You can globally disable **Story Locks** in the advanced configuration section which will override story moon locking behavior and treat it like any regular moon. 
+You can globally disable **Story Locks** in the advanced configuration section which will override story moon locking behavior and treat it like any regular moon.
+</details>
 
 #### TerminalFormatter
 Tags are shown in TerminalFormatter moons node. Thanks @mrov!
@@ -504,8 +503,9 @@ If it's a paid moon, LethalMoonUnlocks will see it as buying the moon - even tho
 
 #### All Mods Displaying Alert Messages
 LethalMoonUnlocks uses a queue for sending alert messages.  
-Alerts from other mods and the vanilla game are added to the same queue to avoid overlapping and missing messages.
-</details>
+
+Alerts from other mods and the vanilla game are added to the same queue to prevent them from displaying over each other.  
+Mods can be excluded from the queue to avoid congesting it. By default, LethalCasino and Imperium are excluded.
 
 ## Example Configurations
 
