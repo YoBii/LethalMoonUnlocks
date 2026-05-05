@@ -600,7 +600,7 @@ namespace LethalMoonUnlocks {
                 // SHUFFLE ON NEW QUOTA
                 if (!ConfigManager.DiscoveryNeverShuffle) {
                     Logger.LogInfo($"Shuffling moon rotation on new Quota..");
-                    ShuffleDiscoverable();
+                    ShuffleDiscoverable(performAutoReroute: false);
                 }
                 // QUOTA DISCOVERY
                 var quotaDiscoveryCandidates = GetTriggerMoonDiscoveryCandidates();
@@ -653,6 +653,11 @@ namespace LethalMoonUnlocks {
                 }
             }
 
+            IterateUnlocks();
+            if (ConfigManager.DiscoveryMode) {
+                RerouteShipToFreeMoon();
+            }
+
             // APPLY ALL
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 5);
@@ -660,6 +665,7 @@ namespace LethalMoonUnlocks {
 
         internal void OnNewDay() {
             Logger.LogDebug($"DaysUntilDeadlineHUD: {(int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime)}, DaysUntilDeadline: {TimeOfDay.Instance.daysUntilDeadline}, deadlineDaysAmount: {TimeOfDay.Instance.quotaVariables.deadlineDaysAmount}");
+            bool checkDiscoveryRerouteAtEnd = false;
             // NEW QUOTA DAY
             if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == TimeOfDay.Instance.quotaVariables.deadlineDaysAmount || (int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) < 0) {
                 DayCount++;
@@ -703,7 +709,7 @@ namespace LethalMoonUnlocks {
                     // Shuffle NEW DAY - EVERY DAY
                     if (ConfigManager.DiscoveryShuffleEveryDay) {
                         Logger.LogInfo($"Shuffling moon rotation on new day!");
-                        ShuffleDiscoverable();
+                        ShuffleDiscoverable(performAutoReroute: false);
                     }
                     // NEW DAY DISCOVERY
                     var newDayDiscoveryCandidates = GetTriggerMoonDiscoveryCandidates();
@@ -719,12 +725,16 @@ namespace LethalMoonUnlocks {
                             NewDayDiscovery(DiscoveryCandidates);
                         }
                     }
+                    checkDiscoveryRerouteAtEnd = true;
                 }
                 if (ConfigManager.Sales && ConfigManager.SalesShuffleDaily) {
                     RefreshSales();
                 }
             }
             IterateUnlocks();
+            if (checkDiscoveryRerouteAtEnd) {
+                RerouteShipToFreeMoon();
+            }
             NetworkManager.Instance.ServerSendUnlockables(Unlocks);
             DelayHelper.Instance.ExecuteAfterDelay(NetworkManager.Instance.ServerSendAlertQueueEvent, 3);
         }
@@ -1365,7 +1375,7 @@ namespace LethalMoonUnlocks {
             Logger.LogInfo($"{unlock.Name}: Forced built-in story lock startup state (hidden + locked).");
         }
 
-        private void ShuffleDiscoverable(bool suppressNewDiscovery = false) {
+        private void ShuffleDiscoverable(bool suppressNewDiscovery = false, bool performAutoReroute = true) {
             Logger.LogInfo("Shuffling discovered moon rotations.. ");
 
             // Reset rotation
@@ -1392,7 +1402,9 @@ namespace LethalMoonUnlocks {
             // Make sure there's at least one moon discovered
             bool oneMoonDiscovered = Unlocks.Any(unlock => unlock.Discovered);
             if (oneMoonDiscovered) {
-                RerouteShipToFreeMoon();
+                if (performAutoReroute) {
+                    RerouteShipToFreeMoon();
+                }
             } else {
                 Logger.LogWarning("All moons would have been hidden from the terminal! Force discovering a free moon..");
                 var unlock = Unlocks.Where(unlock => unlock.RoutePrice == 0).FirstOrDefault();
@@ -1413,7 +1425,9 @@ namespace LethalMoonUnlocks {
                             unlock.NewDiscovery = false;
                         }
                     }
-                    RerouteShipToFreeMoon();
+                    if (performAutoReroute) {
+                        RerouteShipToFreeMoon();
+                    }
                 }
             }
             if (DayCount > 0) {
@@ -1453,7 +1467,7 @@ namespace LethalMoonUnlocks {
         }
 
         private void RerouteShipToFreeMoon() {
-            Logger.LogInfo($"After shuffling check if we have to reroute to a discovered safe destination..");
+            Logger.LogInfo($"Checking if the ship must reroute to a discovered safe destination..");
             if (Unlocks.Any(unlock => (unlock.Discovered || unlock.PermanentlyDiscovered ) && unlock.Name == LevelManager.CurrentExtendedLevel.NumberlessPlanetName) || LevelManager.CurrentExtendedLevel.NumberlessPlanetName == "Gordion") {
                 Logger.LogInfo($"Current moon is discovered. Not rerouting ship.");
             } else {
