@@ -15,9 +15,10 @@ namespace LethalMoonUnlocks.Patches {
         }
 
         [HarmonyPatch(nameof(GameNetworkManager.SaveGame))]
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         private static void SaveGameValuesPatch() {
-            if (!NetworkManager.Instance.IsServer()) return;
+            var lmuNetworkManager = NetworkManager.Instance;
+            if (lmuNetworkManager == null || !lmuNetworkManager.IsServer()) return;
             var inShipPhase = StartOfRound.Instance != null && StartOfRound.Instance.inShipPhase;
             var allowMidRoundSave = ConfigManager.GroupCreditsSavingBandAid;
             Logger.LogDebug($"inShipPhase: {inShipPhase}");
@@ -41,7 +42,8 @@ namespace LethalMoonUnlocks.Patches {
         [HarmonyPostfix]
         private static void ResetSavedGameValuesPatch() {
             Logger.LogInfo($"You are fired!");
-            if (NetworkManager.Instance.IsServer() && ConfigManager.ResetWhenFired != ResetWhenFiredBehavior.Nothing) {
+            var lmuNetworkManager = NetworkManager.Instance;
+            if (lmuNetworkManager != null && lmuNetworkManager.IsServer() && ConfigManager.ResetWhenFired != ResetWhenFiredBehavior.Nothing) {
                 UnlockManager.Instance.OnResetGame();
             }
         }
