@@ -29,11 +29,8 @@ namespace LethalMoonUnlocks.Patches {
         }
 
         private static void Postfix() {
-            foreach (var unlock in UnlockManager.Instance.Unlocks) {
-                unlock.RefreshCalculatedPrice();
-                unlock.ApplyState();
-                unlock.ApplyVisibility();
-            }
+            UnlockManager.Instance.Unlocks.Do(unlock => unlock.RefreshCalculatedPrice());
+            UnlockManager.Instance.ApplyUnlocks();
         }
     }
 }
