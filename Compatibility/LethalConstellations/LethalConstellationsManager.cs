@@ -179,9 +179,10 @@ namespace LethalMoonUnlocks.Compatibility {
             }
 
             RefreshDefinitions(true);
+            bool hasExistingProgression = _hasLoadedPersistedState || HasDiscoveredConstellations();
             ApplyWhitelist();
 
-            if (_hasLoadedPersistedState || HasDiscoveredConstellations()) {
+            if (hasExistingProgression) {
                 if (!TryEnsureCurrentConstellation()) {
                     Logger.LogError("LethalConstellationsManager: Failed to recover a current constellation when constellation discovery progression data is available.");
                     return false;
