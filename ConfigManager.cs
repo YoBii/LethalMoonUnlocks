@@ -182,6 +182,13 @@ namespace LethalMoonUnlocks {
         private static int _salesRateMax;
         private static bool AdvancedPrintMoonNames { get; set; }
         internal static bool AutoRerouteToCompany { get; set; }
+        private static string DeadlineRerouteDestinationsString { get; set; }
+        internal static List<string> DeadlineRerouteDestinations {
+            get {
+                return ParseCommaList(DeadlineRerouteDestinationsString);
+            }
+        }
+        internal static bool LimitRerouteToConstellation { get; private set; }
         internal static bool GroupCreditsSavingBandAid { get; private set; }
         internal static bool EnableStoryProgression { get; private set; }
         internal static StoryReleaseBehavior MoonStoryReleaseBehavior { get; private set; }
@@ -219,7 +226,6 @@ namespace LethalMoonUnlocks {
         public static bool LethalConstellationsOverridePrice { get; private set; }
         internal static bool LethalConstellationsMirrorDefaultMoonRoute { get; private set; }
         internal static string LethalConstellationsQuotaRewardScope { get; private set; }
-        internal static bool PreferGaletry { get; private set; }
 
         internal static bool OverrideHidden { get; private set; }
         private static string OverrideHiddenList { get; set; }
@@ -458,7 +464,7 @@ namespace LethalMoonUnlocks {
             LethalConstellationsOverridePrice = BindValue("4.4 - LethalConstellations Discoveries", "LethalConstellations override price", false, "When enabled and LethalConstellations is present, the configured default moon provides the base routing price for the constellation.\n" +
                 "LMU still applies the constellation's own unlocks, discounts, and sales on top of that base price. To also mirror route progression and travel discovery onto the default moon, enable the separate option below.");
             LethalConstellationsMirrorDefaultMoonRoute = BindValue("4.4 - LethalConstellations Discoveries", "LethalConstellations mirror default moon route", false, "When enabled, routing to a constellation will also apply the route side effects to its default moon.\n" +
-                "This includes moon buy progression when the route was paid and travel discovery side effects even though the constellation itself remains a first-class progression target.");
+                "This includes all price reduction mechanics, route visibility mechanics and triggered discovery mechanics (travel discoveries). ");
             LethalConstellationsQuotaRewardScope = BindValue("4.4 - LethalConstellations Discoveries", "LethalConstellations quota reward scope", LCQuotaRewardScopeAllDiscoveredConstellations, "Where quota-granted unlocks, discounts, and full discounts may target when LethalConstellations is active.",
                 new AcceptableValueList<string>([LCQuotaRewardScopeAllDiscoveredConstellations, LCQuotaRewardScopeCurrentOnly]));
 
@@ -481,7 +487,12 @@ namespace LethalMoonUnlocks {
                 "Enable if your setup needs to for consistency. For example maybe another mod restores some mid-round state like the current moon you're orbiting.");
             AdvancedPrintMoonNames = BindValue("6 - Advanced Settings", "Print moon names to console", false, "Print the names you need to define your custom groups to console/log. They will be logged after you've loaded into a save game. " +
                 "You can also grab moons names from the LMU table that is periodically printed to logs even when this is not enabled.");
-            AutoRerouteToCompany = BindValue("6 - Advanced Settings", "Auto reroute to company", true, "When enabled automatically reroutes the ship to the company on deadline day.");
+            AutoRerouteToCompany = BindValue("6 - Advanced Settings", "Auto reroute to company", true, "When enabled, LMU automatically reroutes the ship to a company moon on deadline day.");
+            DeadlineRerouteDestinationsString = BindValue("6 - Advanced Settings", "Auto reroute destinations", "Gordion, Galetry, Oxyde", "Comma-separated list of moons LMU may reroute to on deadline day.\n" +
+                "This list is evaluated in reverse order, so the last configured moon has the highest priority.\n" +
+                "'Gordion, Galetry, Oxyde' prioritizes Oxyde first, then Galetry, then Gordion.\n +" +
+                "Use 'Gordion' for the default company moon.");
+            LimitRerouteToConstellation = BindValue("6 - Advanced Settings", "Limit reroute to constellation", false, "When enabled and constellation discovery is active, the reroute destination must be visible in the current constellation.");
             const string cheapMoonBiasValueDescription =
                 "Controls how strongly cheaper moons are favored when Cheap Moon Bias is enabled.\n" +
                 "LMU compares each moon's price against the average price of the current candidate pool and turns that into a selection weight.\n" +
@@ -546,7 +557,6 @@ namespace LethalMoonUnlocks {
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             PreferLQRisk = BindValue("6.4 - Compatibility", "Prefer LethalQuantities risk level", false, "Show the moon risk levels set by LethalQuantities in the moon catalog instead of the default risk levels.");
             MalfunctionsNavigation = BindValue("6.4 - Compatibility", "Malfunctions navigation buys moon", false, "When the Malfunctions navigation malfunction is triggered LMU will interpret it as if the moon routed to was bought.");
-            PreferGaletry = BindValue("6.4 - Compatibility", "Prefer Galetry over Gordion", true, "When enabled and Galetry (from Wesley's moons journey) is available and routable, LMU will auto reroute the ship to Galetry instead of Gordion (the company).");
 
             OverrideHidden = BindValue("6.5 - Overrides", "Override moons hidden by default", false, "Enable to hard override any hidden by default information using the list below. Any other information will be ignored. This includes moons hidden in vanilla, via LLL config, etc.");
             OverrideHiddenList = BindValue("6.5 - Overrides", "Override hidden list", "", "List of moons LMU will consider to be hidden by default.\n" +

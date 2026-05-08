@@ -671,29 +671,20 @@ namespace LethalMoonUnlocks {
                 DayCount++;
                 Logger.LogInfo($"New day! Completed days: {DayCount}");
                 Logger.LogInfo($"New day is also new quota! Skip new day routine..");
-                // LAST DAY OF QUOTA - REROUTE SHIP TO COMPANY AND SKIP REST
+                // LAST DAY OF QUOTA - SKIP REGULAR NEW DAY ROUTINE
             } else if ((int)Mathf.Floor(TimeOfDay.Instance.timeUntilDeadline / TimeOfDay.Instance.totalTime) == 0 && ConfigManager.DiscoveryMode) {
                 Logger.LogInfo($"New day is last day of the quota! Not shuffling.");
                 if (ConfigManager.AutoRerouteToCompany) {
-                    ExtendedLevel destination;
-                    ExtendedLevel galetry = AllLevels.FirstOrDefault(level => level.NumberlessPlanetName == "Galetry");
-                    if (ConfigManager.PreferGaletry && galetry != null && !galetry.IsRouteHidden && !galetry.IsRouteLocked) {
-                        destination = galetry;
-                    } else {
-                        destination = AllLevels.FirstOrDefault(level => level.NumberlessPlanetName == "Gordion");
-                    }
-
-                    if (destination == null) {
-                        Logger.LogError($"Couldn't find reroute destination!");
-                    } else if (LevelManager.CurrentExtendedLevel != destination) {
-                        string destinationName = destination.NumberlessPlanetName == "Gordion" ? "the Company building" : destination.NumberlessPlanetName;
-                        Logger.LogInfo($"Rerouting ship to {destinationName}!");
-                        // wait a bit or the level change fails
-                        DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(destination.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
-                        NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to {destinationName}.", Key = "LMU_RerouteCompany" });
-                    } else {
-                        string destinationName = destination.NumberlessPlanetName == "Gordion" ? "the Company building" : destination.NumberlessPlanetName;
-                        Logger.LogInfo($"Already at {destinationName}. No need to reroute.");
+                    IterateUnlocks();
+                    if (TryResolveDeadlineRerouteDestination(out var destination, out var destinationName)) {
+                        if (LevelManager.CurrentExtendedLevel != destination) {
+                            Logger.LogInfo($"Rerouting ship to {destinationName}!");
+                            // wait a bit or the level change fails
+                            DelayHelper.Instance.ExecuteAfterDelay(() => { StartOfRound.Instance.ChangeLevelServerRpc(destination.SelectableLevel.levelID, Terminal.groupCredits); }, 3f);
+                            NetworkManager.Instance.ServerSendAlertMessage(new Notification() { Header = $"Deadline!", Text = $"Auto routing ship to {destinationName}.", Key = "LMU_RerouteCompany" });
+                        } else {
+                            Logger.LogInfo($"Already at {destinationName}. No need to reroute.");
+                        }
                     }
                 }
             } else {
@@ -1464,6 +1455,101 @@ namespace LethalMoonUnlocks {
             foreach (var candidate in paidMoons) {
                 candidate.Discovered = true;
             }
+        }
+
+        private bool TryResolveDeadlineRerouteDestination(out ExtendedLevel destination, out string destinationName) {
+            destination = null;
+            destinationName = string.Empty;
+
+            var configuredDestinations = ConfigManager.DeadlineRerouteDestinations;
+            if (configuredDestinations.Count < 1) {
+                Logger.LogError("Deadline reroute: no destinations are configured.");
+                return false;
+            }
+
+            HashSet<string> currentConstellationVisibleMoonNames = null;
+            if (ConfigManager.LimitRerouteToConstellation && UseConstellationDiscovery && Plugin.ConstellationManager != null) {
+                currentConstellationVisibleMoonNames = Plugin.ConstellationManager.GetCurrentVisibleUnlocks()
+                    .Select(unlock => unlock.Name)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            }
+
+            for (int i = configuredDestinations.Count - 1; i >= 0; i--) {
+                string configuredName = configuredDestinations[i]?.Trim();
+                if (string.IsNullOrWhiteSpace(configuredName)) {
+                    continue;
+                }
+
+                LMUnlockable unlock = Unlocks.FirstOrDefault(candidate => string.Equals(candidate.Name, configuredName, StringComparison.OrdinalIgnoreCase));
+                if (unlock != null) {
+                    if (!IsDeadlineRerouteUnlockValid(unlock, currentConstellationVisibleMoonNames)) {
+                        Logger.LogInfo($"Deadline reroute: configured destination '{configuredName}' is currently unavailable.");
+                        continue;
+                    }
+
+                    destination = unlock.ExtendedLevel;
+                    destinationName = GetDeadlineRerouteDisplayName(unlock.Name);
+                    return destination != null;
+                }
+
+                if (TryResolveDeadlineRerouteFallback(configuredName, currentConstellationVisibleMoonNames, out destination, out destinationName)) {
+                    return true;
+                }
+            }
+
+            Logger.LogError($"Deadline reroute: no configured destination is currently valid. Configured destinations: {string.Join(", ", configuredDestinations)}");
+            return false;
+        }
+
+        private bool IsDeadlineRerouteUnlockValid(LMUnlockable unlock, HashSet<string> currentConstellationVisibleMoonNames) {
+            if (unlock == null || unlock.ExtendedLevel == null) {
+                return false;
+            }
+
+            if (unlock.IsHidden || unlock.IsLocked) {
+                return false;
+            }
+
+            if (ConfigManager.DiscoveryMode && !IsGloballyDiscovered(unlock)) {
+                return false;
+            }
+
+            if (currentConstellationVisibleMoonNames != null && !currentConstellationVisibleMoonNames.Contains(unlock.Name)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryResolveDeadlineRerouteFallback(string configuredName, HashSet<string> currentConstellationVisibleMoonNames, out ExtendedLevel destination, out string destinationName) {
+            destination = null;
+            destinationName = string.Empty;
+
+            ExtendedLevel fallbackLevel = AllLevels.FirstOrDefault(level => string.Equals(level.NumberlessPlanetName, configuredName, StringComparison.OrdinalIgnoreCase));
+            if (fallbackLevel == null) {
+                Logger.LogWarning($"Deadline reroute: configured destination '{configuredName}' could not be found at runtime.");
+                return false;
+            }
+
+            if (!string.Equals(configuredName, "Gordion", StringComparison.OrdinalIgnoreCase)) {
+                Logger.LogInfo($"Deadline reroute: configured destination '{configuredName}' exists at runtime but is not tracked by LMU. Skipping.");
+                return false;
+            }
+
+            if (currentConstellationVisibleMoonNames != null) {
+                Logger.LogInfo("Deadline reroute: skipping raw Gordion fallback because reroute is limited to the current constellation.");
+                return false;
+            }
+
+            destination = fallbackLevel;
+            destinationName = GetDeadlineRerouteDisplayName(configuredName);
+            return true;
+        }
+
+        private static string GetDeadlineRerouteDisplayName(string destinationName) {
+            return string.Equals(destinationName, "Gordion", StringComparison.OrdinalIgnoreCase)
+                ? "the Company building"
+                : destinationName;
         }
 
         private void RerouteShipToFreeMoon() {
