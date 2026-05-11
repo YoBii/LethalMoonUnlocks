@@ -492,7 +492,7 @@ namespace LethalMoonUnlocks {
                 "This list is evaluated in reverse order, so the last configured moon has the highest priority.\n" +
                 "'Gordion, Galetry, Oxyde' prioritizes Oxyde first, then Galetry, then Gordion.\n +" +
                 "Use 'Gordion' for the default company moon.");
-            LimitRerouteToConstellation = BindValue("6 - Advanced Settings", "Limit reroute to constellation", false, "When enabled and constellation discovery is active, the reroute destination must be visible in the current constellation.");
+            LimitRerouteToConstellation = BindValue("6 - Advanced Settings", "Limit reroute to constellation", false, "When enabled and LethalConstellations is active, the reroute destination must be visible in the current constellation.");
             const string cheapMoonBiasValueDescription =
                 "Controls how strongly cheaper moons are favored when Cheap Moon Bias is enabled.\n" +
                 "LMU compares each moon's price against the average price of the current candidate pool and turns that into a selection weight.\n" +

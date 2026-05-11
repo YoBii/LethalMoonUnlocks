@@ -1468,7 +1468,7 @@ namespace LethalMoonUnlocks {
             }
 
             HashSet<string> currentConstellationVisibleMoonNames = null;
-            if (ConfigManager.LimitRerouteToConstellation && UseConstellationDiscovery && Plugin.ConstellationManager != null) {
+            if (ConfigManager.LimitRerouteToConstellation && UseConstellationEconomy && Plugin.ConstellationManager != null) {
                 currentConstellationVisibleMoonNames = Plugin.ConstellationManager.GetCurrentVisibleUnlocks()
                     .Select(unlock => unlock.Name)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
